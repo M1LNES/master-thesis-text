@@ -1,0 +1,144 @@
+% *****************************************************************************
+%
+%        FASThesis Manual
+%        (FASThesis Class File Documentation)
+%
+%        Faculty of Applied Sciences
+%        University of West Bohemia
+%
+%        Manual & Explanatory Document
+%        Copyright (c) 2022-2023 Kamil Ekštein, Dept. of Computer Science
+%        and Engineering, Faculty of Applied Sciences, UWB
+%
+%        Version:  0.7
+%		 Encoding: UTF-8
+%		 TeXer:    pdflatex
+%
+%        Last modification on 28-Feb-2023 by KE
+%
+% *****************************************************************************
+% _____________________________________________________________________________
+%
+%
+%	     DOCUMENT HEADER
+%
+% _____________________________________________________________________________
+%
+\documentclass[czech, bc, kiv, he, iso690numb, viewonly]{fasthesis}
+\usepackage{dirtree}
+\usepackage{hyperref}
+\usepackage{fontawesome5} 
+\usepackage{listings}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage{qrcode}
+%\usepackage{float} 
+\title{Automatické generování end-to-end testů pomocí velkých jazykových modelů (LLM)}
+\author{Bc. Milan}{Janoch}{}{}
+\supervisor{Ing. Martin Dostal, Ph.D.}
+\assignment{zadani.pdf}
+\signdate{01}{03}{2026}{V Plzni}% << the longest local name in the Czech Rep.
+
+\addbibresource{dp.bib}% << the file with the bibliographical database to be used throughout the text
+
+% _____________________________________________________________________________
+%
+%
+%	     DOCUMENT FRONTMATTER TEXTS
+%
+% _____________________________________________________________________________
+%
+\abstract{xxx
+}
+% *** English abstract ***
+{xxx}
+\keywords{xxx, xxxx, xxx}
+% _____________________________________________________________________________
+%
+%        ACKNOWLEDGEMENT
+% _____________________________________________________________________________
+%
+\acknowledgement{xxx
+}
+% _____________________________________________________________________________
+%
+%
+%	     DOCUMENT TEXT BEGINNING
+%
+% _____________________________________________________________________________
+%
+\begin{document}
+\frontpages[tm] % or notm if the `trademark' declaration is not needed
+\tableofcontents
+% 
+% -x---- ADDITIONAL COLOUR DEFINITIONS ----------------------------------------
+%
+\makeatletter%
+\ifx\FASThesis@style\c@fullcolor%
+	\definecolor{fascolor}{cmyk}{0.06, 0.27, 1.0, 0.12}%
+	\definecolor{fascolordk}{cmyk}{0.05, 0.28, 1.0, 0.24}%
+\else%
+	\definecolor{fascolor}{cmyk}{0, 0, 0, 0.6}%
+	\definecolor{fascolordk}{cmyk}{0, 0, 0, 0.75}%
+\fi%
+\makeatother%
+\lstdefinestyle{plainsrc}{
+	backgroundcolor=\color{fascolor!10},
+	basicstyle=\ttzfamily\footnotesize,
+	numberstyle=\tiny\color{fascolordk},
+	numbers=left,
+	numbersep=5pt,
+	keepspaces=true,
+	tabsize=2,
+	extendedchars=true,
+	literate={á}{{\'a}}1 {č}{{\v{c}}}1 {ď}{{\v{d}}}1 {é}{{\'e}}1 {ě}{{\v{e}}}1 {è}{{\`{e}}}1 {í}{{\'{\i}}}1 {ľ}{{\v{l}}}1 {ň}{{\v{n}}}1 {ó}{{\'o}}1 {ŕ}{{\'r}}1 {ř}{{\v{r}}}1 {š}{{\v{s}}}1 {ť}{{\v{t}}}1 {ú}{{\'u}}1 {ů}{{\r{u}}}1 {ý}{{\'y}}1 {ž}{{\v{z}}}1
+	{Á}{{\'A}}1 {Č}{{\v{C}}}1 {Ď}{{\v{D}}}1 {É}{{\'E}}1 {Ě}{{\v{E}}}1 {È}{{\`{E}}}1 {Í}{{\'I}}1 {Ľ}{{\v{L}}}1 {Ň}{{\v{N}}}1 {Ó}{{\'O}}1 {Ŕ}{{\'R}}1 {Ř}{{\v{R}}}1 {Š}{{\v{Š}}}1 {Ť}{{\v{T}}}1 {Ú}{{\'U}}1 {Ů}{{\r{U}}}1 {Ý}{{\'Y}}1 {Ž}{{\v{Z}}}1
+}
+
+% _____________________________________________________________________________
+%
+%
+%        CHAPTER
+%
+% _____________________________________________________________________________
+%
+\chapter{Úvod}
+xxx
+
+%
+%
+%        CHAPTER Závěr
+%
+% _____________________________________________________________________________
+%
+\chapter{Závěr}
+xxxx
+
+\chapter*{Přehled zkratek}
+\addcontentsline{toc}{chapter}{Přehled zkratek}
+
+\begin{itemize}[align=left, labelwidth=1.5cm, labelsep=10pt, leftmargin=!]
+    \item[\textbf{X}]    xxx
+    \item[\textbf{Y}]    yyy
+\end{itemize}
+
+\appendix
+\chapter{Uživatelská dokumentace}\label{app:docuDocs}
+xxx
+
+
+\backmatter
+\printbibliography
+\listoffigures
+\listoftables
+\listoflistings
+
+% _____________________________________________________________________________
+%
+%		BACK COVER
+% _____________________________________________________________________________
+%
+\setbackpageqrcode
+\backpage
+\end{document}
