@@ -24,7 +24,7 @@
 %
 % _____________________________________________________________________________
 %
-\documentclass[czech, bc, kiv, he, iso690numb, viewonly]{fasthesis}
+\documentclass[czech, ing, kiv, he, iso690numb, viewonly]{fasthesis}
 \usepackage{dirtree}
 \usepackage{hyperref}
 \usepackage{fontawesome5} 
@@ -104,8 +104,22 @@
 % _____________________________________________________________________________
 %
 \chapter{Úvod}
-xxx
+V dnešním světě, kdy se software i díky nástupu umělé inteligence vyvíjí rychleji než kdy dříve, je zajištění kvality a spolehlivosti aplikací klíčovým faktorem 
+pro úspěch. Testování hraje zásadní roli při odhalování chyb, zajištění důvěry uživatelů a zvyšování kvality softwaru.
+S nástupem velkých jazykových modelů (LLM) se objevují nové příležitosti pro automatizaci generování testů \cite{wang2024softwaretestinglargelanguage}, 
+což může výrazně zefektivnit proces testování a snížit náklady spojené s manuálním vytvářením testovacích scénářů. 
+Hranice možností se stále posouvají nejen co se týče výkonností jednotlivých modelů (např. známých GPT, Claude) a společností přicházejících na trh,
+ale i co se týče přístupů k využití těchto modelů pro generování testů. I přes tento inovační potenciál je ale třeba myslet na rizika a 
+výzvy spojené s rozšířeným využíváním LLM - a to nejen z pohledu softwarového (např. riziko halucinací, nedostatečná kvalita generovaných testů), 
+ale i na cenovou a etickou stránku věci (např. náklady na využívání LLM, otázka ochrany dat a soukromí).
+\newline
 
+Cílem této diplomové práce je prozkoumat možnosti generování kódu pomocí velkých jazykových modelů v rámci automatizovaného testování a implementovat 
+funkční prototyp, který má potenciál výrazně urychlit a zefektivnit proces testování softwaru pomocí end-to-end testů. Aby aplikace byla 
+prakticky použitelná, bude zaměřená na generování testů na základě uživatelských příběhů, jež jsou běžně využívány v agilním vývoji softwaru
+\cite{10467677} a poskytují přehledný a srozumitelný popis požadavků z pohledu uživatele. To umožní rozšířit možnosti psaní spustitelných 
+testů i do oddělení jako je QA (Quality Assurance), které nemusí mít hluboké technické znalosti, ale jsou klíčové pro zajištění kvality softwaru.
+Důraz bude kladen na kvalitu vygenerovaných testů, jejich schopnost odhalovat chyby a přínos pro zefektivnění procesu testování.
 %
 %
 %        CHAPTER Závěr
