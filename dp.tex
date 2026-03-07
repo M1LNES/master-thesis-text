@@ -33,7 +33,7 @@
 \usepackage{enumitem}
 \usepackage{xurl}
 \usepackage{qrcode}
-%\usepackage{float} 
+\usepackage{float} 
 \title{Automatické generování end-to-end testů pomocí velkých jazykových modelů (LLM)}
 \author{Bc. Milan}{Janoch}{}{}
 \supervisor{Ing. Martin Dostal, Ph.D.}
@@ -99,7 +99,7 @@
 % _____________________________________________________________________________
 %
 %
-%        CHAPTER
+%        CHAPTER ÚVOD
 %
 % _____________________________________________________________________________
 %
@@ -108,7 +108,7 @@ V dnešním světě, kdy se software i díky nástupu umělé inteligence vyvíj
 pro úspěch. Testování hraje zásadní roli při odhalování chyb, zajištění důvěry uživatelů a zvyšování kvality softwaru.
 S nástupem velkých jazykových modelů (LLM) se objevují nové příležitosti pro automatizaci generování testů \cite{wang2024softwaretestinglargelanguage}, 
 což může výrazně zefektivnit proces testování a snížit náklady spojené s manuálním vytvářením testovacích scénářů. 
-Hranice možností se stále posouvají nejen co se týče výkonností jednotlivých modelů (např. známých GPT, Claude) a společností přicházejících na trh,
+Hranice možností se stále posouvají nejen co se týče výkonností jednotlivých modelů (např. známých GPT, Claude) a společností přicházejících na~trh,
 ale i co se týče přístupů k využití těchto modelů pro generování testů. I přes tento inovační potenciál je ale třeba myslet na rizika a 
 výzvy spojené s rozšířeným využíváním LLM - a to nejen z pohledu softwarového (např. riziko halucinací, nedostatečná kvalita generovaných testů), 
 ale i na cenovou a etickou stránku věci (např. náklady na využívání LLM, otázka ochrany dat a soukromí).
@@ -120,12 +120,101 @@ prakticky použitelná, bude zaměřená na generování testů na základě už
 \cite{10467677} a poskytují přehledný a srozumitelný popis požadavků z pohledu uživatele. To umožní rozšířit možnosti psaní spustitelných 
 testů i do oddělení jako je QA (Quality Assurance), které nemusí mít hluboké technické znalosti, ale jsou klíčové pro zajištění kvality softwaru.
 Důraz bude kladen na kvalitu vygenerovaných testů, jejich schopnost odhalovat chyby a přínos pro zefektivnění procesu testování.
+
+% _____________________________________________________________________________
 %
 %
-%        CHAPTER Závěr
+%
+%        CHAPTER Analýza současného stavu
 %
 % _____________________________________________________________________________
 %
+\chapter{Analýza současného stavu}
+\section{Agilní vývoj a specifikace požadavků}
+\subsection{Agilní metodiky}
+IT je jedním z nejrychleji se rozvíjejících odvětví a to nejen z pohledu technologií,
+ale i přístupu k vývoji softwaru. Jak \cite{articleFromWaterfallToAgile} uvádí, tento aspekt vedl k vývoji metodik (např. 
+agilní metodiky či vodopádový model), které navrhují řízení v závislosti na vlastnostech produktu, organizačních strukturách či dynamickém prostředí.
+Tradiční konzervativnější vodopádový model (populární např. ve stavebnictví) se zaměřuje na důkladné plánování \cite{senarath2021waterfall} a znalost 
+požadavků před zahájením vývoje \cite{almeida2017challenges}. V rychle se měnícím prostředí je ale tento přístup často neefektivní,
+protože požadavky ze strany uživatelů se mohou rychle měnit a není možné je znát všechny předem. Tento problém řeší agilní metodiky,
+které kladou důraz na flexibilitu - díky tomu, že fungují na tzv. iterativním principu (software se vyvíjí v krátkých cyklech často 
+přezdívané jako sprinty), umožňují průběžné přizpůsobování se měnícím se požadavkům a rychlejší dodávání funkčních verzí softwaru \cite{almeida2017challenges}. 
+
+Nejznámějším a současně nejrozšířenějším přístupem k agilnímu vývoji je Scrum. Scrum tým se zpravidla skládá z následujících rolí 
+\cite{senarath2021waterfall, sassa2023scrum,hron2018scrum, sachdeva2016scrum}:
+
+\begin{itemize}
+    \item \textbf{Vývojáři (Developers)} - jsou zodpovědní za vývoj softwaru a implementaci požadovaných funkcionalit (\texttt{featur}).
+    
+    \item \textbf{Scrum Master} - zajišťuje dodržování Scrum procesů, podporuje tým při práci a pomáhá odstraňovat překážky, které by mohly bránit efektivnímu vývoji.
+    
+\item \textbf{Product Owner} - je zodpovědný za správu produktového backlogu, komunikaci s vývojovým týmem a zainteresovanými stranami (stakeholdery) 
+a za zajištění toho, aby vývoj směřoval k naplnění potřeb zákazníka.\end{itemize}
+
+Hlavní náplní práce Product Ownera je správa backlogu a příprava uživatelských příběhů (často známý pod rozšířejnějším anglickým pojmem \textit{user stories}), 
+které specifikují požadované funkcionality z pohledu uživatele \cite{sachdeva2016scrum}.
+
+\subsection{Uživatelské příběhy}
+User story je nejpoužívanějším artefaktem v agilním vývoji \cite{9393933userstories} - jedná se o krátký, semi-strukturovaný 
+popis požadavků napsán v přirozeném jazyce. Na obrázku \ref{fig:user-story-template} je uvedena standardní šablona, 
+podle níž se uživatelské příběhy píší \cite{9393933userstories,9771182userStories, 9325670userStories}.
+\begin{figure}[h]
+    \centering
+    \setlength{\fboxsep}{1em} % Vnitřní okraj rámečku
+    \fbox{
+        \begin{minipage}{0.75\textwidth}
+            \centering
+            \textbf{Standard User Story Template} \\
+            \vspace{1em}
+            \raggedright
+            \textbf{As a} <type of user / persona> \\
+            \textbf{I want} <to perform some action / goal> \\
+            \textbf{So that} <some value / benefit is achieved>
+        \end{minipage}
+    }
+    \caption{Standardní šablona uživatelského příběhu.}
+    \label{fig:user-story-template}
+\end{figure}
+
+Každá user story by měla být napsána z pohledu konkrétního uživatele (\texttt{persona}), s jasně stanoveným cílem (\texttt{goal}) 
+a dosaženou hodnotou (\texttt{value}). Hodnota je dosažena pouze tehdy, pokud byl plánovaný cíl úspěšně splněn \cite{9325670userStories}.
+
+Kvalita napsaných user storek je klíčová nejen pro porozumění vývojářů při implementaci, ale také pro následné testování a ověření, že plánovaný 
+cíl byl skutečně dosažen. Jednou z metod, která pomáhá jasně definovat kritéria pro úspěšné splnění user story, je \texttt{INVEST} \cite{lucassen2016useinvest}. 
+V tabulce \ref{tab:invest_principy} jsou uvedeny jednotlivé principy \texttt{INVEST}, které by měly být dodržovány pro psaní kvalitních uživatelských příběhů.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Princip} & \textbf{Popis} \\ \hline
+\textbf{Independent} & User story by měla být co nejvíce nezávislá na ostatních stories. \\ \hline
+\textbf{Negotiable} & Požadavky by měly být otevřené pro diskusi a případné úpravy. \\ \hline
+\textbf{Valuable} & Splnění user story musí přinést jasnou hodnotu koncovému uživateli. \\ \hline
+\textbf{Estimable} & Musí být možné odhadnout náročnost implementace (např. čas nebo potřebné zdroje). \\ \hline
+\textbf{Small} & User story by měla být dostatečně malá, aby bylo možné ji dokončit během jednoho sprintu. \\ \hline
+\textbf{Testable} & Musí obsahovat definovaná akceptační kritéria, podle kterých lze ověřit splnění požadavku. \\ \hline
+\end{tabular}
+\caption{INVEST principy pro tvorbu kvalitních user stories \cite{6693222invest}.}
+\label{tab:invest_principy}
+\end{table}
+
+\subsection{Akceptační kritéria}
+
+\subsection{Problém nejednoznačnosti v přirozeném jazyce}
+
+
+
+
+\section{Automatizované testování softwaru}
+
+\section{Velké jazykové modely ve vývoji softwaru}
+
+\section{Agentní systémy a autonomní testování}
+
+
+
 \chapter{Závěr}
 xxxx
 
