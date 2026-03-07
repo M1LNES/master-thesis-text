@@ -34,6 +34,7 @@
 \usepackage{xurl}
 \usepackage{qrcode}
 \usepackage{float} 
+\usepackage{svg}
 \title{Automatické generování end-to-end testů pomocí velkých jazykových modelů (LLM)}
 \author{Bc. Milan}{Janoch}{}{}
 \supervisor{Ing. Martin Dostal, Ph.D.}
@@ -201,13 +202,133 @@ V tabulce \ref{tab:invest_principy} jsou uvedeny jednotlivé principy \texttt{IN
 \end{table}
 
 \subsection{Akceptační kritéria}
+Zatímco user story charakterizují potřeby zákazníka, akceptační kritéria (často označována zkratou \texttt{ACC} z anglického \texttt{Acceptance Criteria}) 
+jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkrétní user story \cite{li2024simac} co je nutno dodržet a udělat, aby byla user
+ story považována za splněnou. Týkají se zejména funkcionality (tlačítko dělá to co má), kvalitativních charakteristik 
+ (systém reaguje do X milisekund) a obchodní logiky \cite{ferreira2022towards}. 
 
-\subsection{Problém nejednoznačnosti v přirozeném jazyce}
+ Akceptační kritéria mohou být zapsána různou formou - ať už prostý seznam, kde každý bod představuje právě jedno kriéterium, 
+ nebo formou scénářů, které jsou popisovány pomocí jazyka Gherkin. Tento způsob testování (kdy jsou nejprve napsany testovací 
+ scénáře v přirozeném jazyce a následně se implementují samotné testy) se nazývá \texttt{Behavior-Driven Development} (\texttt{BDD}) \cite{9825769gherkin}.
+ 
+\begin{figure}[h]
+    \centering
+    \setlength{\fboxsep}{1em}
+    \fbox{
+        \begin{minipage}{0.75\textwidth}
+            \raggedright
+            \textbf{Feature:} User Login \\
+            \vspace{0.5em}
+            \textbf{Scenario:} Successful login with valid credentials \\
+            \quad \textbf{Given} the user is on the ``/login`` page \\
+            \quad \textbf{When} the user enters ``user@example.com`` into the email field \\
+            \quad \textbf{And} the user enters ``password123`` into the password field \\
+            \quad \textbf{And} the user clicks the ``Login`` button \\
+            \quad \textbf{Then} the user should be redirected to the ``/dashboard`` page \\
+            \quad \textbf{And} a welcome message ``Welcome back`` should be displayed
+        \end{minipage}
+    }
+    \caption{Ukázka testovacího scénáře zapsaného pomocí klíčových slov jazyka Gherkin.}
+    \label{fig:gherkin-example}
+\end{figure}
 
+Hlavní motivací pro využití Gherkin scénářů je vysoká abstrakce - scénáře jsou psány v přirozeném jazyce, což umožňuje 
+jednodušší komunikaci mezi technicky zdatnými i netechnickými členy týmu a zároveň poskytují jasný popis požadavků a očekávaného chování \cite{alshammari2025use}.
 
+Pro prostý seznam akceptačních je důležité, aby používal jasný a konzistentní jazyk a zaměřoval se hlavně na testovatelnost, nikoliv na formát zápisu \cite{ferreira2022towards}.
+Ukázka takového seznamu je uvedena na obrázku \ref{fig:list-ac-example} - každý bod by měl být jasně identifikovatelný a obsahuje jedno kritérium, které lze ověřit.
 
+\begin{figure}[H]
+    \centering
+    \setlength{\fboxsep}{1em}
+    \fbox{
+        \begin{minipage}{0.75\textwidth}
+            \raggedright
+            \textbf{Acceptance Criteria for US\_01: User Login} \\
+            \vspace{0.5em}
+            \begin{itemize}
+                \item \textbf{ac\_01 (Success):} System grants access to the dashboard when valid credentials (email and password) are provided.
+                \item \textbf{ac\_02 (Success):} Navigation to the login page is possible via the ``Sign In`` button on the landing page.
+                \item \textbf{ac\_03 (Failure):} System displays an error message ``Invalid credentials`` if the password does not match the stored hash.
+                \item \textbf{ac\_04 (Failure):} Account is temporarily locked after five consecutive failed login attempts.
+                \item \textbf{ac\_05 (Robustness):} Input fields prevent the submission of SQL injection patterns or excessively long strings.
+            \end{itemize}
+        \end{minipage}
+    }
+    \caption{Ukázka akceptačních kritérií zapsaných formou strukturovaného seznamu s unikátní identifikací.}
+    \label{fig:list-ac-example}
+\end{figure}
+
+V praxi bývají akceptační kritéria (spolu s uživateslkými příběhy) nejčastěji obsažena v \texttt{ALM} nástrojích (\texttt{Application Lifecycle Management}) 
+jako jsou \texttt{Jira}, \texttt{Azure DevOps}, \texttt{Rally} či \texttt{GitHub Projects}. Tyto nástroje nevyžadují specifický formát zápisu, ale umožňují flexibilitu - ať už jde o prostý seznam, Gherkin scénáře nebo 
+kombinaci obojího. Např. studie \cite{schwedt2025bugs} zaměřená na generování akceptačních testů vycházela z běžných user stories a jejich 
+textových popisů, z něhož následně generovala Gherkin scénáře, z nichž až poté byly implementovány automatizované testy.
 
 \section{Automatizované testování softwaru}
+\subsection{Metodika a pyramida testování}
+Softwarové testování lze definovat jako hledání chyb či chybějících požadavků v softwaru \cite{7814898swtesting}. Dá se na něj 
+nahlížet i z pohledu snižování rizika, což vede v posílení důvěry uživatelů a zlepšení kvality softwaru. Jak také studie \cite{7814898swtesting} uvádí,
+testování je důležitou součástí \texttt{QA} - čím dříve jsou chyby odhaleny, tím levnější je jejich oprava. Testování lze rozdělit 
+do několika tříd, jež jsou znázorněny v tabulce \ref{tab:druhy_testu}, která vychází z knihy \cite{herout_testovani_programatory}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Název testu} & \textbf{Popis} \\ \hline
+\textbf{Testování podle scénářů} & Tester dle předpřipravených scénářů manuálně prochází aplikaci a kontroluje očekávané chování jednotlivých testovacích kroků. \\ \hline
+\textbf{Průzkumné testování} & Tester bez předem známých scénářů prozkoumává aplikaci a hledá chyby. \\ \hline
+\textbf{Regresní testy} & Ověřují, zda nově přidané featury nezhoršily existující funkce. \\ \hline
+\textbf{Jednotkové (unit) testy} & Automatizované skripty, které izolovaně ověřují funkčnost nejmenších částí zdrojového kódu (funkce, metody). \\ \hline
+\textbf{Beta testy} & Poskytnutí aplikace omezené skupině uživatelů . \\ \hline
+\textbf{Smoke testy} & Rychlé počáteční testy ověřující sestavení aplikace a její stabilitu. \\ \hline
+\textbf{Konfirmační testy} & Potvrzení, že aplikace po odstranění defektu funguje správně. \\ \hline
+\end{tabular}
+\caption{Druhy testů dle \cite{herout_testovani_programatory}.}
+\label{tab:druhy_testu}
+\end{table}
+
+Na obrázku \ref{fig:testing-pyramid} je uvedena klasická pyramida testování, která znázorňuje důležitost jednotlivých druhů testů 
+v rámci automatizace testování \cite{mukhin2021testingTestingPyramid}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{./pictures/pyramidasvg.pdf}
+    \caption{Pyramida testování Mika Cohna (vektorový formát).}
+    \label{fig:testing-pyramid}
+\end{figure}
+
+
+Jednotkové testy jsou nejvíce izolované, píšou se rychleji, a tudíž jsou i levnější. Naproti tomu \texttt{UI} testy 
+(\texttt{User Interface} - testy uživatelského rozhraní - např. end-to-end) vyžadují
+větší integraci a jejich vývoj je zpravidla dražší (testy se píšou déle a déle běží). Přestože jsou end-to-end testy dražší, 
+představují nedílnou součást celé automatizace - bez těchto testů nejsme schopni zaručit, že komponenty/moduly systému spolu správně 
+komunikují a dávají tak koncovému uživateli očekávaný stav.
+
+Při psaní testů se objevují speciální případy testů - a to testy chybně napsané či nestabilní testy. Jedná se o následující 
+termíny \cite{herout_testovani_programatory}:
+
+\begin{itemize}
+    \item \textbf{Falešně pozitivní (False Positive)} - Test, který selže, přestože testovaná funkcionalita funguje správně.
+    
+    \item \textbf{Falešně negativní (False Negative)} - Test, který projde, i když testovaná funkcionalita nefunguje správně.
+    \item \textbf{Křehké (Fragile)} - Test, který selže kvůli změně v implementaci, přestože testovaná funkcionalita zůstala nezměněna (např. změna názvu HTML elementu).
+    \item \textbf{Nestabilní (Flaky)} - Test, který se chová nedeterministicky - může selhat nebo projít bez jakýchkoliv změn v kódu, 
+    což ztěžuje identifikaci skutečných problémů (např. problémy se síťovou komunikací).
+    
+\end{itemize}
+
+Těmto problémům se při psaní testů snaží vývojáři předcházet - a to např. důrazem na determinismus testů, kontrolou správnosti testovaného chování na Code Review nebo využíváním nástrojů 
+pro správu testů, které pomáhají identifikovat a řešit nestabilní testy.
+
+
+\subsection{E2E testování a simulace uživatele}
+
+
+\subsection{Přehled frameworků pro webovou automatizaci}
+
+
+\subsection{Výzvy automatizace v agilním prostředí}
 
 \section{Velké jazykové modely ve vývoji softwaru}
 
