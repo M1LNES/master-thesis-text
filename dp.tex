@@ -280,7 +280,7 @@ do několika tříd, jež jsou znázorněny v tabulce \ref{tab:druhy_testu}, kte
 \textbf{Průzkumné testování} & Tester bez předem známých scénářů prozkoumává aplikaci a hledá chyby. \\ \hline
 \textbf{Regresní testy} & Ověřují, zda nově přidané featury nezhoršily existující funkce. \\ \hline
 \textbf{Jednotkové (unit) testy} & Automatizované skripty, které izolovaně ověřují funkčnost nejmenších částí zdrojového kódu (funkce, metody). \\ \hline
-\textbf{Beta testy} & Poskytnutí aplikace omezené skupině uživatelů . \\ \hline
+\textbf{Beta testy} & Poskytnutí aplikace omezené skupině uživatelů. \\ \hline
 \textbf{Smoke testy} & Rychlé počáteční testy ověřující sestavení aplikace a její stabilitu. \\ \hline
 \textbf{Konfirmační testy} & Potvrzení, že aplikace po odstranění defektu funguje správně. \\ \hline
 \end{tabular}
@@ -288,7 +288,7 @@ do několika tříd, jež jsou znázorněny v tabulce \ref{tab:druhy_testu}, kte
 \label{tab:druhy_testu}
 \end{table}
 
-Na obrázku \ref{fig:testing-pyramid} je uvedena klasická pyramida testování, která znázorňuje důležitost jednotlivých druhů testů 
+Na obrázku \ref{fig:testing-pyramid} je uvedena pyramida testování, která znázorňuje důležitost jednotlivých druhů testů 
 v rámci automatizace testování \cite{mukhin2021testingTestingPyramid}.
 
 \begin{figure}[H]
@@ -302,7 +302,7 @@ v rámci automatizace testování \cite{mukhin2021testingTestingPyramid}.
 Jednotkové testy jsou nejvíce izolované, píšou se rychleji, a tudíž jsou i levnější. Naproti tomu \texttt{UI} testy 
 (\texttt{User Interface} - testy uživatelského rozhraní - např. end-to-end) vyžadují
 větší integraci a jejich vývoj je zpravidla dražší (testy se píšou déle a déle běží). Přestože jsou end-to-end testy dražší, 
-představují nedílnou součást celé automatizace - bez těchto testů nejsme schopni zaručit, že komponenty/moduly systému spolu správně 
+představují nedílnou součást celé automatizace - bez těchto testů není zaručeno, že komponenty/moduly systému spolu správně 
 komunikují a dávají tak koncovému uživateli očekávaný stav.
 
 Při psaní testů se objevují speciální případy testů - a to testy chybně napsané či nestabilní testy. Jedná se o následující 
@@ -322,13 +322,89 @@ Těmto problémům se při psaní testů snaží vývojáři předcházet - a to
 pro správu testů, které pomáhají identifikovat a řešit nestabilní testy.
 
 
-\subsection{E2E testování a simulace uživatele}
+\subsection{E2E testování}
+
+End-to-end testování (zkráceně \texttt{E2E}) je typ testování, který ověřuje kompletní funkčnost systému z pohledu koncového uživatele. 
+Využívá se přístupu tzv. metody \texttt{black-box} (černé skříňky), kdy tester nemá přístup k implementaci či struktuře systému, 
+ale testuje systém jako jeden celek \cite{herout_testovani_programatory, leotta2016approaches}. V případě webových aplikací je možné nahlížet  
+na způsoby tvorby end-to-end testů dvěma způsoby \cite{leotta2016approaches}:
+
+\begin{itemize}
+    \item \textbf{Capture-Replay} - Tester nejdříve manuálně prochází aplikaci, zaznamenává své akce a následně se tyto akce převedou na automatizovaný skript.
+    \item \textbf{Programmable Web Testing} - Testy se rovnou píšou jako zdrojový kód, který využívá frameworky pro webovou automatizaci.
+\end{itemize}
+
+Hlavní výhodou přístupu \texttt{Capture-Replay} je rychlost - testy lze vytvořit velmi rychle, nevýhodou je ale nízká kvalita a nestabilita testů, které jsou často náchylné 
+k falešně negativním výsledkům (např. když se HTML elementy změní, program funguje stále správně, ale test selže).
+
+Obě tyto perspektivy potřebují lokalizovat a interagovat s HTML elementy. Interakce s HTML elementy lze rozdělit do tří kategorií \cite{leotta2016approaches}:
+
+\begin{itemize}
+    \item \textbf{Coordinate-based} - Využívání [X,Y] souřadnic pro interakci s elementy.
+    \item \textbf{DOM-based} - Využití \texttt{Document Object Modelu} (\texttt{DOM})/HTML struktury.
+    \item \textbf{Vizuální} - Využití rozpoznání obrazu pro určení elementů na obrazovce.
+\end{itemize}
+
+Zatímco první kategorie je označována jako zastaralá \cite{leotta2016approaches}, DOM-based přístup je náchylný na drobné změny v HTML struktuře, 
+které mohou způsobit selhání testů a vyžadují častou údržbu. Vizuální přístup sice dokáže testovat to, co uživatel skutečně vidí, 
+ale je náchylný na změny v rozložení stránky a režie spojená s rozpoznáváním obrazu může být vysoká. Právě snaha o řešení těchto problémů 
+vedla k zrodu mnoha testovacích frameworků pro webovou automatizaci, které se snaží zjednodušit a zefektivnit tvorbu end-to-end testů.
 
 
 \subsection{Přehled frameworků pro webovou automatizaci}
+V oblasti webové automatizace existuje velké množství frameworků, které se navzájem liší svými vlastnostmi, podporovanými jazyky a přístupy k testování.
+Zde je uveden přehled těch nejpopulárnějších a nejčastěji používaných,
+
+\subsubsection{Selenium (WebDriver)}
+Jeden z nejrozšířenějších a nejstarších nástrojů. Podporuje širokou škálu jazyků (Java, Python, C\#, JavaScript) a prohlížeců prostřednictvím WebDriveru \cite{selenium_docs}. Díky rozšířené 
+komunitě, množství dostupných zdrojů a existujících knihoven je Selenium stále velmi populární volbou. Nevýhodou je 
+složitější prvotní konfigurace a manuální správa testů, která může (při nesprávném použití) vést k nestabilním testům.
+
+\subsubsection{Robot Framework}
+Open-source framework založený na Pythonu, který využívá klíčová slova pro psaní testů (tzv. \texttt{Keyword-Driven Testing}).
+Architektura využívá knihovny SeleniumLibrary pro webovou automatizaci \cite{robot_framework}. Silnou stránkou je jednoduché psaní testů - 
+testy jsou psány čitelně v přirozeném jazyce, díky čemuž jim porozumí i netechničtí členové týmu. Se zvyšující se komplexností 
+webových aplikací a testů může být nevýhodou nižší flexibilita a nutnost používat externí knihovny pro pokročilé funkce.
+
+\subsubsection{Playwright}
+Moderní testovací framework vyvinutý společností Microsoft. Podporuje více jazyků (JavaScript/TypeScript, Python, Java, .NET) a 
+nabízí robustní API pro interakci s webovými stránkami \cite{playwright_docs}. Výhodou je rychlost testů a podpora pro více prohlížečů (Firefox, WebKit, Chromium) bez 
+nutnosti externích driverů. Klíčovou funkcí je také \texttt{Auto-waiting}, který pomáhá eliminovat křehkost testů. Nevýhodou je menší komunita a méně dostupných zdrojů,
+jelikož se jedná o relativně nový nástroj.
+
+\subsubsection{Cypress}
+Nástroj zaměřený na testování moderních webových aplikací, který podporuje pouze JavaScript a TypeScript. Běží přímo v prohlížeči \cite{cypress_docs}, což 
+urychluje vývoj testů a jejich případné debuggování. Disponuje také funkcí \texttt{Time Travel}, která umožňuje procházet test krok po kroku a vidět stav aplikace v každém kroku. 
+Nevýhodou je omezená podpora napříč jazyky, prohlížeči a testování vícero tabů.
 
 
 \subsection{Výzvy automatizace v agilním prostředí}
+
+Studie \cite{butt2023conceptual} identifikovala několik klíčových výzev, které
+se vyskytují při implementaci automatizace testů v agilním prostředí. 
+
+\subsubsection{Údržba a technický dluh}
+Studie uvádí, že tento proces je časově náročný a náchylný k chybám. S rostoucím počtem uživatelských příběhů se manuální tvorba 
+test casů (testovacích případů) stává bottleneckem, což může vést k následnému nárůstu technického dluhu, kdy se testy stávají zastaralými a všechny 
+scénáře nemusí být pokryty, což zvyšuje riziko chyb. 
+
+
+\subsubsection{Regresní testování}
+Jelikož agilní vývoj vyžaduje rychlé a časté změny, je klíčové zajistit, aby po každé z nich bylo co nejdříve ověřeno na regresních testech, 
+že nedošlo k narušení stávající funkcionality. Tento problém je možno částečně řešit automatickým generovaním testů přímo z požadavků, aby se 
+minimalizoval čas mezi implementací a testováním.
+
+\subsubsection{Rozdíl mezi specifikací a kódem}
+Tato výzva souvisí s jasností požadavků na produkt. Jelikož jsou požadavky napsány v přirozeném jazyce, může docházet k nedorozuměním či nejasnostem,
+které mohou vést k nesprávné implementaci či chybám. To poté vede na:
+
+\begin{itemize}
+    \item Nestabilní testovácí orákulum - pokud mechanismus pro ověření výsledků není stabilní a předvídatelný, může docházet k velkému množství falešně pozitivních nálezů či křehkým testům.
+    \item Náklady na opravu - opakovaná re-implementace funkcionalit vynucuje souběžnou údržbu testů, což výrazně snižuje návratnost (ROI) investic.
+    \item Nízká testovatelnost - zaměření na testovatelnost od prvotních fází vývoje výrazně zvyšuje efektivitu automatizace.
+\end{itemize}
+
+
 
 \section{Velké jazykové modely ve vývoji softwaru}
 
