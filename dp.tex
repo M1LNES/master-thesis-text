@@ -27,6 +27,7 @@
 \documentclass[czech, ing, kiv, he, iso690numb, viewonly]{fasthesis}
 \usepackage{dirtree}
 \usepackage{hyperref}
+\usepackage{url}
 \usepackage{fontawesome5} 
 \usepackage{listings}
 \usepackage{color}
@@ -181,7 +182,7 @@ podle níž se uživatelské příběhy píší \cite{9393933userstories,9771182
 Každá user story by měla být napsána z pohledu konkrétního uživatele (\texttt{persona}), s jasně stanoveným cílem (\texttt{goal}) 
 a dosaženou hodnotou (\texttt{value}). Hodnota je dosažena pouze tehdy, pokud byl plánovaný cíl úspěšně splněn \cite{9325670userStories}.
 
-Kvalita napsaných user storek je klíčová nejen pro porozumění vývojářů při implementaci, ale také pro následné testování a ověření, že plánovaný 
+Kvalita napsaných user stories je klíčová nejen pro porozumění vývojářů při implementaci, ale také pro následné testování a ověření, že plánovaný 
 cíl byl skutečně dosažen. Jednou z metod, která pomáhá jasně definovat kritéria pro úspěšné splnění user story, je \texttt{INVEST} \cite{lucassen2016useinvest}. 
 V tabulce \ref{tab:invest_principy} jsou uvedeny jednotlivé principy \texttt{INVEST}, které by měly být dodržovány pro psaní kvalitních uživatelských příběhů.
 
@@ -294,7 +295,7 @@ v rámci automatizace testování \cite{mukhin2021testingTestingPyramid}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{./pictures/pyramidasvg.pdf}
-    \caption{Pyramida testování Mika Cohna (vektorový formát).}
+    \caption{Pyramida testování Mika Cohna.}
     \label{fig:testing-pyramid}
 \end{figure}
 
@@ -396,17 +397,157 @@ minimalizoval čas mezi implementací a testováním.
 
 \subsubsection{Rozdíl mezi specifikací a kódem}
 Tato výzva souvisí s jasností požadavků na produkt. Jelikož jsou požadavky napsány v přirozeném jazyce, může docházet k nedorozuměním či nejasnostem,
-které mohou vést k nesprávné implementaci či chybám. To poté vede na:
+které mohou vést k nesprávné implementaci či chybám. To má poté za následek:
 
 \begin{itemize}
     \item Nestabilní testovácí orákulum - pokud mechanismus pro ověření výsledků není stabilní a předvídatelný, může docházet k velkému množství falešně pozitivních nálezů či křehkým testům.
-    \item Náklady na opravu - opakovaná re-implementace funkcionalit vynucuje souběžnou údržbu testů, což výrazně snižuje návratnost (ROI) investic.
+    \item Náklady na opravu - opakovaná reimplementace funkcionalit vynucuje souběžnou údržbu testů, což výrazně snižuje návratnost (ROI) investic.
     \item Nízká testovatelnost - zaměření na testovatelnost od prvotních fází vývoje výrazně zvyšuje efektivitu automatizace.
 \end{itemize}
 
-
-
 \section{Velké jazykové modely ve vývoji softwaru}
+
+\subsection{Architektura a principy LLM}
+Velké jazykové modely jsou rozsáhlé, předtrénované, statistické modely založené na neuronových sítí. 
+Jedná se zejména o modely založené na architektuře Transformer, které obsahují milairdy parametrů a jsou trénovány na masivním množství 
+textových dat. Díky tomuto objemu parametrů jsou schopni zachytit komplexní vzory a vztahy v jazyce (na základě statistické analýzy) a generovat 
+text  \cite{minaee2024large}. Navíc vykazují i tzv. \texttt{emergent abilities} - schopnosti jako je schopnost učit se v kontextu, plnit komplexní 
+instrukce či řešit více krokové úlohy.
+
+Evoluce jazykových modelů prošla 4 hlavními generacemi \cite{wang2025history}:
+
+\begin{itemize}
+    \item \textbf{Statistické jazykové modely (SLM)} - Vznik v 90. letech 20. století, založené na pravděpodobnostních modelech a n-gramových přístupech.
+    \item \textbf{Neurální jazykové modely (NLM)} - Slova mapovaná na vektory (embeddings), k predikci dalších slov využívány rekurentní neuronové sítě (RNN) a později LSTM (Long Short-Term Memory).
+    \item \textbf{Předtrénované jazykové modely (PLM)} - Předtrénované na obrovském množství neoznačeného textu a využití fine-tuningu pro zaměření na konkrétní úlohy.
+    \item \textbf{Velké jazykové modely (LLM)} - Současné modely s miliardami parametrů vycházející z PLM, které díky masivnímu nárustu dat a výpočetnímu výkonu nevyžadují ani dolaďování (emergent abilities).
+\end{itemize}
+
+
+Základem architektury Transformer, která byla představena v roce 2017 \cite{vaswani2017attention} a je převratná pro vývoj LLM, je tzv. 
+mechanismus \texttt{Self-Attention} - ten umožňuje modelovat vliv každého slova v kontextu věty na ostatní slova, což pomáhá efektivněji zachytit 
+a pochopit kontextové vazby.
+
+V rámci architektury Transformer se využívají dva hlavní typy bloků - \texttt{Encoder} a \texttt{Decoder}. Zatímco \texttt{Encoder} bloky se zaměřují na zpracování vstupního textu a 
+jejich pochopení, \texttt{Decoder} bloky jsou zmaěřené na generování výstupního textu na základě těchto reprezentací \cite{wang2025history}. Na modely se pak 
+nahlíží tak, jakou část této architektury využívají:
+
+\begin{itemize}
+\item \textbf{Encoder-only} - Modely využívající pouze encoder část architektury. Jsou vhodné zejména pro úlohy zaměřené na porozumění textu, například klasifikaci nebo analýzu sentimentu. Typickým příkladem je BERT.
+\item \textbf{Decoder-only} - Modely založené pouze na decoder části, optimalizované pro generování textu. Do této kategorie patří například rodina modelů GPT.
+\item \textbf{Encoder-Decoder} - Modely kombinující obě části architektury. Využívají se zejména pro úlohy transformace textu, jako je strojový překlad, sumarizace nebo otázky a odpovědi. Příkladem je model T5.
+\end{itemize}
+
+Je nutné podotknout, že i přes své schopnosti a potenciál jsou LLM stále jen nástrojem založené na predikci - nejsou schopné skutečnému porozumění, 
+a proto může docházet k jevu zvanému \texttt{halucinace} - okamžik, kdy model generuje věcně nesprávný či nesmyslný text, který ale může působit věrohodně.
+
+\subsection{Parametry a technické aspekty}
+\subsubsection{Tokenizace a zpracování dat}
+Tokenizace je proces převedení vstupního textu na menší jednotky (tzv. tokeny), které mohou reprezentovat celá slova, 
+části slov či jednotlivé znaky. To umožňuje modelům zpracovávat i neznámé výrazy pomocí algoritmů jako je Byte Pair Encoding (BPE) nebo SentencePiece \cite{galle-2019-investigating}.
+
+
+Tyto tokeny se dále na další kategorie uvedené v tabulce \ref{tab:tokenization}, které jsou i základní metrikou pro pricing jednotlivých poskytovtelů (providerů) 
+v rámci používání jejich modelů.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{|l|X|p{3cm}|p{1.8cm}|}
+\hline
+\textbf{Token} & \textbf{Popis} & \textbf{Příklad} & \textbf{Cena} \\ \hline
+\textbf{Input} & Data zasílaná modelu ke zpracování. & Uživatelský dotaz. & Nižší \\ \hline
+\textbf{Output} & Sekvence tokenů generovaná modelem jako odpověď. & Odpověď modelu. & Vyšší \\ \hline
+\textbf{Reasoning} & Externalizovaný výpočetní stav předávaný mezi cykly generování. & Mezikroky řešení. & Dle implementace \\ \hline
+\textbf{Cached} & Data v mezipaměti pro opakované využití. & Části dlouhého dokumentu. & Nejnižší \\ \hline
+\end{tabularx}
+\caption{Přehled běžně používaných druhů tokenů v LLM.}
+\label{tab:tokenization}
+\end{table}
+
+Přestože reasoning tokeny mohou připomínat lidské uvažování, model po dalším cyklu tuto znalost ztrácí - tyto 
+tokeny mu tak slouží jako \texttt{State over Tokens}, kam si odkládá mezivýsledky, aby věděl, jak při dalším kroku pokračovat \cite{levy2025stateReasoning}.
+
+\subsubsection{Context window}
+Kontextové okno definuje maximální počet tokenů, které je model schopen zpracovat v rámci jednoho výpočetního cyklu. 
+Zatímco starší generace modelů operovaly v řádu nižších tisíců tokenů, současné modely již zvládají pracovat v řádu nižších milionů. 
+Průkopníkem v této oblasti se stala společnost Google, která jako první u svých modelů řady Gemini
+\footnote{\href{https://ai.google.dev/gemini-api/docs/long-context}{Dokumentace Google AI}} představila kapacitu přesahující jeden milion tokenů. 
+Podobné limity nyní postupně adoptují i další poskytovatelé, jako například Anthropic u modelů Claude v rámci platformy Bedrock
+\footnote{\href{https://aws.amazon.com/bedrock/anthropic/}{Dokumentace AWS Bedrock (Anthropic)}}.
+
+\subsubsection{Temperature}
+Parametr využívaný modely k určení míry náhodnosti a diverzity generovaného výstupu \cite{renze2024effect}. Čím nižší je hodnota \texttt{temperature}, tím 
+konzervativnější a determinističtější je výstup modelu. S vyššími hodnotami stoupá riziko halucinací, ale model nabízí vyšší míru kreativity. Pro úlohy vyžadující 
+přesnost a konzistenci se doporučuje nastavit hodnotu \texttt{temperature} na 0. Některé modely (např. v rámci Azure OpenAI) tento parametr neumožňují konfigurovat, 
+protože je pevně definován na úrovni modelu \footnote{\href{https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/reasoning?tabs=csharp\%2Cgpt-5\#not-supported}{Dokumentace Microsoft k Azure OpenAI}}.
+\subsubsection{Tool Calling}
+Tool Calling (volání nástrojů) je schopnost modelu autonomně využívat externé aplikace či služby (jako jsou firemní API, vyhledávače...), čímž překonávají svá omezení 
+jako jsou např. zastaralé informace. Pro správné použití je nutné zajistit, aby model mohl správně identifikovat záměr uživatele, vybral vhodný nástroj a 
+správně nastavil vstupní parametry \cite{shen2024llm}. Tato schopnost lze naučit model buď pomocí fine-tuningu na ukázkových interakcích, nebo technikou \texttt{in-context-learningu},
+kdy se do promptu, který se zasílá modelu, vloží definice jednotlivých nástrojů, aby věděl, jak je využívat. Tato vlastnost není podporována u všech modelů, a proto 
+je třeba předem zkontrolovat dokumentaci, zda je pro daný model Tool Calling dostupný.
+
+
+\subsubsection{Prompt Caching}
+Prompt Chacing je inovativní technika, jenž výrazně zrychluje inferenci modelu a snižuje výpočetní nároky tím, že recykluje interní výpočty modelu \cite{gim2024prompt}. 
+Vychází z toho, že uživatelské dotazy obsahují často stejné bloky zpráv (např. systémový prompt, specifikace nástrojů, přiložené dokumenty...), které se mezi
+dotazy nemění. Namísto přepočítávání těchto bloků si model ukládá jejich výpočty do mezipaměti a při dalším dotazu, který obsahuje identické bloky, 
+si je pouze načte z mezipaměti a spojí, čímž se zkracuje doba zpracování dotazu a to bez jakéhokoliv dopadu na kvalitu finálního výstupu. Tato technika
+je podporována zejména u novějších modelů a je nutné zkontrolovat dokumentaci, zda je pro daný model dostupná.
+
+\subsection{Srovnání modelů a pricing}
+
+Výběr konkrétního modelu závisí na mnoha faktorech - ať už se jedná o výkon, ale i rovnováhu mezi cenou, rychlostí a dostupností funkcí 
+(Tool Calling, Temperature, podporvaný vstup - text, obrázky). V tabulce \ref{tab:modely} jsou uvedeny některé z nejnovějších modelů, které vyšly od druhé poloviny 
+roku 2025.
+
+\begin{table}[h!]
+\centering
+\caption{Vybrané modely vydané od H2 2025 a jejich cenová politika.}
+\small 
+\newcolumntype{C}{>{\centering\arraybackslash}X} 
+
+\begin{tabularx}{\textwidth}{@{} l l C C C @{}}
+\toprule
+\textbf{Provider} & \textbf{Model} & \textbf{In (\$/1M)} & \textbf{Out (\$/1M)} & \textbf{Context} \\ \midrule
+\textbf{Anthropic} & Claude 4.6 Sonnet & 3.00 & 15.00 & 1M \\
+& Claude 4.6 Opus & 5.00 & 25.00 & 1M \\ \midrule
+\textbf{OpenAI} & GPT-5 (Standard) & 1.25 & 10.00 & 400k \\
+& GPT-5.3 Codex & 1.75 & 14.00 & 400k \\ \midrule
+\textbf{Google AI} & Gemini 3.1 Pro & 2.00/4.00 & 12.00/18.00 & 1M \\
+& Gemini 3.1 Flash-Lite & 0.25 & 1.50 & 1M \\ \midrule
+\textbf{Ostatní} & DeepSeek-V3.2 & 0.28 & 0.42 & 128k \\
+& Llama 4 Scout & 0.18 & 0.59 & 1M \\
+& Moonshot Kimi K2 & 0.60 & 2.50 & 262k \\ \bottomrule
+\end{tabularx}
+
+\caption{Vybrané modely vydané od H2 2025 a jejich cenová politika.}
+\label{tab:modely}
+\end{table}
+
+Veškeré cenové údaje jsou převzaty z oficiálních dokumentací jednotlivých poskytovatelů.\footnote{Podrobné specifikace dostupné v dokumentacích: 
+\href{https://platform.claude.com/docs/en/about-claude/pricing}{Anthropic}, 
+\href{https://ai.google.dev/gemini-api/docs/pricing}{Google AI}, 
+\href{https://openai.com/api/pricing/}{OpenAI}, 
+\href{https://api-docs.deepseek.com/quick_start/pricing}{DeepSeek}, 
+\href{https://www.together.ai/models/llama-4-scout}{Together AI} a 
+\href{https://platform.moonshot.ai/docs/pricing/chat}{Moonshot}.}
+Je důležité poznamenat, že každý poskytovatel uplatňuje odlišnou cenovou strategii. Například, jak je patrné z tabulky \ref{tab:modely}, Google AI 
+rozlišuje u některých modelů dvoustupňový pricing - sazba za milion tokenů se automaticky navyšuje u dotazů, 
+jejichž celkový kontext přesáhne hranici 200 000 tokenů. A ještě větší rozdíly jsou u přístupu ke cachování - zatímco např. OpenAI sází na plnou automatizaci 
+a slevy pro krátkodobě identické začátky promptů, Anthropic a Google vyžadují explicitní definici ukládaných bloků, což umožňuje efektivnější a dlouhodobější uchování rozsáhlých dat.
+
+Modely, které jsou veřejnosti dostupné (včetně jejich metadat o nástrojích, kontextových oknech apod.), je možné najít na stránkách \href{https://models.dev/}{models.dev}, 
+která tak slouží jako centrální repozitář, který usnadňuje vývojářům výběr a porovnání modelů pro jejich konkrétní potřeby.
+
+
+
+
+\subsection{Limity generování}
+
+
+
 
 \section{Agentní systémy a autonomní testování}
 
