@@ -541,10 +541,28 @@ a slevy pro krátkodobě identické začátky promptů, Anthropic a Google vyža
 Modely, které jsou veřejnosti dostupné (včetně jejich metadat o nástrojích, kontextových oknech apod.), je možné najít na stránkách \href{https://models.dev/}{models.dev}, 
 která tak slouží jako centrální repozitář, který usnadňuje vývojářům výběr a porovnání modelů pro jejich konkrétní potřeby.
 
-
-
-
 \subsection{Limity generování}
+
+Ačkoliv LLM prokazují schopnost psát zdrojové kódy, při generování testů na GUI (Graphical User Interface) narážejí na omezení spojená s 
+absencí interaktivity s aktuálním prostředím. Hlavními výzvami jsou:
+
+\begin{itemize}
+    \item \textbf{Halucinace} - Jazykové modely si mohou při nedostatku kontextu vymýšlet neexistující elementy/selektory. S tímto chováním 
+    se setkal Horínek ve své diplomové práci \cite{HORINEK2024thesis}, kdy se modely snažily použít atribut \texttt{aria}, který ovšem daným frameworkem nebyl vůbec podporován.
+    
+    \item \textbf{Statický kontext} - Model při generování testu nevidí reálný stav DOMu v čase běhu a nedokáže reagovat na dynamické změny na stránce. Tento problém 
+    demonstruje Horínek \cite{HORINEK2024thesis} na případu, kdy model generoval výběr prvku z rozbalovací nabídky, ovšem tyto hodnoty se při každé inicializaci databáze měnily a pevně vygenerované selektory 
+    tak v době běhu selhávaly.
+    
+    \item \textbf{Absence zpětné vazby a zotavení z chyb} - Bez možnosti interakce model nemůže v průběhu testu ověřit, zda jeho předchozí kroky byly úspěšné. 
+    Na nutnost řešit tento problém při návrhu nástrojů pro generování GUI testů poukazuje ve své práci Holický \cite{HOLICKY2025thesis}. 
+    Pokud je test vygenerován čistě staticky, sebemenší nepřesnost nebo neočekávané chování uživatelského rozhraní vede k selhání celého skriptu. Bez implementace dodatečné zpětné vazby (např. předání chybové hlášky zpět modelu) se systém z takové chyby nedokáže zotavit a test zůstává nevalidní.
+    
+\end{itemize}
+
+Tyto tři body ukazují, že generovat kód staticky pro moderní dynamické aplikace nemusí stačit. Pro překonání těchto limitů 
+je potřeba opustit paradigma jednorázového promptu a přijít s řešením, které dokáže s aplikací aktivně interagovat, pozorovat výsledky akcí a následně je verifikovat.
+Tímto směrem se ubírají tzv. \textbf{agentní systémy} - systémy, které vidí do DOMu a dokážou dynamicky reagovat.
 
 
 
