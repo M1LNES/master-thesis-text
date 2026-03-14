@@ -241,7 +241,7 @@ jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkr
     \label{fig:gherkin-example}
 \end{figure}
 
-Hlavní motivací pro využití Gherkin scénářů je vysoká abstrakce - scénáře jsou psány v přirozeném jazyce, což umožňuje 
+Hlavní motivací pro využití Gherkin scénářů je vysoká abstrakce - scénáře jsou psány v přirozeném jazyce (jak je vidět na obrázku \ref{fig:gherkin-example}), což umožňuje 
 jednodušší komunikaci mezi technicky zdatnými i netechnickými členy týmu a zároveň poskytují jasný popis požadavků a očekávaného chování \cite{alshammari2025use}.
 
 Pro prostý seznam akceptačních je důležité, aby používal jasný a konzistentní jazyk a zaměřoval se hlavně na testovatelnost, nikoliv na formát zápisu \cite{ferreira2022towards}.
@@ -449,7 +449,7 @@ nahlíží tak, jakou část této architektury využívají:
 Je nutné podotknout, že i přes své schopnosti a potenciál jsou LLM stále jen nástrojem založené na predikci - nejsou schopné skutečnému porozumění, 
 a proto může docházet k jevu zvanému \texttt{halucinace} - okamžik, kdy model generuje věcně nesprávný či nesmyslný text, který ale může působit věrohodně.
 
-\subsection{Parametry a technické aspekty}
+\subsection{Parametry a technické aspekty LLM}
 \subsubsection*{Tokenizace a zpracování dat}
 Tokenizace je proces převedení vstupního textu na menší jednotky (tzv. tokeny), které mohou reprezentovat celá slova, 
 části slov či jednotlivé znaky. To umožňuje modelům zpracovávat i neznámé výrazy pomocí algoritmů jako je Byte Pair Encoding (BPE) nebo SentencePiece \cite{galle-2019-investigating}.
@@ -504,7 +504,7 @@ dotazy nemění. Namísto přepočítávání těchto bloků si model ukládá j
 si je pouze načte z mezipaměti a spojí, čímž se zkracuje doba zpracování dotazu a to bez jakéhokoliv dopadu na kvalitu finálního výstupu. Tato technika
 je podporována zejména u novějších modelů a je nutné zkontrolovat dokumentaci, zda je pro daný model dostupná.
 
-\subsection{Srovnání modelů a pricing}
+\subsection{Srovnání LLM modelů a pricing}
 
 Výběr konkrétního modelu závisí na mnoha faktorech - ať už se jedná o výkon, ale i rovnováhu mezi cenou, rychlostí a dostupností funkcí 
 (Tool Calling, Temperature, podporvaný vstup - text, obrázky). V tabulce \ref{tab:modely} jsou uvedeny některé z nejnovějších modelů, které vyšly od druhé poloviny 
@@ -567,7 +567,7 @@ absencí interaktivity s aktuálním prostředím. Hlavními výzvami jsou:
     
 \end{itemize}
 
-Tyto tři body ukazují, že generovat kód staticky pro moderní dynamické aplikace nemusí stačit. Pro překonání těchto limitů 
+Tyto tři body ukazují, že generovat kód staticky pro moderní proměnlivé aplikace nemusí stačit. Pro překonání těchto limitů 
 je potřeba opustit paradigma jednorázového promptu a přijít s řešením, které dokáže s aplikací aktivně interagovat, pozorovat výsledky akcí a následně je verifikovat.
 Tímto směrem se ubírají tzv. \textbf{agentní systémy} - systémy, které vidí do DOMu a dokážou dynamicky reagovat.
 
@@ -615,12 +615,14 @@ Jádrem tohoto vzoru je opakující se smyčka, která se skládá ze tří fáz
     \item \textbf{Observation (Pozorování)} - Získání zpětné vazby z prostředí po provedení konkrétní akce - tou může být např. pozměněný stav DOMu, nová URL adresa či chybová hláška.
 \end{itemize}
 
-Celý tento proces je zobrazen na obrázku \ref{fig:react}. TODO rozepíšu se víc, až bude obrázek ready. Zmínit self-healing.
+Celý tento proces je zobrazen na obrázku \ref{fig:react}. Ten začíná přijetím vstupu od uživatele a pokračuje do agentovy iterativní smyčky, 
+kde se střídají fáze uvažování, jednání a následného pozorování. Celý proces končí v okamžiku, kdy agent v rámci fáze myšlení dospěje k závěru, 
+že úloha je splněna a vygeneruje výsledný výstup pro uživatele.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{pictures/react.pdf}
-    \caption{TODO}
+    \includegraphics[width=1\textwidth]{pictures/react.pdf}
+    \caption{Vzor ReAct: Spojení uvažování a jednání pro autonomní agenty.}
     \label{fig:react}
 \end{figure}
 
