@@ -36,6 +36,9 @@
 \usepackage{qrcode}
 \usepackage{float} 
 \usepackage{svg}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+
 \title{Automatické generování end-to-end testů pomocí velkých jazykových modelů (LLM)}
 \author{Bc. Milan}{Janoch}{}{}
 \supervisor{Ing. Martin Dostal, Ph.D.}
@@ -85,17 +88,39 @@
 	\definecolor{fascolordk}{cmyk}{0, 0, 0, 0.75}%
 \fi%
 \makeatother%
-\lstdefinestyle{plainsrc}{
-	backgroundcolor=\color{fascolor!10},
-	basicstyle=\ttzfamily\footnotesize,
-	numberstyle=\tiny\color{fascolordk},
-	numbers=left,
-	numbersep=5pt,
-	keepspaces=true,
-	tabsize=2,
-	extendedchars=true,
-	literate={á}{{\'a}}1 {č}{{\v{c}}}1 {ď}{{\v{d}}}1 {é}{{\'e}}1 {ě}{{\v{e}}}1 {è}{{\`{e}}}1 {í}{{\'{\i}}}1 {ľ}{{\v{l}}}1 {ň}{{\v{n}}}1 {ó}{{\'o}}1 {ŕ}{{\'r}}1 {ř}{{\v{r}}}1 {š}{{\v{s}}}1 {ť}{{\v{t}}}1 {ú}{{\'u}}1 {ů}{{\r{u}}}1 {ý}{{\'y}}1 {ž}{{\v{z}}}1
-	{Á}{{\'A}}1 {Č}{{\v{C}}}1 {Ď}{{\v{D}}}1 {É}{{\'E}}1 {Ě}{{\v{E}}}1 {È}{{\`{E}}}1 {Í}{{\'I}}1 {Ľ}{{\v{L}}}1 {Ň}{{\v{N}}}1 {Ó}{{\'O}}1 {Ŕ}{{\'R}}1 {Ř}{{\v{R}}}1 {Š}{{\v{Š}}}1 {Ť}{{\v{T}}}1 {Ú}{{\'U}}1 {Ů}{{\r{U}}}1 {Ý}{{\'Y}}1 {Ž}{{\v{Z}}}1
+
+\definecolor{framegray}{rgb}{0.7, 0.7, 0.7}
+
+\lstset{
+    basicstyle=\rmfamily\normalsize, 
+    keywordstyle=\bfseries,          
+    stringstyle=\rmfamily,
+    commentstyle=\rmfamily\itshape,
+    frame=single,
+    rulecolor=\color{framegray},
+    backgroundcolor=\color{gray!3},
+    breaklines=true,
+    captionpos=b,
+    xleftmargin=2em,
+    xrightmargin=2em,
+    framesep=0.5em,
+    columns=fullflexible,
+    keepspaces=true,
+    showstringspaces=false,
+    extendedchars=true,
+    literate={-}{{\textminus}}1 
+}
+
+\lstdefinelanguage{JQL}{
+    morekeywords={project, AND, issuetype, IS, NOT, EMPTY, created, startOfYear},
+    otherkeywords={=,!=,>=},
+    sensitive=false,
+    morestring=[b]"
+}\lstdefinelanguage{UserStory}{morekeywords={As, a, I, want, So, that}, sensitive=true}
+\lstdefinelanguage{AcceptanceCriteria}{morekeywords={ac_01, ac_02, ac_03, ac_04, ac_05, Success, Failure, Robustness}, sensitive=false}
+\lstdefinelanguage{Gherkin}{
+    morekeywords={Feature, Scenario, Given, When, Then, And, But},
+    sensitive=true
 }
 
 % _____________________________________________________________________________
@@ -180,25 +205,22 @@ tvoří základní pilíř pro specifikování těchto přírůstků.
 
 \footnotetext{Zdroj: \textit{What is Scrum?} [online]. MarTech.org. Dostupné z: \href{https://martech.org/what-is-scrum-the-project-management-framework-agile-teams-rely-on/}{martech.org/what-is-scrum}}\subsection{Uživatelské příběhy}
 User story je nejpoužívanějším artefaktem v agilním vývoji \cite{9393933userstories} - jedná se o krátký, semi-strukturovaný 
-popis požadavků napsán v přirozeném jazyce. Na obrázku \ref{fig:user-story-template} je uvedena standardní šablona, 
+popis požadavků napsán v přirozeném jazyce. Na ukázce \ref{lst:user-story-template} je uvedena standardní šablona, 
 podle níž se uživatelské příběhy píší \cite{9393933userstories,9771182userStories, 9325670userStories}.
-\begin{figure}[h]
-    \centering
-    \setlength{\fboxsep}{1em} % Vnitřní okraj rámečku
-    \fbox{
-        \begin{minipage}{0.75\textwidth}
-            \centering
-            \textbf{Standard User Story Template} \\
-            \vspace{1em}
-            \raggedright
-            \textbf{As a} <type of user / persona> \\
-            \textbf{I want} <to perform some action / goal> \\
-            \textbf{So that} <some value / benefit is achieved>
-        \end{minipage}
-    }
-    \caption{Standardní šablona uživatelského příběhu.}
-    \label{fig:user-story-template}
-\end{figure}
+\begin{center}
+\begin{minipage}{0.8\textwidth}
+\begin{lstlisting}[
+    language=UserStory, 
+    lineskip=3pt, 
+    caption={Standardní šablona uživatelského příběhu.}, 
+    label={lst:user-story-template}
+]
+As a <type of user / persona>
+I want <to perform some action / goal>
+So that <some value / benefit is achieved>
+\end{lstlisting}
+\end{minipage}
+\end{center}
 
 Každá user story by měla být napsána z pohledu konkrétního uživatele (\texttt{persona}), s jasně stanoveným cílem (\texttt{goal}) 
 a dosaženou hodnotou (\texttt{value}). Hodnota je dosažena pouze tehdy, pokud byl plánovaný cíl úspěšně splněn \cite{9325670userStories}.
@@ -233,53 +255,43 @@ jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkr
  nebo formou scénářů, které jsou popisovány pomocí jazyka Gherkin. Tento způsob testování (kdy jsou nejprve napsány testovací 
  scénáře v přirozeném jazyce a následně se implementují samotné testy) se nazývá \texttt{Behavior-Driven Development} (\texttt{BDD}) \cite{9825769gherkin}.
  
-\begin{figure}[h]
-    \centering
-    \setlength{\fboxsep}{1em}
-    \fbox{
-        \begin{minipage}{0.75\textwidth}
-            \raggedright
-            \textbf{Feature:} User Login \\
-            \vspace{0.5em}
-            \textbf{Scenario:} Successful login with valid credentials \\
-            \quad \textbf{Given} the user is on the ``/login`` page \\
-            \quad \textbf{When} the user enters ``user@example.com`` into the email field \\
-            \quad \textbf{And} the user enters ``password123`` into the password field \\
-            \quad \textbf{And} the user clicks the ``Login`` button \\
-            \quad \textbf{Then} the user should be redirected to the ``/dashboard`` page \\
-            \quad \textbf{And} a welcome message ``Welcome back`` should be displayed
-        \end{minipage}
-    }
-    \caption{Ukázka testovacího scénáře zapsaného pomocí klíčových slov jazyka Gherkin.}
-    \label{fig:gherkin-example}
-\end{figure}
+\begin{lstlisting}[language=Gherkin, caption={\protect\centering Ukázka testovacího scénáře zapsaného pomocí klíčových slov jazyka Gherkin.}, label={lst:gherkin-example}]
+Feature: User Login
 
-Hlavní motivací pro využití Gherkin scénářů je vysoká abstrakce - scénáře jsou psány v přirozeném jazyce (jak je vidět na obrázku \ref{fig:gherkin-example}), což umožňuje 
+  Scenario: Successful login with valid credentials
+    Given the user is on the "/login" page
+    When the user enters "user@example.com" into the email field
+    And the user enters "password123" into the password field
+    And the user clicks the "Login" button
+    Then the user should be redirected to the "/dashboard" page
+    And a welcome message "Welcome back" should be displayed
+\end{lstlisting}
+
+Hlavní motivací pro využití Gherkin scénářů je vysoká abstrakce - scénáře jsou psány v přirozeném jazyce (jak je vidět na ukázce \ref{lst:gherkin-example}), což umožňuje 
 jednodušší komunikaci mezi technicky zdatnými i netechnickými členy týmu a zároveň poskytují jasný popis požadavků a očekávaného chování \cite{alshammari2025use}.
 
 Pro prostý seznam akceptačních je důležité, aby používal jasný a konzistentní jazyk a zaměřoval se hlavně na testovatelnost, nikoliv na formát zápisu \cite{ferreira2022towards}.
-Ukázka takového seznamu je uvedena na obrázku \ref{fig:list-ac-example} - každý bod by měl být jasně identifikovatelný a obsahuje jedno kritérium, které lze ověřit.
+Ukázka takového seznamu je uvedena na ukázce \ref{lst:list-ac-example} - každý bod by měl být jasně identifikovatelný a obsahuje jedno kritérium, které lze ověřit.
 
-\begin{figure}[H]
-    \centering
-    \setlength{\fboxsep}{1em}
-    \fbox{
-        \begin{minipage}{0.75\textwidth}
-            \raggedright
-            \textbf{Acceptance Criteria for US\_01: User Login} \\
-            \vspace{0.5em}
-            \begin{itemize}
-                \item \textbf{ac\_01 (Success):} System grants access to the dashboard when valid credentials (email and password) are provided.
-                \item \textbf{ac\_02 (Success):} Navigation to the login page is possible via the ``Sign In`` button on the landing page.
-                \item \textbf{ac\_03 (Failure):} System displays an error message ``Invalid credentials`` if the password does not match the stored hash.
-                \item \textbf{ac\_04 (Failure):} Account is temporarily locked after five consecutive failed login attempts.
-                \item \textbf{ac\_05 (Robustness):} Input fields prevent the submission of SQL injection patterns or excessively long strings.
-            \end{itemize}
-        \end{minipage}
-    }
-    \caption{Ukázka akceptačních kritérií zapsaných formou strukturovaného seznamu s unikátní identifikací.}
-    \label{fig:list-ac-example}
-\end{figure}
+\begin{center}
+\begin{minipage}{\textwidth}
+\begin{lstlisting}[
+    language=AcceptanceCriteria, 
+    lineskip=2pt, 
+    caption={\protect\centering Ukázka akceptačních kritérií zapsaných formou strukturovaného seznamu.}, 
+    label={lst:list-ac-example},
+    moredelim={[is][\bfseries]{|}{|}} 
+]
+|Acceptance Criteria for US_01: User Login|
+
+- ac_01 (Success): System grants access to the dashboard when valid credentials (email and password) are provided.
+- ac_02 (Success): Navigation to the login page is possible via the "Sign In" button on the landing page.
+- ac_03 (Failure): System displays an error message "Invalid credentials" if the password does not match the stored hash.
+- ac_04 (Failure): Account is temporarily locked after five consecutive failed login attempts.
+- ac_05 (Robustness): Input fields prevent the submission of SQL injection patterns or excessively long strings.
+\end{lstlisting}
+\end{minipage}
+\end{center}
 
 V praxi bývají akceptační kritéria (spolu s uživatelskými příběhy) nejčastěji obsažena v \texttt{ALM} nástrojích (\texttt{Application Lifecycle Management}) 
 jako jsou \texttt{Jira}, \texttt{Azure DevOps}, \texttt{Rally} či \texttt{GitHub Projects}. Tyto nástroje nevyžadují specifický formát zápisu, ale umožňují flexibilitu - ať už jde o prostý seznam, Gherkin scénáře nebo 
@@ -711,24 +723,24 @@ Pro průzkum a extrakci relevantních uživatelských příběhů byl využit na
 Tento nástroj umožňuje filtrování napříč projekty na základě mnoha atributů, jako jsou typ úlohy, stav řešení, 
 časové okno vytvoření či fulltextové vyhledávání v obsahu ticketu. 
 
-\begin{figure}[H]
-    \centering
-    \setlength{\fboxsep}{1em}
-    \fbox{
-        \begin{minipage}{0.8\textwidth}
-        \ttfamily 
-        project = "TRELLO" \\
-        \hspace*{1.5em}AND issuetype != Bug \\
-        \hspace*{1.5em}AND attachments IS NOT EMPTY \\
-        \hspace*{1.5em}AND assignee IS NOT EMPTY \\
-        \hspace*{1.5em}AND created >= startOfYear(-1)
-        \end{minipage}
-    }
-    \caption{Ukázka dotazu v jazyce JQL pro filtrování uživatelských příběhů.}
-\label{fig:jql-example}
-\end{figure}
+\begin{center}
+\begin{minipage}{0.7\textwidth}
+\begin{lstlisting}[
+    language=JQL, 
+    linewidth=\textwidth, 
+    caption={\protect\centering Ukázka dotazu v jazyce JQL pro filtrování uživatelských příběhů.}, 
+    label={lst:jql-example}
+]
+project = "TRELLO" 
+    AND issuetype != Bug 
+    AND attachments IS NOT EMPTY 
+    AND assignee IS NOT EMPTY 
+    AND created >= startOfYear(-1)
+\end{lstlisting}
+\end{minipage}
+\end{center}
 
-Na obrázku \ref{fig:jql-example} je zobrazen ukázkový dotaz zapsán v jazyce JQL, který kombinuje několik vlastností:
+Na ukázce \ref{lst:jql-example} je zobrazen dotaz zapsán v jazyce JQL, který kombinuje několik vlastností:
 \begin{itemize}
     \item \textbf{Filtrování dle projektu a typu} - Filtrování ticketů z konkrétního projektu a vyloučení bugů.
     \item \textbf{Validace metadat} - Filtrování ticketů na základě přítomnosti metadat.
