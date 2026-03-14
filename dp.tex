@@ -142,20 +142,20 @@ které propojují svět testování a umělé inteligence skrze pokročilé arch
 návrh vlastního řešení.
 \section{Agilní vývoj a specifikace požadavků}
 \subsection{Agilní metodiky}
-IT je jedním z nejrychleji se rozvíjejících odvětví a to nejen z pohledu technologií,
+IT je jedním z nejrychleji se rozvíjejících odvětví, a to nejen z pohledu technologií,
 ale i přístupu k vývoji softwaru. Jak \cite{articleFromWaterfallToAgile} uvádí, tento aspekt vedl k vývoji metodik (např. 
 agilní metodiky či vodopádový model), které navrhují řízení v závislosti na vlastnostech produktu, organizačních strukturách či dynamickém prostředí.
 Tradiční konzervativnější vodopádový model (populární např. ve stavebnictví) se zaměřuje na důkladné plánování \cite{senarath2021waterfall} a znalost 
 požadavků před zahájením vývoje \cite{almeida2017challenges}. V rychle se měnícím prostředí je ale tento přístup často neefektivní,
 protože požadavky ze strany uživatelů se mohou rychle měnit a není možné je znát všechny předem. Tento problém řeší agilní metodiky,
-které kladou důraz na flexibilitu - díky tomu, že fungují na tzv. iterativním principu (software se vyvíjí v krátkých cyklech často 
-přezdívané jako sprinty), umožňují průběžné přizpůsobování se měnícím se požadavkům a rychlejší dodávání funkčních verzí softwaru \cite{almeida2017challenges}. 
+které kladou důraz na flexibilitu - díky tomu, že fungují na tzv. iterativním principu (software se vyvíjí v krátkých cyklech často
+přezdívaných jako sprinty), umožňují průběžné přizpůsobování se měnícím se požadavkům a rychlejší dodávání funkčních verzí softwaru \cite{almeida2017challenges}. 
 
 Nejznámějším a současně nejrozšířenějším přístupem k agilnímu vývoji je Scrum. Scrum tým se zpravidla skládá z následujících rolí 
 \cite{senarath2021waterfall, sassa2023scrum,hron2018scrum, sachdeva2016scrum}:
 
 \begin{itemize}
-    \item \textbf{Vývojáři (Developers)} - jsou zodpovědní za vývoj softwaru a implementaci požadovaných funkcionalit (\texttt{featur}).
+    \item \textbf{Vývojáři (Developers)} - jsou zodpovědní za vývoj softwaru a implementaci požadovaných funkcionalit (\texttt{features}).
     
     \item \textbf{Scrum Master} - zajišťuje dodržování Scrum procesů, podporuje tým při práci a pomáhá odstraňovat překážky, které by mohly bránit efektivnímu vývoji.
     
@@ -211,13 +211,13 @@ V tabulce \ref{tab:invest_principy} jsou uvedeny jednotlivé principy \texttt{IN
 \end{table}
 
 \subsection{Akceptační kritéria}
-Zatímco user story charakterizují potřeby zákazníka, akceptační kritéria (často označována zkratou \texttt{ACC} z anglického \texttt{Acceptance Criteria}) 
+Zatímco user story charakterizují potřeby zákazníka, akceptační kritéria (často označována zkratkou \texttt{ACC} z anglického \texttt{Acceptance Criteria}) 
 jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkrétní user story \cite{li2024simac} co je nutno dodržet a udělat, aby byla user
  story považována za splněnou. Týkají se zejména funkcionality (tlačítko dělá to co má), kvalitativních charakteristik 
  (systém reaguje do X milisekund) a obchodní logiky \cite{ferreira2022towards}. 
 
  Akceptační kritéria mohou být zapsána různou formou - ať už prostý seznam, kde každý bod představuje právě jedno kriéterium, 
- nebo formou scénářů, které jsou popisovány pomocí jazyka Gherkin. Tento způsob testování (kdy jsou nejprve napsany testovací 
+ nebo formou scénářů, které jsou popisovány pomocí jazyka Gherkin. Tento způsob testování (kdy jsou nejprve napsány testovací 
  scénáře v přirozeném jazyce a následně se implementují samotné testy) se nazývá \texttt{Behavior-Driven Development} (\texttt{BDD}) \cite{9825769gherkin}.
  
 \begin{figure}[h]
@@ -268,7 +268,7 @@ Ukázka takového seznamu je uvedena na obrázku \ref{fig:list-ac-example} - ka�
     \label{fig:list-ac-example}
 \end{figure}
 
-V praxi bývají akceptační kritéria (spolu s uživateslkými příběhy) nejčastěji obsažena v \texttt{ALM} nástrojích (\texttt{Application Lifecycle Management}) 
+V praxi bývají akceptační kritéria (spolu s uživatelskými příběhy) nejčastěji obsažena v \texttt{ALM} nástrojích (\texttt{Application Lifecycle Management}) 
 jako jsou \texttt{Jira}, \texttt{Azure DevOps}, \texttt{Rally} či \texttt{GitHub Projects}. Tyto nástroje nevyžadují specifický formát zápisu, ale umožňují flexibilitu - ať už jde o prostý seznam, Gherkin scénáře nebo 
 kombinaci obojího. Např. studie \cite{schwedt2025bugs} zaměřená na generování akceptačních testů vycházela z běžných user stories a jejich 
 textových popisů, z něhož následně generovala Gherkin scénáře, z nichž až poté byly implementovány automatizované testy.
@@ -417,7 +417,7 @@ které mohou vést k nesprávné implementaci či chybám. To má poté za násl
 
 \subsection{Architektura a principy LLM}
 Velké jazykové modely jsou rozsáhlé, předtrénované, statistické modely založené na neuronových sítí. 
-Jedná se zejména o modely založené na architektuře Transformer, které obsahují milairdy parametrů a jsou trénovány na masivním množství 
+Jedná se zejména o modely založené na architektuře Transformer, které obsahují miliardy parametrů a jsou trénovány na masivním množství 
 textových dat. Díky tomuto objemu parametrů jsou schopni zachytit komplexní vzory a vztahy v jazyce (na základě statistické analýzy) a generovat 
 text  \cite{minaee2024large}. Navíc vykazují i tzv. \texttt{emergent abilities} - schopnosti jako je schopnost učit se v kontextu, plnit komplexní 
 instrukce či řešit více krokové úlohy.
@@ -437,7 +437,7 @@ mechanismus \texttt{Self-Attention} - ten umožňuje modelovat vliv každého sl
 a pochopit kontextové vazby.
 
 V rámci architektury Transformer se využívají dva hlavní typy bloků - \texttt{Encoder} a \texttt{Decoder}. Zatímco \texttt{Encoder} bloky se zaměřují na zpracování vstupního textu a 
-jejich pochopení, \texttt{Decoder} bloky jsou zmaěřené na generování výstupního textu na základě těchto reprezentací \cite{wang2025history}. Na modely se pak 
+jejich pochopení, \texttt{Decoder} bloky jsou zaměřené na generování výstupního textu na základě těchto reprezentací \cite{wang2025history}. Na modely se pak 
 nahlíží tak, jakou část této architektury využívají:
 
 \begin{itemize}
@@ -455,7 +455,7 @@ Tokenizace je proces převedení vstupního textu na menší jednotky (tzv. toke
 části slov či jednotlivé znaky. To umožňuje modelům zpracovávat i neznámé výrazy pomocí algoritmů jako je Byte Pair Encoding (BPE) nebo SentencePiece \cite{galle-2019-investigating}.
 
 
-Tyto tokeny se dále na další kategorie uvedené v tabulce \ref{tab:tokenization}, které jsou i základní metrikou pro pricing jednotlivých poskytovtelů (providerů) 
+Tyto tokeny se dále dělí na další kategorie uvedené v tabulce \ref{tab:tokenization}, které jsou i základní metrikou pro pricing jednotlivých poskytovatelů (providerů) 
 v rámci používání jejich modelů.
 
 \begin{table}[H]
@@ -491,14 +491,14 @@ přesnost a konzistenci se doporučuje nastavit hodnotu \texttt{temperature} na 
 protože je pevně definován na úrovni modelu \footnote{\href{https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/reasoning?tabs=csharp\%2Cgpt-5\#not-supported}{Dokumentace Microsoft k Azure OpenAI}}.
 \subsubsection*{Tool Calling}
 Tool Calling (volání nástrojů) je schopnost modelu autonomně využívat externí aplikace či služby (jako jsou firemní API, vyhledávače...), čímž překonávají svá omezení 
-jako jsou např. zastaralé informace. Pro správné použití je nutné zajistit, aby model mohl správně identifikovat záměr uživatele, vybral vhodný nástroj a 
-správně nastavil vstupní parametry \cite{shen2024llm}. Tato schopnost lze naučit model buď pomocí fine-tuningu na ukázkových interakcích, nebo technikou \texttt{in-context-learningu},
+jako jsou např. zastaralé informace. Pro správné použití je nutné zajistit, aby model mohl správně identifikovat záměr uživatele, vybrat vhodný nástroj a
+správně nastavit vstupní parametry\cite{shen2024llm}. Tuto schopnost lze modelu naučit buď pomocí fine-tuningu na ukázkových interakcích, nebo technikou \texttt{in-context-learningu},
 kdy se do promptu, který se zasílá modelu, vloží definice jednotlivých nástrojů, aby věděl, jak je využívat. Tato vlastnost není podporována u všech modelů, a proto 
 je třeba předem zkontrolovat dokumentaci, zda je pro daný model Tool Calling dostupný.
 
 
 \subsubsection*{Prompt Caching}
-Prompt Caching je inovativní technika, jenž výrazně zrychluje inferenci modelu a snižuje výpočetní nároky tím, že recykluje interní výpočty modelu \cite{gim2024prompt}. 
+Prompt Caching je inovativní technika, jež výrazně zrychluje inferenci modelu a snižuje výpočetní nároky tím, že recykluje interní výpočty modelu \cite{gim2024prompt}. 
 Vychází z toho, že uživatelské dotazy obsahují často stejné bloky zpráv (např. systémový prompt, specifikace nástrojů, přiložené dokumenty...), které se mezi
 dotazy nemění. Namísto přepočítávání těchto bloků si model ukládá jejich výpočty do mezipaměti a při dalším dotazu, který obsahuje identické bloky, 
 si je pouze načte z mezipaměti a spojí, čímž se zkracuje doba zpracování dotazu a to bez jakéhokoliv dopadu na kvalitu finálního výstupu. Tato technika
@@ -507,7 +507,7 @@ je podporována zejména u novějších modelů a je nutné zkontrolovat dokumen
 \subsection{Srovnání LLM modelů a pricing}
 
 Výběr konkrétního modelu závisí na mnoha faktorech - ať už se jedná o výkon, ale i rovnováhu mezi cenou, rychlostí a dostupností funkcí 
-(Tool Calling, Temperature, podporvaný vstup - text, obrázky). V tabulce \ref{tab:modely} jsou uvedeny některé z nejnovějších modelů, které vyšly od druhé poloviny 
+(Tool Calling, Temperature, podporovaný vstup - text, obrázky). V tabulce \ref{tab:modely} jsou uvedeny některé z nejnovějších modelů, které vyšly od druhé poloviny 
 roku 2025.
 
 \begin{table}[h!]
@@ -581,10 +581,10 @@ S narůstající komplexností úloh, které jsou na modely umělé inteligence 
 od tradičního jednorázového generování k interaktivním a adaptivním systémům, které dokáží reagovat na dynamické prostředí.
 Zatímco standardní neagentní přístup (tzv. \texttt{non-agentic workflow}) funguje na principu, 
 který generuje výstup na základě jednorázového uživatelského dotazu a čeká na další lidský pokyn \cite{singh2024enhancing}, agentní systémy představují zásadní změnu paradigmatu.
-V agentním pojetím se LLM stává jakýmsi ``mozkem``, jenž proaktivně řídí provádění úkolů, samostatně se rozhoduje o dalším postupu a v případě potřeby 
+V agentním pojetí se LLM stává jakýmsi ``mozkem``, jenž proaktivně řídí provádění úkolů, samostatně se rozhoduje o dalším postupu a v případě potřeby 
 iterativně reviduje své kroky bez nutnosti neustálých zásahů člověka \cite{singh2024enhancing,ahmadi2025mcp,openai2025_agents_guide}.
 
-Ve své základní podobě se skládá ze tří kličových komponent \cite{openai2025_agents_guide}:
+Ve své základní podobě se skládá ze tří klíčových komponent \cite{openai2025_agents_guide}:
 
 
 
@@ -609,7 +609,7 @@ model (místo klasického přístupu, kdy se vygeneruje celý výstup najednou) 
 Jádrem tohoto vzoru je opakující se smyčka, která se skládá ze tří fází \cite{yan2025general}:
 
 \begin{itemize}
-    \item \textbf{Thought (Myšlenka)} - Interní monolog, v němž model analyzuje aktuální stav. Na základě svých předchozích isntrukcí a aktuálního kontextu hodnotí, co vidí, jaký by měl být další krok a
+    \item \textbf{Thought (Myšlenka)} - Interní monolog, v němž model analyzuje aktuální stav. Na základě svých předchozích instrukcí a aktuálního kontextu hodnotí, co vidí, jaký by měl být další krok a
     jaké nástroje by měl k jeho dosažení použít.
     \item \textbf{Action (Akce)} - Konkrétní volání toolu, který model na základě předchozí úvahy zvolil.
     \item \textbf{Observation (Pozorování)} - Získání zpětné vazby z prostředí po provedení konkrétní akce - tou může být např. pozměněný stav DOMu, nová URL adresa či chybová hláška.
@@ -631,8 +631,6 @@ interpretovatelný a auditovatelný. Uživatel přesně vidí úvahu, která age
 tak spolehlivost celého systému.
 
 
-\subsection{Model Context Protocol}
-
 \subsection{Model Context Protocol (MCP)}
 
 Model Context Protocol (MCP), představený firmou \texttt{Anthropic} ke konci roku 2024, je otevřený standard pro interoperabilitu, jehož cílem 
@@ -647,8 +645,8 @@ robustním modelu komunikace Client-Host-Server s využitím formátu JSON-RPC 2
 \end{itemize}
 
 
-Obrázek \ref{fig:mcp} zobrazuje ukázkový ekosystém MCP, v němž hostitelské aplikace - od vývojových prostředí (IDE) jako je Visual Studio Code až po vlastní specalizované platfomy - 
-komunikují se servery pomocí jednotného rozhraní. Díky této architektuře servery fungují jako univerzální adaptéry, překládají požadavky modelu do spcifických protokolů (SQL, REST API) 
+Obrázek \ref{fig:mcp} zobrazuje ukázkový ekosystém MCP, v němž hostitelské aplikace - od vývojových prostředí (IDE) jako je Visual Studio Code až po vlastní specializované platformy - 
+komunikují se servery pomocí jednotného rozhraní. Díky této architektuře servery fungují jako univerzální adaptéry, překládají požadavky modelu do specifických protokolů (SQL, REST API) 
 pro externí služby typu GitHub či Slack, což radikálně zvyšuje modularitu a zjednodušuje integraci nových funkcí do agentních systémů.
 \begin{figure}[H]
     \centering
@@ -663,7 +661,7 @@ a to bez nutnosti explicitního předávání těchto informací.
 Tento přístup umožňuje agentům být skutečně autonomními - dokážou se adaptovat na měnící se prostředí a využívat nové nástroje, které se objeví, aniž by bylo potřeba měnit jejich základní instrukce či prompt.
 
 \section{Shrnutí}
-V této kapitole byl podrobně popsán teoretický základ propojující agilní vávoj, automatizované testování a umělou inteligenci.
+V této kapitole byl podrobně popsán teoretický základ propojující agilní vývoj, automatizované testování a umělou inteligenci.
 Byly definovány způsoby specifikace požadavků, které slouží jako primární vstup pro automatizaci, a analyzovány výzvy spojené s údržbou a regresním testováním. 
 Zároveň byly představeny možnosti moderních jazykových modelů a jejich klíčové parametry, jež ovlivňují výsledné chování modelů.
 
