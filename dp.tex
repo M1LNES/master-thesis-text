@@ -666,8 +666,174 @@ Byly definovány způsoby specifikace požadavků, které slouží jako primárn
 Zároveň byly představeny možnosti moderních jazykových modelů a jejich klíčové parametry, jež ovlivňují výsledné chování modelů.
 
 Klíčovým poznatkem kapitoly je vymezení autonomních agentů, kteří díky využití iterativního uvažování a standardizovaného protokolu MCP dokáží překonat limity statického generování 
-a zajistit interaktivní a stabilní testování v dynamickém prostředí webu. Po získání těchto znalostí je možné přejít k praktické části práce, kde bude navržena 
-architektura konkrétního systému, což bude podrobněji popsáno v další kapitole.
+a zajistit interaktivní a stabilní testování v dynamickém prostředí webu. Po získání těchto znalostí je možné přejít k návrhu systému, kde budou definovány 
+konkrétní požadavky a architektura řešení, čemuž se podrobně věnuje následující kapitola.
+
+
+\chapter{Návrh systému}
+TODO dopsat
+\section{Analýza vstupních artefaktů a jejich mapování}
+\subsection{Struktura a sémantika vstupních dat}
+Důležitým faktorem pro úspěšnou automatizaci testů je správné pochopení a zpracování vstupních artefaktů, které jsou základem pro generování testů.
+Jak bylo zmíněno v kapitole 2, tyto artefakty mohou mít různou formu - od textových dokumentů (např. uživatelské příběhy, akceptační kritéria) až po strukturované formáty (např. Gherkin).
+V ALM nástrojích uživatelské příběhy často nemají jednotnou strukturu, což výrazně ztěžuje jejich zpracování. Zejména nástroje jako \texttt{Jira} nabízí 
+uživatelům velkou flexibilitu (nejen) při správě uživatelkých příběhů. K prozkoumání této problematiky lze využít a nahlédnout na 
+již existující Jira instance, které jsou přístupné veřejnosti. Zde je několik existujícíh instancí, ze kterých lze získat 
+cenné informace o struktuře a sémantice uživatelských příběhů:
+
+\begin{itemize}
+    \item \textbf{Atlassian Jira}\footnote{\url{https://jira.atlassian.com/secure/BrowseProjects.jspa}} - Instance zaměřená na vývoj softwaru samotné společnosti Atlassian (poskytovatel Jira software). Projekty jsou organizovány podle jednotlivých produktů (např. Jira Software, Confluence, Bitbucket...).
+    
+    \item \textbf{Apache Jira}\footnote{\url{https://issues.apache.org/jira/issues/}} - Instance zaměřená na vývoj open-source softwaru. Projekty jsou organizovány podle jednotlivých open-source projektů (např. Hadoop, Tomcat, Kafka...).
+    
+    \item \textbf{MongoDB Issue Tracker}\footnote{\url{https://jira.mongodb.org/secure/BrowseProjects.jspa}} - Instance zaměřená na vývoj databázových systémů. Projekty jsou organizovány logicky dle menších celků (např. MCP server, Shell, drivery dle programovacích jazyků...).
+    
+    \item \textbf{Mojang Studios Bug Tracker}\footnote{\url{https://bugs.mojang.com/}} - Instance zaměřená na vývoj her (Minecraft). Jednotlivé projekty jsou dílčí částí her (např. Java Edition, Bedrock Edition, Launcher...).
+\end{itemize}
+
+Před samotnou investigací jednotlivých instancí je vhodné definovat metodiku, jakou byla data pro analýzu získávána. 
+Vzhledem k obrovskému množství ticketů ve veřejných repozitářích nelze spoléhat na manuální procházení. 
+
+Pro průzkum a extrakci relevantních uživatelských příběhů byl využit nativní dotazovací jazyk \textbf{JQL (Jira Query Language)}. 
+Tento nástroj umožňuje filtrování napříč projekty na základě mnoha atributů, jako jsou typ úlohy, stav řešení, 
+časové okno vytvoření či fulltextové vyhledávání v obsahu ticketu. 
+
+\begin{figure}[H]
+    \centering
+    \setlength{\fboxsep}{1em}
+    \fbox{
+        \begin{minipage}{0.8\textwidth}
+        \ttfamily 
+        project = "TRELLO" \\
+        \hspace*{1.5em}AND issuetype != Bug \\
+        \hspace*{1.5em}AND attachments IS NOT EMPTY \\
+        \hspace*{1.5em}AND assignee IS NOT EMPTY \\
+        \hspace*{1.5em}AND created >= startOfYear(-1)
+        \end{minipage}
+    }
+    \caption{Ukázka dotazu v jazyce JQL pro filtrování uživatelských příběhů.}
+\label{fig:jql-example}
+\end{figure}
+
+Na obrázku \ref{fig:jql-example} je zobrazen ukázkový dotaz zapsán v jazyce JQL, který kombinuje několik vlastností:
+\begin{itemize}
+    \item \textbf{Filtrování dle projektu a typu} - Filtrování ticketů z konkrétního projektu a vyloučení bugů.
+    \item \textbf{Validace metadat} - Filtrování ticketů na základě přítomnosti metadat.
+    \item \textbf{Časové funkce} - Filtrování ticketů na základě času.
+\end{itemize}
+
+Díky těmto dotazům je možné snadno získat relevantní vzorky dat z jakékoliv veřejné instance a 
+následně je porovnat napříč ostatními instancemi. 
+
+Zkoumání výše zmíněných veřejných instancí ukázalo, 
+že navzdory využití stejného softwarového nástroje se přístup k evidenci požadavků velmi liší. 
+Tyto rozdíly jsou dány především doménou projektu, firemní kulturou a zavedenými procesy konkrétní organizace. 
+
+\subsubsection*{Metadata ticketů}
+Typ ticketů není nijak omezen. Napříč instancemi se vyskytují různé druhy ticketů, přičemž každý z nich může mít
+definovanou svojí zcela vlastní strukturu (např. Bug může mít pole pro kroky reprodukce, zatímco User Story pole pro akceptační kritéria).
+Nejčastěji používanými typy jsou \textbf{User Story} a \textbf{Bug}. Dále se v rámci instancí vyskytují i další typy jako jsou: 
+New Feature, Task, Improvement, Test, Question, Sub-task, RTC (Request to Change), Epic, Dependency, Suggestion, Support Request, Build Failure,
+Technical Debt a další. 
+
+Co se týče priorit, opět není žádný jednotný systém - a to i co se týče v rámci jedné instance. Například v rámci Apache Jira se 
+vyskytují priority jak číselné (P0, P1, P2...), tak i textové (Critical, Major, Minor...). V rámci Atlassian Jira se vyskytují priority pouze textové (Highest, High, Medium, Low).
+Někdy dochází i k míchání těchto přístupů - např. v rámci MongoDB Jira se vyskytují priority Major - P3, Minor - P4, Trivial - P5, a další.
+
+K určování rozsahů ticketů se využívají různé metriky - od odhadů v rámci story points až po odhady v rámci časových jednotek (hodiny, dny...). 
+Co se týče stavu řešení, i zde není jednotný systém - nejčastější stavy jsou To Do, In Progress, Done, 
+ale v rámci instancí se vyskytuje i mnoho dalších stavů - Ready to Commit, Awaiting Feedback, Blocked. Když je ticket uzavřen, 
+i zde nastává mnoho různých způsobů, jak se uzavření dokumentuje - Closed, Delivered, Resolved, Rejected, Duplicate, Won't Fix, Cannot Reproduce a další.
+
+\subsection*{Description ticketu}
+V rámci popisu ticketů je společná jedna věc - celý popisek je jeden velký textový blok, který může obsahovat jakýkoliv obsah - 
+od čistého textu, přes tabulky a úryvky kódu. Řádná struktura (As a [role], I want [feature], So that [benefit]) 
+se vyskytovala velmi ojediněle - většinou se popis skládal z jednoho odstavce bez jakékoliv struktury či akceptačních kritérií.
+
+
+\subsubsection*{Akceptační kritéria}
+Akceptační kritéria lze v rámci Jira instance definovat jako samostatné pole, ale žádný ze 4 zmiňovaných projektů tuto možnost 
+nevyužívá - to může být způsobeno tím, že se jedná o veřejné repozitáře, kde není rozšířená role Product Ownera, který by měl na starosti definici 
+akceptačních kritérií. 
+
+
+\section{Specifikace požadavků na systém}
+Na základě předchozí analýzy vstupních artefaktů a teoretických poznatků jsou v této sekci definovány konkrétní požadavky 
+na navrhovaný systém. Vzhledem k vysoké různorodosti vstupních dat bude systém navržen tak, aby mohl být aplikován na širokou 
+doménu projektů, a to bez nutnosti přizpůsobení pro konkrétní instanci.
+
+\subsection{Vymezení rozsahu generovaných testů}
+Systém bude primárně navržen pro generování automatizovaných end-to-end testů s důrazem na ověřování chování uživatelského rozhraní (GUI),
+obchodní logiku a vizuální interakci s aplikací. Systém naopak nebude koncipován pro verifikaci 
+nefunkčních požadavků, jako jsou výkonnostní testy či bezpečnostní testy. Pokud se v akceptačních kritériích objeví 
+nefunkční požadavky, systém bude instruován, aby se zaměřil výhradně na funkční aspekty - měření časových metrik v rámci E2E testování v prohlížeči 
+může být velmi závislé na výkonu testovacího prostředí (zařízení, síť), což by mohlo vést k nestabilním testům a falešně pozitivním výsledkům.
+
+
+\subsection{Funkční požadavky (FR) na systém}
+Funkční požadavky definují konkrétní chování, které musí systém vykazovat, aby naplnil potřeby uživatelů. 
+Vzhledem k využití velkých jazykových modelů definují nejen samotné vygenerování testů, ale i celý proces - tzv. 
+\texttt{agentic workflow}. K určení priorit byla využita metoda MoSCoW (M - Must have, S - Should have, C - Could have, W - Won't have) -
+výsledné požadavky jsou uvedeny v tabulce \ref{tab:functional_req}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{8cm}|l|}
+\hline
+\textbf{ID} & \textbf{Popis požadavku} & \textbf{Priorita} \\ \hline
+FR-01 & \textbf{Sestavení kontextu:} Systém musí přijmout strukturovaná vstupní data (uživatelský příběh a kontext testované aplikace) a transformovat je do vhodné formy agentovi. & Must \\ \hline
+FR-02 & \textbf{Explorativní analýza:} Před generováním kódu agent proaktivně naviguje testovanou aplikací a zkoumá strukturu DOMu pomocí dostupných nástrojů. & Must \\ \hline
+FR-03 & \textbf{Křížová verifikace:} Agent musí systematicky porovnat každé akceptační kritérium se skutečným chováním aplikace. & Must \\ \hline
+FR-04 & \textbf{Řízené selhání:} Při nefunkční či neimplementované funkcionalitě agent vygeneruje test s očekávaným správným chováním, ale označí jej speciálním příznakem. & Should \\ \hline
+FR-05 & \textbf{Standardizace výstupu:} Vygenerovaný kód musí být validní, přeložitelný a spustitelný. & Must \\ \hline
+FR-06 & \textbf{Popis implementace:} Vygenerovaný test by měl obsahovat krátké shrnutí, které popisuje výsledky verifikace oproti akceptačním kritériím. & Should \\ \hline
+FR-07 & \textbf{Vizualizace procesu:} Uživatelské rozhraní by mělo zobrazovat flow agenta a vhodně jej vizualizovat uživateli. & Should \\ \hline
+FR-08 & \textbf{Exekuce testů:} Systém by mohl umožňovat přímé spuštění vygenerovaných testovacích scénářů z uživatelského rozhraní bez nutnosti přepínání do jiného prostředí (např. IDE, CLI). & Could \\ \hline
+FR-09 & \textbf{Regenerace na základě zpětné vazby:} Systém by mohl podporovat regeneraci testů - v případě selhání běhu testu by měl agent přijmout chybový report a na jeho základě opravit testovací kód. & Could \\ \hline
+FR-10 & \textbf{Dynamická konfigurace agenta:} Uživatel by mohl mít možnost upravovat konfiguraci agenta dle potřeby - volba LLM modelu či konkrétních toolů. & Could \\ \hline
+\end{tabular}
+\caption{Specifikace funkčních požadavků na systém.}
+\label{tab:functional_req}
+\end{table}
+
+\subsection{Nefunkční požadavky (NFR) na systém}
+Nefunkční požadavky se zaměřují na kvalitu, výkon, bezpečnost a spolehlivost celého systému.
+V tabulce \ref{tab:nonfunctional_req} jsou uvedeny klíčové nefunkční požadavky, které musí být zohledněny a při návrhu dodrženy 
+při implementaci.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{8cm}|l|}
+\hline
+\textbf{ID} & \textbf{Popis požadavku} & \textbf{Priorita} \\ \hline
+NFR-01 & \textbf{Architektura MCP:} Logika agenta musí být oddělena od fyzického ovládání prohlížeče pomocí standardizovaného MCP protokolu. & Must \\ \hline
+NFR-02 & \textbf{Odolnost vůči selhání:} Pokud volání nástroje selže, agent se nesmí zacyklit, ale musí chybu reflektovat či zvolit jiný přístup k vyřešení úlohy. & Must \\ \hline
+NFR-03 & \textbf{Bezpečnost API klíčů:} Citlivé autentizační údaje musí být bezpečně spravovány backendovou částí aplikace. & Must \\ \hline
+NFR-04 & \textbf{Modularita modelů:} Systém by měl umožňovat snadné přidání nových LLM modelů bez významného vlivu na celkovou architekturu. & Should \\ \hline
+NFR-05 & \textbf{Rozšiřitelnost nástrojů:} Architektura by mohla umožňovat snadné přidávání nástrojů bez nutnosti refaktorizace jádra agenta. & Could \\ \hline
+\end{tabular}
+\caption{Specifikace nefunkčních požadavků na systém.}
+\label{tab:nonfunctional_req}
+\end{table}
+
+\section{Koncepční architektura systému}
+
+\section{Návrh uživatelského rozhraní}
+
+\section{Shrnutí}
+TODO dopsat
+\chapter{Technologický stack a technický návrh}
+
+\section{Volba frontendového řešení}
+
+\section{Volba backendového řešení}
+
+\section{Výběr E2E frameworku a automatizačního nástroje}
+
+\section{Volba LLM modelu a orchestrace}
+
+\section{Shrnutí}
+
 
 
 \chapter{Závěr}
