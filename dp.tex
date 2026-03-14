@@ -645,11 +645,13 @@ robustním modelu komunikace Client-Host-Server s využitím formátu JSON-RPC 2
 \end{itemize}
 
 
-Na obrázku \ref{fig:mcp} je znázorněna ukázka Client-Host-Server architektury v rámci MCP. TODO rozepíšu se.
+Obrázek \ref{fig:mcp} zobrazuje ukázkový ekosystém MCP, v němž hostitelské aplikace - od vývojových prostředí (IDE) jako je Visual Studio Code až po vlastní specalizované platfomy - 
+komunikují se servery pomocí jednotného rozhraní. Díky této architektuře servery fungují jako univerzální adaptéry, překládají požadavky modelu do spcifických protokolů (SQL, REST API) 
+pro externí služby typu GitHub či Slack, což radikálně zvyšuje modularitu a zjednodušuje integraci nových funkcí do agentních systémů.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{pictures/react.pdf}
-    \caption{TODO}
+    \includegraphics[width=1\textwidth]{pictures/client.pdf}
+    \caption{Ukázková architektura Client-Host-Server v rámci Model Context Protocolu.}
     \label{fig:mcp}
 \end{figure}
 
