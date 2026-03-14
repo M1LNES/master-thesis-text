@@ -160,12 +160,25 @@ Nejznámějším a současně nejrozšířenějším přístupem k agilnímu vý
     \item \textbf{Scrum Master} - zajišťuje dodržování Scrum procesů, podporuje tým při práci a pomáhá odstraňovat překážky, které by mohly bránit efektivnímu vývoji.
     
 \item \textbf{Product Owner} - je zodpovědný za správu produktového backlogu, komunikaci s vývojovým týmem a zainteresovanými stranami (stakeholdery) 
-a za zajištění toho, aby vývoj směřoval k naplnění potřeb zákazníka.\end{itemize}
+a za zajištění toho, aby vývoj směřoval k naplnění potřeb zákazníka.
+\end{itemize}
 
 Hlavní náplní práce Product Ownera je správa backlogu a příprava uživatelských příběhů (často známý pod rozšířejnějším anglickým pojmem \textit{user stories}), 
 které specifikují požadované funkcionality z pohledu uživatele \cite{sachdeva2016scrum}.
 
-\subsection{Uživatelské příběhy}
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{pictures/scrum_cropped.pdf}
+\caption{Vizualizace Scrum procesu a jeho klíčových fází\protect\footnotemark}
+\label{fig:scrum_process}
+\end{figure}
+
+Vzájemná interakce těchto rolí a posloupnost jednotlivých aktivit je znázorněna na obrázku \ref{fig:scrum_process}. Celý proces probíhá v cyklech délky 
+2-4 týdnů, během nichž tým postupuje od plánování a výběru priorit ze sprint backlogu až po samotnou implementaci a následnou revizi zhotovené práce.
+Klíčovým výstupem každého sprintu je funkční přírůstek softwaru a zpětná vazba od zákazníka. A právě uživatelské příběhy 
+tvoří základní pilíř pro specifikování těchto přírůstků.
+
+\footnotetext{Zdroj: \textit{What is Scrum?} [online]. MarTech.org. Dostupné z: \href{https://martech.org/what-is-scrum-the-project-management-framework-agile-teams-rely-on/}{martech.org/what-is-scrum}}\subsection{Uživatelské příběhy}
 User story je nejpoužívanějším artefaktem v agilním vývoji \cite{9393933userstories} - jedná se o krátký, semi-strukturovaný 
 popis požadavků napsán v přirozeném jazyce. Na obrázku \ref{fig:user-story-template} je uvedena standardní šablona, 
 podle níž se uživatelské příběhy píší \cite{9393933userstories,9771182userStories, 9325670userStories}.
@@ -745,7 +758,7 @@ Co se týče stavu řešení, i zde není jednotný systém - nejčastější st
 ale v rámci instancí se vyskytuje i mnoho dalších stavů - Ready to Commit, Awaiting Feedback, Blocked. Když je ticket uzavřen, 
 i zde nastává mnoho různých způsobů, jak se uzavření dokumentuje - Closed, Delivered, Resolved, Rejected, Duplicate, Won't Fix, Cannot Reproduce a další.
 
-\subsection*{Description ticketu}
+\subsubsection*{Description ticketu}
 V rámci popisu ticketů je společná jedna věc - celý popisek je jeden velký textový blok, který může obsahovat jakýkoliv obsah - 
 od čistého textu, přes tabulky a úryvky kódu. Řádná struktura (As a [role], I want [feature], So that [benefit]) 
 se vyskytovala velmi ojediněle - většinou se popis skládal z jednoho odstavce bez jakékoliv struktury či akceptačních kritérií.
@@ -798,7 +811,7 @@ FR-10 & \textbf{Dynamická konfigurace agenta:} Uživatel by mohl mít možnost 
 
 \subsection{Nefunkční požadavky (NFR) na systém}
 Nefunkční požadavky se zaměřují na kvalitu, výkon, bezpečnost a spolehlivost celého systému.
-V tabulce \ref{tab:nonfunctional_req} jsou uvedeny klíčové nefunkční požadavky, které musí být zohledněny a při návrhu dodrženy 
+V tabulce \ref{tab:nonfunctional_req} jsou uvedeny klíčové nefunkční požadavky, které musí být zohledněny při návrhu a dodrženy 
 při implementaci.
 
 \begin{table}[H]
@@ -822,7 +835,7 @@ NFR-05 & \textbf{Rozšiřitelnost nástrojů:} Architektura by mohla umožňovat
 
 \section{Shrnutí}
 TODO dopsat
-\chapter{Technologický stack a technický návrh}
+\chapter{Technologický stack}
 
 \section{Volba frontendového řešení}
 
