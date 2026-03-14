@@ -127,11 +127,19 @@ Důraz bude kladen na kvalitu vygenerovaných testů, jejich schopnost odhalovat
 %
 %
 %
-%        CHAPTER Analýza současného stavu
+%        CHAPTER Teoretická část
 %
 % _____________________________________________________________________________
 %
-\chapter{Analýza současného stavu}
+\chapter{Teoretická část}
+V této kapitole bude představen teoretický rámec nezbytný pro pochopení problematiky autonomního generování testů. 
+Z důvodu potřeby transformace obchodních požadavků do funkčního kódu bude nejprve popsáno, jakým způsobem probíhá specifikace v agilním prostředí pomocí uživatelských příběhů 
+a akceptačních kritérií. Následně budou rozebrány moderní přístupy k testování softwaru, existující frameworky pro webovou automatizaci a výzvy spojené s testováním v agilním prostředí.
+
+Důležitou částí kapitoly je rozbor velkých jazykových modelů (LLM), které v současnosti slouží jako nástroj pro interpretaci požadavků a generování kódu. 
+Budou vysvětleny jejich základní principy, technické parametry a limity spojené s psaním testovacích skriptů. V závěru kapitoly pak budou představeny autonomní agentní systémy, 
+které propojují svět testování a umělé inteligence skrze pokročilé architektury a komunikační protokoly. Tento ucelený přehled metodik a technologií poslouží jako základ pro následný praktický 
+návrh vlastního řešení.
 \section{Agilní vývoj a specifikace požadavků}
 \subsection{Agilní metodiky}
 IT je jedním z nejrychleji se rozvíjejících odvětví a to nejen z pohledu technologií,
@@ -356,24 +364,24 @@ vedla k zrodu mnoha testovacích frameworků pro webovou automatizaci, které se
 V oblasti webové automatizace existuje velké množství frameworků, které se navzájem liší svými vlastnostmi, podporovanými jazyky a přístupy k testování.
 Zde je uveden přehled těch nejpopulárnějších a nejčastěji používaných,
 
-\subsubsection{Selenium (WebDriver)}
+\subsubsection*{Selenium (WebDriver)}
 Jeden z nejrozšířenějších a nejstarších nástrojů. Podporuje širokou škálu jazyků (Java, Python, C\#, JavaScript) a prohlížeců prostřednictvím WebDriveru \cite{selenium_docs}. Díky rozšířené 
 komunitě, množství dostupných zdrojů a existujících knihoven je Selenium stále velmi populární volbou. Nevýhodou je 
 složitější prvotní konfigurace a manuální správa testů, která může (při nesprávném použití) vést k nestabilním testům.
 
-\subsubsection{Robot Framework}
+\subsubsection*{Robot Framework}
 Open-source framework založený na Pythonu, který využívá klíčová slova pro psaní testů (tzv. \texttt{Keyword-Driven Testing}).
 Architektura využívá knihovny SeleniumLibrary pro webovou automatizaci \cite{robot_framework}. Silnou stránkou je jednoduché psaní testů - 
 testy jsou psány čitelně v přirozeném jazyce, díky čemuž jim porozumí i netechničtí členové týmu. Se zvyšující se komplexností 
 webových aplikací a testů může být nevýhodou nižší flexibilita a nutnost používat externí knihovny pro pokročilé funkce.
 
-\subsubsection{Playwright}
+\subsubsection*{Playwright}
 Moderní testovací framework vyvinutý společností Microsoft. Podporuje více jazyků (JavaScript/TypeScript, Python, Java, .NET) a 
 nabízí robustní API pro interakci s webovými stránkami \cite{playwright_docs}. Výhodou je rychlost testů a podpora pro více prohlížečů (Firefox, WebKit, Chromium) bez 
 nutnosti externích driverů. Klíčovou funkcí je také \texttt{Auto-waiting}, který pomáhá eliminovat křehkost testů. Nevýhodou je menší komunita a méně dostupných zdrojů,
 jelikož se jedná o relativně nový nástroj.
 
-\subsubsection{Cypress}
+\subsubsection*{Cypress}
 Nástroj zaměřený na testování moderních webových aplikací, který podporuje pouze JavaScript a TypeScript. Běží přímo v prohlížeči \cite{cypress_docs}, což 
 urychluje vývoj testů a jejich případné debuggování. Disponuje také funkcí \texttt{Time Travel}, která umožňuje procházet test krok po kroku a vidět stav aplikace v každém kroku. 
 Nevýhodou je omezená podpora napříč jazyky, prohlížeči a testování vícero tabů.
@@ -384,18 +392,18 @@ Nevýhodou je omezená podpora napříč jazyky, prohlížeči a testování ví
 Studie \cite{butt2023conceptual} identifikovala několik klíčových výzev, které
 se vyskytují při implementaci automatizace testů v agilním prostředí. 
 
-\subsubsection{Údržba a technický dluh}
+\subsubsection*{Údržba a technický dluh}
 Studie uvádí, že tento proces je časově náročný a náchylný k chybám. S rostoucím počtem uživatelských příběhů se manuální tvorba 
 test casů (testovacích případů) stává bottleneckem, což může vést k následnému nárůstu technického dluhu, kdy se testy stávají zastaralými a všechny 
 scénáře nemusí být pokryty, což zvyšuje riziko chyb. 
 
 
-\subsubsection{Regresní testování}
+\subsubsection*{Regresní testování}
 Jelikož agilní vývoj vyžaduje rychlé a časté změny, je klíčové zajistit, aby po každé z nich bylo co nejdříve ověřeno na regresních testech, 
 že nedošlo k narušení stávající funkcionality. Tento problém je možno částečně řešit automatickým generovaním testů přímo z požadavků, aby se 
 minimalizoval čas mezi implementací a testováním.
 
-\subsubsection{Rozdíl mezi specifikací a kódem}
+\subsubsection*{Rozdíl mezi specifikací a kódem}
 Tato výzva souvisí s jasností požadavků na produkt. Jelikož jsou požadavky napsány v přirozeném jazyce, může docházet k nedorozuměním či nejasnostem,
 které mohou vést k nesprávné implementaci či chybám. To má poté za následek:
 
@@ -442,7 +450,7 @@ Je nutné podotknout, že i přes své schopnosti a potenciál jsou LLM stále j
 a proto může docházet k jevu zvanému \texttt{halucinace} - okamžik, kdy model generuje věcně nesprávný či nesmyslný text, který ale může působit věrohodně.
 
 \subsection{Parametry a technické aspekty}
-\subsubsection{Tokenizace a zpracování dat}
+\subsubsection*{Tokenizace a zpracování dat}
 Tokenizace je proces převedení vstupního textu na menší jednotky (tzv. tokeny), které mohou reprezentovat celá slova, 
 části slov či jednotlivé znaky. To umožňuje modelům zpracovávat i neznámé výrazy pomocí algoritmů jako je Byte Pair Encoding (BPE) nebo SentencePiece \cite{galle-2019-investigating}.
 
@@ -468,7 +476,7 @@ v rámci používání jejich modelů.
 Přestože reasoning tokeny mohou připomínat lidské uvažování, model po dalším cyklu tuto znalost ztrácí - tyto 
 tokeny mu tak slouží jako \texttt{State over Tokens}, kam si odkládá mezivýsledky, aby věděl, jak při dalším kroku pokračovat \cite{levy2025stateReasoning}.
 
-\subsubsection{Context window}
+\subsubsection*{Context window}
 Kontextové okno definuje maximální počet tokenů, které je model schopen zpracovat v rámci jednoho výpočetního cyklu. 
 Zatímco starší generace modelů operovaly v řádu nižších tisíců tokenů, současné modely již zvládají pracovat v řádu nižších milionů. 
 Průkopníkem v této oblasti se stala společnost Google, která jako první u svých modelů řady Gemini
@@ -476,21 +484,21 @@ Průkopníkem v této oblasti se stala společnost Google, která jako první u 
 Podobné limity nyní postupně adoptují i další poskytovatelé, jako například Anthropic u modelů Claude v rámci platformy Bedrock
 \footnote{\href{https://aws.amazon.com/bedrock/anthropic/}{Dokumentace AWS Bedrock (Anthropic)}}.
 
-\subsubsection{Temperature}
+\subsubsection*{Temperature}
 Parametr využívaný modely k určení míry náhodnosti a diverzity generovaného výstupu \cite{renze2024effect}. Čím nižší je hodnota \texttt{temperature}, tím 
 konzervativnější a determinističtější je výstup modelu. S vyššími hodnotami stoupá riziko halucinací, ale model nabízí vyšší míru kreativity. Pro úlohy vyžadující 
 přesnost a konzistenci se doporučuje nastavit hodnotu \texttt{temperature} na 0. Některé modely (např. v rámci Azure OpenAI) tento parametr neumožňují konfigurovat, 
 protože je pevně definován na úrovni modelu \footnote{\href{https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/reasoning?tabs=csharp\%2Cgpt-5\#not-supported}{Dokumentace Microsoft k Azure OpenAI}}.
-\subsubsection{Tool Calling}
-Tool Calling (volání nástrojů) je schopnost modelu autonomně využívat externé aplikace či služby (jako jsou firemní API, vyhledávače...), čímž překonávají svá omezení 
+\subsubsection*{Tool Calling}
+Tool Calling (volání nástrojů) je schopnost modelu autonomně využívat externí aplikace či služby (jako jsou firemní API, vyhledávače...), čímž překonávají svá omezení 
 jako jsou např. zastaralé informace. Pro správné použití je nutné zajistit, aby model mohl správně identifikovat záměr uživatele, vybral vhodný nástroj a 
 správně nastavil vstupní parametry \cite{shen2024llm}. Tato schopnost lze naučit model buď pomocí fine-tuningu na ukázkových interakcích, nebo technikou \texttt{in-context-learningu},
 kdy se do promptu, který se zasílá modelu, vloží definice jednotlivých nástrojů, aby věděl, jak je využívat. Tato vlastnost není podporována u všech modelů, a proto 
 je třeba předem zkontrolovat dokumentaci, zda je pro daný model Tool Calling dostupný.
 
 
-\subsubsection{Prompt Caching}
-Prompt Chacing je inovativní technika, jenž výrazně zrychluje inferenci modelu a snižuje výpočetní nároky tím, že recykluje interní výpočty modelu \cite{gim2024prompt}. 
+\subsubsection*{Prompt Caching}
+Prompt Caching je inovativní technika, jenž výrazně zrychluje inferenci modelu a snižuje výpočetní nároky tím, že recykluje interní výpočty modelu \cite{gim2024prompt}. 
 Vychází z toho, že uživatelské dotazy obsahují často stejné bloky zpráv (např. systémový prompt, specifikace nástrojů, přiložené dokumenty...), které se mezi
 dotazy nemění. Namísto přepočítávání těchto bloků si model ukládá jejich výpočty do mezipaměti a při dalším dotazu, který obsahuje identické bloky, 
 si je pouze načte z mezipaměti a spojí, čímž se zkracuje doba zpracování dotazu a to bez jakéhokoliv dopadu na kvalitu finálního výstupu. Tato technika
@@ -504,7 +512,6 @@ roku 2025.
 
 \begin{table}[h!]
 \centering
-\caption{Vybrané modely vydané od H2 2025 a jejich cenová politika.}
 \small 
 \newcolumntype{C}{>{\centering\arraybackslash}X} 
 
@@ -569,6 +576,96 @@ Tímto směrem se ubírají tzv. \textbf{agentní systémy} - systémy, které v
 
 \section{Agentní systémy a autonomní testování}
 
+\subsection{Definice a charakteristika autonomních agentů}
+S narůstající komplexností úloh, které jsou na modely umělé inteligence kladeny, se objevuje potřeba systémů k migraci 
+od tradičního jednorázového generování k interaktivním a adaptivním systémům, které dokáží reagovat na dynamické prostředí.
+Zatímco standardní neagentní přístup (tzv. \texttt{non-agentic workflow}) funguje na principu, 
+který generuje výstup na základě jednorázového uživatelského dotazu a čeká na další lidský pokyn \cite{singh2024enhancing}, agentní systémy představují zásadní změnu paradigmatu.
+V agentním pojetím se LLM stává jakýmsi ``mozkem``, jenž proaktivně řídí provádění úkolů, samostatně se rozhoduje o dalším postupu a v případě potřeby 
+iterativně reviduje své kroky bez nutnosti neustálých zásahů člověka \cite{singh2024enhancing,ahmadi2025mcp,openai2025_agents_guide}.
+
+Ve své základní podobě se skládá ze tří kličových komponent \cite{openai2025_agents_guide}:
+
+
+
+\begin{itemize}
+    \item \textbf{Model} - Konkrétní velký jazykový model, který řídí uvažování, rozhodování a celkovou exekuci workflow agenta.
+    \item \textbf{Nástroje (Tools)} - Externí funkce nebo API, jenž agent využívá k interakci s vnějším prostředím.
+    \item \textbf{Instrukce (Instructions)} - Explicitní pravidla definující agentovo chování - zmenšují prostor pro nejednoznačnosti což vede k efektivníějšímu chování a minimalizaci halucinací.
+\end{itemize}
+
+
+Pro plné fungování v rámci komplexnějších architektur je často zmiňují i další klíčové aspekty, které pomáhají agentům řešit náročnější úlohy. Mezi ně patří 
+pamět (\texttt{Memory}), která umožňuje agentovi uchovávat a využívat informace z předchozích interakcí, a dále plánování (\texttt{Planning}), jež umožňuje 
+agentovi dekomponovat složitý problém na sadu menších proveditelných kroků \cite{sarkar2025survey}.
+
+
+\subsection{Architektura ReAct: Spojení uvažování a jednání}
+
+Vzor ReAct (\texttt{Reasoning and Acting}) je klíčový rámec pro pochopení toho, jak autonomní agenti ``přemýšlejí`` a jednají \cite{ahmadi2025mcp}. 
+Tento vzor umožňuje jazykovému modelu krok za krokem uvažovat o problému a konkrétními příkazy spouštět nástroje. Díky tomu 
+model (místo klasického přístupu, kdy se vygeneruje celý výstup najednou) běží v cyklu, jenž mu umožní iterativně vytvářet, monitorovat a revidovat své kroky.
+
+Jádrem tohoto vzoru je opakující se smyčka, která se skládá ze tří fází \cite{yan2025general}:
+
+\begin{itemize}
+    \item \textbf{Thought (Myšlenka)} - Interní monolog, v němž model analyzuje aktuální stav. Na základě svých předchozích isntrukcí a aktuálního kontextu hodnotí, co vidí, jaký by měl být další krok a
+    jaké nástroje by měl k jeho dosažení použít.
+    \item \textbf{Action (Akce)} - Konkrétní volání toolu, který model na základě předchozí úvahy zvolil.
+    \item \textbf{Observation (Pozorování)} - Získání zpětné vazby z prostředí po provedení konkrétní akce - tou může být např. pozměněný stav DOMu, nová URL adresa či chybová hláška.
+\end{itemize}
+
+Celý tento proces je zobrazen na obrázku \ref{fig:react}. TODO rozepíšu se víc, až bude obrázek ready. Zmínit self-healing.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/react.pdf}
+    \caption{TODO}
+    \label{fig:react}
+\end{figure}
+
+Pro QA a automatizované testy představuje tento vzor zásadní posun - díky explicitním krokům je celý proces generování plně transparentní,
+interpretovatelný a auditovatelný. Uživatel přesně vidí úvahu, která agenta vedla k výběru určitého lokátoru, což výrazně usnadňuje ladění a zvyšuje
+tak spolehlivost celého systému.
+
+
+\subsection{Model Context Protocol}
+
+\subsection{Model Context Protocol (MCP)}
+
+Model Context Protocol (MCP), představený firmou \texttt{Anthropic} ke konci roku 2024, je otevřený standard pro interoperabilitu, jehož cílem 
+je sjednotit a zjednodušit způsob, jakým se modely umělé inteligence propojují s externími nástroji, systémy a daty.\footnote{\href{https://modelcontextprotocol.io/docs/getting-started/intro}{Oficiální dokumentace MCP}} MCP, 
+jež si vysloužil přezdívku ``USB-C for AI applications``, poskytuje jednotné a standardní rozhraní pro komunikaci - je postaven na 
+robustním modelu komunikace Client-Host-Server s využitím formátu JSON-RPC 2.0 \cite{sarkar2025survey}:
+
+\begin{itemize}
+    \item \textbf{Client} - Protokolová komponenta zabudována do hostitelské aplikace, která udržuje spojení s jedním konkrétním MCP serverem.
+    \item \textbf{Host} - Aplikace, která navazuje komunikaci a interaguje s uživateli.
+    \item \textbf{Server} - Samostatný nezávislý proces (běžící lokálně nebo vzdáleně), který zpřístupňuje konkrétní funkce (tooly) - slouží jako obálky kolem externích systémů (API, databáze, CLI nástroje...).
+\end{itemize}
+
+
+Na obrázku \ref{fig:mcp} je znázorněna ukázka Client-Host-Server architektury v rámci MCP. TODO rozepíšu se.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pictures/react.pdf}
+    \caption{TODO}
+    \label{fig:mcp}
+\end{figure}
+
+Zásadní význam MCP pro autonomii agentů spočívá v dynamické správě dostupných nástrojů a dat - agent se skrze protokol MCP dokáže automaticky dotázat serveru na seznam 
+dostupných nástrojů a získat k nim přesné definice parametrů. Díky tomu agent v hostitelské aplikaci sám zjistí, jaké nástroje může v rámci své úlohy využívat, 
+a to bez nutnosti explicitního předávání těchto informací. 
+Tento přístup umožňuje agentům být skutečně autonomními - dokážou se adaptovat na měnící se prostředí a využívat nové nástroje, které se objeví, aniž by bylo potřeba měnit jejich základní instrukce či prompt.
+
+\section{Shrnutí}
+V této kapitole byl podrobně popsán teoretický základ propojující agilní vávoj, automatizované testování a umělou inteligenci.
+Byly definovány způsoby specifikace požadavků, které slouží jako primární vstup pro automatizaci, a analyzovány výzvy spojené s údržbou a regresním testováním. 
+Zároveň byly představeny možnosti moderních jazykových modelů a jejich klíčové parametry, jež ovlivňují výsledné chování modelů.
+
+Klíčovým poznatkem kapitoly je vymezení autonomních agentů, kteří díky využití iterativního uvažování a standardizovaného protokolu MCP dokáží překonat limity statického generování 
+a zajistit interaktivní a stabilní testování v dynamickém prostředí webu. Po získání těchto znalostí je možné přejít k praktické části práce, kde bude navržena 
+architektura konkrétního systému, což bude podrobněji popsáno v další kapitole.
 
 
 \chapter{Závěr}
