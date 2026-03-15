@@ -872,7 +872,93 @@ ale každý vygenerovaný test patří pouze jednomu jedinému uživatelskému p
 Ostatní prvky identifikované v analýze (např. metadata ticketů) jsou záměrně vynechány, protože pro generování testů nepřináší žádnou přidanou hodnotu a navíc jejich 
 zahrnování v agentově kontextu by mohlo vést k zvětšení množství tokenů a tím i nákladů na generování testů. 
 
-\subsection{Architektura komponent}
+\subsection{Distribuce a perzistence dat}
+Před samotnou definicí architektury agenta je nejprve nutné rozhodnout, jaký způsob k distribuci systému zvolit a jakým způsobem ukládat data.
+Původní myšlenkou bylo využít tradiční architektury s nasazením relační databáze (např. PostgreSQL). Výhodou by bylo, že veškeré testy a uživatelské příběhy by byly uloženy 
+centralizovaně v jedné konkrétní databázi, což by umožnilo snadné sdílení a přístup napříč uživateli a vývojovými týmy.
+Z tohoto přístupu se nakonec ustoupilo kvůli následujícím důvodům:
+
+\begin{itemize}
+    \item \textbf{Ukládání výsledných testů} - Největší úskalí by bylo definování tzv. \texttt{source of truth} pro vygenerované testy.
+    Pokud by se testy ukládaly do centrální databáze, vznikla by potřeba synchronizace mezi touto databází a prostředími, kde by se testy pouštěly (např. IDE, CI/CD pipeline).
+    Databáze by tak obsahovala veškeré vygenerované testy a bylo by možné trasovat, kdy a kým byly testy vygenerovány, 
+    ale zároveň by stejně bylo potřeba testy ukládat do repozitářů, aby bylo možné je spouštět a nakonec by stejně zdrojem pravdy pro testy zůstaly repozitáře.
+    \item \textbf{Správa databáze} - S produkčním nasazením by bylo potřeba zajistit správu a údržbu databáze, což by vývojáře odvádělo od hlavního cíle - jednoduché generování testů.
+    \item \textbf{Závislost na třetí straně} - Program by byl závislý na další externí službě - k závislosti na dostupnosti LLM modelů by se tak přidala i 
+    závislost na dostupnosti a správě databáze. Navíc pokud by aplikace běžela jako samostatná služba, vývojáři by museli z vývojových prostředí otevírat další rozhraní, což 
+    by mohlo vést k nižší adopci nástroje.
+\end{itemize}
+
+Tato analýza vede k závěru, že tradiční přístup s databází by nedisponoval uživatelskou přívětivostí, která je pro adopci nástroje klíčová.
+Všechny výše zmíněné nevýhody řeší tzv. \textit{local-first} přístup, 
+který umožňuje vývojářům pracovat s nástrojem přímo z jejich lokálního prostředí bez nutnosti přepínání do jiných rozhraní či závislosti na externích službách.
+Systém bude distribuován jako samostatný instalovatelný balíček (prostřednictvím správce balíčků NPM - Node Package Manager), 
+který si uživatel pouze nainstaluje do svého projektu, kde chce testy generovat (případně může jednou globálně, pokud chce testy generovat napříč vícero projekty).
+Následně jen pomocí jednoduchého CLI příkazu spustí systém lokálně a celý proces generování testů proběhne přímo na jeho zařízení. Jediné nastavení, které bude muset provést, 
+je konfigurace přístupových údajů k LLM modelům, což bude záležitost několika řádků v konfiguračním souboru, který bude umístěn lokálně v projektu.
+
+Díky tomu budou mít vývojáři systém přímo ve svém IDE bez nutnosti otevírání dalších rozhraní, \texttt{source of truth} bude přímo v repozitáři, do něhož bude aplikace testy ukládat a bude 
+je moci i číst a rovnou spouštět, a navíc veškerá historie generovaných testů, uložených projektů a uživatelských příběhů, bude uložena v souboru, který bude možno distribuovat přes Git.
+
+Celé vývojářské flow, které bylo popisováno, je zobrazeno na obrázku \ref{fig:local-first}, kde navržený systém je označován jako TestPilot. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/local.pdf}
+    \caption{Vývojářské flow s využitím local-first přístupu.}
+    \label{fig:local-first}
+\end{figure}
+
+\subsection{Architektura systémových komponent}
+
+Nejprve v úvahu přicházela možnost navrhnout systém jako čistě backendovou službu, která by běžela jen v terminálu a komunikovala s uživatelem pouze prostřednictvím CLI,
+ale tento přístup by nebyl uživatelsky přívětivý pro ne-technické uživatele. Na základě toho bude systém navržen jako 
+\textit{full-stack} aplikace, která bude mít intuitivní GUI a umožní tak širší adopci napříč různými uživateli a týmy.
+
+Schéma architektury bude rozděleno do 4 hlavních logických částí a jejich vzájemná komunikace je znázorněna na obrázku \ref{fig:architecture}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/arch.png}
+    \caption{Koncepční architektura systému.}
+    \label{fig:architecture}
+\end{figure}
+\subsubsection*{Frontend (Uživatelské rozhraní)}
+Tato klientská část zajišťuje interakci s uživatelem a slouží jako hlavní bod pro konfiguraci a vizualizaci celého procesu generování testů.
+S backendem bude komunikovat pomocí dvou odlišných komunikačních vzorů. Pro standardní operace čtení a zápisu dat 
+(např. zakládání projektů, správa uživatelských příběhů) bude využíváno klasické \textbf{HTTP/REST} rozhraní.
+Pro sledování myšlenek agenta při generování ale synchronní HTTP komunikace není ideální, protože potřebujeme průběžně 
+aktualizovat uživatelské rozhraní o nové informace (co agent dělá, jaké nástroje volá). Proto bude využit jednosměrný protokol 
+\textbf{Server-Sent Events (SSE)}, který umožňuje efektivní streamování dat z backendu do frontendu v reálném čase a je alternativou 
+k WebSocketům, které jsou pro tento účel komplexnější.
+
+
+\subsubsection*{Backend}
+Nejdůležitější část celé architektury - její hlavní zodpovědností je řízení celého procesu generování testů, udržování agentní smyčky a 
+zprostředkování komunikace mezi jazykovými modely, testovacím frameworkem a uživatelským rozhraním. 
+Bude zodpovědný také za bezpečné čtení a zápis dat do lokálního konfiguračního souboru.
+
+\subsubsection*{AI Gateway}
+Zajištění spolehlivé komunikace s velkými jazykovými modely představuje zásadní výzvu. Každý poskytovatel (provider) 
+umělé inteligence (OpenAI, Anthropic, Google) využívá pro své API zcela odlišná vstupní a výstupní schémata - 
+liší se formáty pro definici dostupných nástrojů (\texttt{tool calling}), což je pro správnou funkčnost agenta klíčové.
+Dále se liší i strukturováním historie zpráv či výpočtem spotřebovaných tokenů - další klíčový faktor pro správné fungování agenta.
+Přímá integrace těchto jednotlivých API by vedla k vysoké komplexitě zdrojového kódu a obtížné udržitelnosti.
+Pro každého nového poskytovatele by bylo potřeba naimplementovat vlastní logiku pro překlad požadavků a zpracování odpovědí.
+Systém proto zavede dedikovanou vrstvu AI Gateway, která tyto rozdíly efektivně abstrahuje za pomoci existujících řešení
+(např. knihovny \texttt{AI Vercel SDK}) a díky níž bude budoucí rozšiřitelnost o nové modely výrazně jednodušší - 
+bude pouze třeba přidat existující adaptér pro daného poskytovatele, aniž by bylo potřeba zasahovat do zbytku architektury či 
+psát ručně překlad pro každý model.
+
+
+\subsubsection*{MCP Server a testovací framework}
+Pro zajištění modularity a bezpečnosti systému by autonomní agent neměl mít přímou kontrolu nad prohlížečem z backendu.
+Místo toho budou požadavky na interakci s prohlížečem odesílány do dedikovaného serveru, který bude využívat
+standardizovaný \texttt{Model Context Protocol} a poběží jako zcela samostatný izolovaný proces. 
+Tento server bude přijímat příkazy od agenta (např. kliknutí na tlačítko, vyplnění formuláře) a překládat 
+je do konkrétních instrukcí pro zvolený testovací framework. Framework poté ovládá webový prohlížeč a vrací zpět výsledky akce,
+které backend předá agentovi pro další zpracování.
+
 
 \subsection{Architektura agenta a exekuční smyčka}
 
