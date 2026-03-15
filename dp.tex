@@ -705,9 +705,9 @@ který zobrazuje navržené řešení a demonstruje jeho klíčové funkce.
 \section{Analýza struktury a sémantiky vstupních artefaktů}
 Důležitým faktorem pro úspěšnou automatizaci testů je správné pochopení a zpracování vstupních artefaktů, které jsou základem pro generování testů.
 Jak bylo zmíněno v kapitole 2, tyto artefakty mohou mít různou formu - od textových dokumentů (např. uživatelské příběhy, akceptační kritéria) až po strukturované formáty (např. Gherkin).
-V ALM nástrojích uživatelské příběhy často nemají jednotnou strukturu, což výrazně ztěžuje jejich zpracování. Zejména nástroje jako \texttt{Jira} nabízí 
-uživatelům velkou flexibilitu (nejen) při správě uživatelkých příběhů. K prozkoumání této problematiky lze využít a nahlédnout na 
-již existující Jira instance, které jsou přístupné veřejnosti. Zde je několik existujícíh instancí, ze kterých lze získat 
+V ALM nástrojích uživatelské příběhy často nemají jednotnou strukturu, což výrazně ztěžuje jejich zpracování. Zejména nástroje jako \texttt{Jira} nabízejí 
+uživatelům velkou flexibilitu (nejen) při správě uživatelských příběhů. K prozkoumání této problematiky lze využít a nahlédnout na 
+již existující Jira instance, které jsou přístupné veřejnosti. Zde je několik existujících instancí, ze kterých lze získat 
 cenné informace o struktuře a sémantice uživatelských příběhů:
 
 \begin{itemize}
@@ -720,7 +720,7 @@ cenné informace o struktuře a sémantice uživatelských příběhů:
     \item \textbf{Mojang Studios Bug Tracker}\footnote{\url{https://bugs.mojang.com/}} - Instance zaměřená na vývoj her (Minecraft). Jednotlivé projekty jsou dílčí částí her (např. Java Edition, Bedrock Edition, Launcher...).
 \end{itemize}
 
-Před samotnou investigací jednotlivých instancí je vhodné definovat metodiku, jakou byla data pro analýzu získávána. 
+Před samotnou investigací jednotlivých instancí je vhodné definovat metodiku, jakým způsobem byla data pro analýzu získávána. 
 Vzhledem k obrovskému množství ticketů ve veřejných repozitářích nelze spoléhat na manuální procházení. 
 
 Pro průzkum a extrakci relevantních uživatelských příběhů byl využit nativní dotazovací jazyk \textbf{JQL (Jira Query Language)}. 
@@ -744,7 +744,7 @@ project = "TRELLO"
 \end{minipage}
 \end{center}
 
-Na ukázce \ref{lst:jql-example} je zobrazen dotaz zapsán v jazyce JQL, který kombinuje několik vlastností:
+Na ukázce \ref{lst:jql-example} je zobrazen dotaz zapsaný v jazyce JQL, který kombinuje několik vlastností:
 \begin{itemize}
     \item \textbf{Filtrování dle projektu a typu} - Filtrování ticketů z konkrétního projektu a vyloučení bugů.
     \item \textbf{Validace metadat} - Filtrování ticketů na základě přítomnosti metadat.
@@ -760,12 +760,12 @@ Tyto rozdíly jsou dány především doménou projektu, firemní kulturou a zav
 
 \subsubsection*{Metadata ticketů}
 Typ ticketů není nijak omezen. Napříč instancemi se vyskytují různé druhy ticketů, přičemž každý z nich může mít
-definovanou svojí zcela vlastní strukturu (např. Bug může mít pole pro kroky reprodukce, zatímco User Story pole pro akceptační kritéria).
+definovanou svou zcela vlastní strukturu (např. Bug může mít pole pro kroky reprodukce, zatímco User Story pole pro akceptační kritéria).
 Nejčastěji používanými typy jsou \textbf{User Story} a \textbf{Bug}. Dále se v rámci instancí vyskytují i další typy jako jsou: 
 New Feature, Task, Improvement, Test, Question, Sub-task, RTC (Request to Change), Epic, Dependency, Suggestion, Support Request, Build Failure,
 Technical Debt a další. 
 
-Co se týče priorit, opět není žádný jednotný systém - a to i co se týče v rámci jedné instance. Například v rámci Apache Jira se 
+Co se týče priorit, opět není žádný jednotný systém - a to i v rámci jedné instance. Například v rámci Apache Jira se 
 vyskytují priority jak číselné (P0, P1, P2...), tak i textové (Critical, Major, Minor...). V rámci Atlassian Jira se vyskytují priority pouze textové (Highest, High, Medium, Low).
 Někdy dochází i k míchání těchto přístupů - např. v rámci MongoDB Jira se vyskytují priority Major - P3, Minor - P4, Trivial - P5, a další.
 
@@ -878,8 +878,8 @@ Ostatní prvky identifikované v analýze (např. metadata ticketů) jsou zámě
 zahrnování v agentově kontextu by mohlo vést k zvětšení množství tokenů a tím i nákladů na generování testů. 
 
 \subsection{Distribuce a perzistence dat}
-Před samotnou definicí architektury agenta je nejprve nutné rozhodnout, jaký způsob k distribuci systému zvolit a jakým způsobem ukládat data.
-Původní myšlenkou bylo využít tradiční architektury s nasazením relační databáze (např. PostgreSQL). Výhodou by bylo, že veškeré testy a uživatelské příběhy by byly uloženy 
+Před samotnou definicí architektury agenta je nejprve nutné rozhodnout, jaký způsob distribuce systému zvolit a jakým způsobem ukládat data.
+Původní myšlenkou bylo využít tradiční architekturu s nasazením relační databáze (např. PostgreSQL). Výhodou by bylo, že veškeré testy a uživatelské příběhy by byly uloženy 
 centralizovaně v jedné konkrétní databázi, což by umožnilo snadné sdílení a přístup napříč uživateli a vývojovými týmy.
 Z tohoto přístupu se nakonec ustoupilo kvůli následujícím důvodům:
 
@@ -967,7 +967,7 @@ které backend předá agentovi pro další zpracování.
 
 \subsection{Architektura agenta a exekuční smyčka}
 \subsubsection*{Zdůvodnění Single-agent architektury}
-Jak popisuje příručka Open AI \cite{openai2025_agents_guide}, existují dva hlavní přístupy k návrhu agentních systémů - \textbf{Single-agent} a \textbf{Multi-agent} architektura,
+Jak popisuje příručka OpenAI \cite{openai2025_agents_guide}, existují dva hlavní přístupy k návrhu agentních systémů - \textbf{Single-agent} a \textbf{Multi-agent} architektura,
 které jsou zobrazeny na obrázku \ref{fig:agent_architecture}.
 
 \begin{figure}[H]
@@ -993,7 +993,7 @@ od prvotní navigace, přes ověření stávajícího stavu aplikace až po fin�
 
 \subsubsection*{ReAct smyčka}
 Jak bylo popsáno v kapitole dedikované analýze LLM agentů,
-systém bude využívat paradigmatu ReAct. V rámci fáze Thought bude agent analyzovat aktuální stav aplikace a plánovat další krok, který by měl podniknout.
+systém bude využívat paradigma ReAct. V rámci fáze Thought bude agent analyzovat aktuální stav aplikace a plánovat další krok, který by měl podniknout.
 V Action fázi bude volat konkrétní nástroje prostřednictvím MCP serveru, aby získal potřebné informace o stavu aplikace.
 V Observation fázi bude backend zpracovávat výsledky těchto akcí a poskytovat jejich zpětnou vazbu agentovi, který na základě toho 
 bude pokračovat v iteraci, dokud nebude mít dostatek informací na vygenerování finálního testu.
@@ -1003,7 +1003,7 @@ K snížení rizika halucinací bude agent instruován sadou striktních pravide
 která bude muset dodržovat. Bude se jednat o následující mechanismy:
 
 \begin{itemize}
-    \item \textbf{Tool Enforcement} - Agent bude muset použít nástroje pro průzkum aplikace než bude moci vygenerovat finální test. Běžně se stává, že agenti se snaží rovnou
+    \item \textbf{Tool Enforcement} - Agent bude muset použít nástroje pro průzkum aplikace předtím, než bude moci vygenerovat finální test. Běžně se stává, že agenti se snaží rovnou
     vygenerovat test ``naslepo``, aniž by měli dostatek informací o stavu aplikace.
     \item \textbf{Code Validation} - Jakmile agent vygeneruje kód, bude muset projít základní validací, aby se ověřilo, že je syntakticky správný a přeložitelný. Pokud ne,
     bude agent vyzván k opravě kódu, dokud nebude kód validní.
@@ -1039,11 +1039,11 @@ do lokálního souborového systému, kde jsou testy uloženy.
 \subsection*{Vizualizace procesu agenta}
 Tato sekce bude klíčová pro zajištění transparentnosti a důvěry uživatelů v systém. 
 Bude zobrazovat celý průběh generování testů - od prvotního zamyšlení agenta, přes volání nástrojů až po finální validaci a generaci kódu. Pokud to 
-daný krok umožní, bude zobrazet i konkrétní výstup (např. výsledek tool callu). Po vygenerování testu bude (kromě samotného kódu) zobrazeno 
+daný krok umožní, bude zobrazovat i konkrétní výstup (např. výsledek tool callu). Po vygenerování testu bude (kromě samotného kódu) zobrazeno 
 i krátké shrnutí v podobě počtu zkonzumovaných tokenů, celkové ceny a případně i možnost regenerovat test na základě zpětné vazby od uživatele.
 
 \subsection*{Sekce pro spuštění testů a zobrazení výsledků}
-Tato sekce by měla nahradit potřebu přepínat mezi běžícím systémem pro generování testů a vývojovým prostředím, čímž se vývojáři ušetří čas.
+Tato sekce by měla nahradit potřebu přepínat mezi běžícím systémem pro generování testů a vývojovým prostředím, čímž se vývojářům ušetří čas.
 Uživatel by měl mít možnost vidět a spravovat testy, které má v aktuálním repozitáři - a pokud možno, tak je rovnou i spouštět a vidět výsledky jejich běhu.
 
 
