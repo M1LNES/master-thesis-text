@@ -696,7 +696,12 @@ konkrétní požadavky a architektura řešení, čemuž se podrobně věnuje n�
 
 
 \chapter{Návrh systému}
-TODO dopsat
+Tato kapitola využívá teoretické poznatky z předchozí kapitoly a přechází k praktickému návrhu systému pro automatizované generování E2E testů s využitím velkých jazykových modelů.
+Text se v úvodu zaměřuje na analýzu struktury vstupních dat z běžně využívaných ALM nástrojů, z čehož jsou následně odvozeny konkrétní funkční a nefunkční požadavky.
+Hlavní část kapitoly je poté zaměřena na návrh koncepční architektury - od doménového modelu a distribučního modelu, přes představení a vysvětlení 
+jednotlivých systémových komponent, až po specifikaci exekuční smyčky autonomního agenta. Na závěr kapitoly je pak navržen prototyp uživatelského rozhraní,
+který zobrazuje navržené řešení a demonstruje jeho klíčové funkce.
+
 \section{Analýza struktury a sémantiky vstupních artefaktů}
 Důležitým faktorem pro úspěšnou automatizaci testů je správné pochopení a zpracování vstupních artefaktů, které jsou základem pro generování testů.
 Jak bylo zmíněno v kapitole 2, tyto artefakty mohou mít různou formu - od textových dokumentů (např. uživatelské příběhy, akceptační kritéria) až po strukturované formáty (např. Gherkin).
@@ -926,10 +931,10 @@ Schéma architektury bude rozděleno do 4 hlavních logických částí a jejich
 \subsubsection*{Frontend (Uživatelské rozhraní)}
 Tato klientská část zajišťuje interakci s uživatelem a slouží jako hlavní bod pro konfiguraci a vizualizaci celého procesu generování testů.
 S backendem bude komunikovat pomocí dvou odlišných komunikačních vzorů. Pro standardní operace čtení a zápisu dat 
-(např. zakládání projektů, správa uživatelských příběhů) bude využíváno klasické \textbf{HTTP/REST} rozhraní.
+(např. zakládání projektů, správa uživatelských příběhů) bude využíváno klasické \texttt{HTTP/REST} rozhraní.
 Pro sledování myšlenek agenta při generování ale synchronní HTTP komunikace není ideální, protože potřebujeme průběžně 
 aktualizovat uživatelské rozhraní o nové informace (co agent dělá, jaké nástroje volá). Proto bude využit jednosměrný protokol 
-\textbf{Server-Sent Events (SSE)}, který umožňuje efektivní streamování dat z backendu do frontendu v reálném čase a je alternativou 
+\texttt{Server-Sent Events (SSE)}, který umožňuje efektivní streamování dat z backendu na frontend v reálném čase a je alternativou 
 k WebSocketům, které jsou pro tento účel komplexnější.
 
 
@@ -961,11 +966,97 @@ které backend předá agentovi pro další zpracování.
 
 
 \subsection{Architektura agenta a exekuční smyčka}
+\subsubsection*{Zdůvodnění Single-agent architektury}
+Jak popisuje příručka Open AI \cite{openai2025_agents_guide}, existují dva hlavní přístupy k návrhu agentních systémů - \textbf{Single-agent} a \textbf{Multi-agent} architektura,
+které jsou zobrazeny na obrázku \ref{fig:agent_architecture}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/agent_architecture.pdf}
+    \caption{Schéma Single-agent vs Multi-agent architektury.}
+    \label{fig:agent_architecture}
+\end{figure}
+
+
+Single-agent architektura se zaměřuje na jednoho centrálního agenta, který má přístup ke všem nástrojům a informacím potřebným k vykonání úkolu.
+Tento agent je zodpovědný za celý proces - od plánování, přes exekuci, až po generování výstupu. Tento přístup je jednodušší na implementaci,
+snadněji se ladí a chová se determiničtěji, protože veškeré rozhodování je centralizované v jednom agentovi.
+
+Oproti tomu multi-agentní architektura rozděluje úkol mezi více specializovaných agentů, kde každý z nich má svou specifickou roli - 
+jeden může být zodpovědný za plánování, druhý za generování kódu a třetí za revizi kódu. Tento přístup může být efektivní pro řešení komplexnějších úloh,
+ale přináší s sebou vyšší míru nedeterminismu (jelikož agenti mohou mít různé strategie), je náchylný k zacyklení (nekonečné debaty mezi jednotlivými agenty) a 
+jeho debugging je složitý, jelikož je třeba sledovat flow mezi více entitami. Navíc tento způsob může generovat obrovskou režii v podobě spotřebovaných tokenů právě díky 
+komunikaci mezi agenty, která vyžaduje další volání modelů.
+
+Proto systém bude využívat striktní Single-agent architekturu, kde bude definován agent s rolí \textit{Senior QA Automation Engineer}, který bude provádět celý proces postupně - 
+od prvotní navigace, přes ověření stávajícího stavu aplikace až po finální generování kódu.
+
+\subsubsection*{ReAct smyčka}
+Jak bylo popsáno v kapitole dedikované analýze LLM agentů,
+systém bude využívat paradigmatu ReAct. V rámci fáze Thought bude agent analyzovat aktuální stav aplikace a plánovat další krok, který by měl podniknout.
+V Action fázi bude volat konkrétní nástroje prostřednictvím MCP serveru, aby získal potřebné informace o stavu aplikace.
+V Observation fázi bude backend zpracovávat výsledky těchto akcí a poskytovat jejich zpětnou vazbu agentovi, který na základě toho 
+bude pokračovat v iteraci, dokud nebude mít dostatek informací na vygenerování finálního testu.
+
+\subsubsection*{Ochranné mechanismy}
+K snížení rizika halucinací bude agent instruován sadou striktních pravidel, 
+která bude muset dodržovat. Bude se jednat o následující mechanismy:
+
+\begin{itemize}
+    \item \textbf{Tool Enforcement} - Agent bude muset použít nástroje pro průzkum aplikace než bude moci vygenerovat finální test. Běžně se stává, že agenti se snaží rovnou
+    vygenerovat test ``naslepo``, aniž by měli dostatek informací o stavu aplikace.
+    \item \textbf{Code Validation} - Jakmile agent vygeneruje kód, bude muset projít základní validací, aby se ověřilo, že je syntakticky správný a přeložitelný. Pokud ne,
+    bude agent vyzván k opravě kódu, dokud nebude kód validní.
+    \item \textbf{Circuit Breaker} - Aby se předešlo nekonečnému zacyklení (které by vyústilo v nekonečné volání LLM modelů), 
+    bude implementován mechanismus, který po určitém počtu po sobě jdoucích selhání nástrojů přeruší agentní smyčku a ukončí proces generování testu.
+\end{itemize}
+
+Tento přístup by měl zlepšovat spolehlivost a kvalitu vygenerovaných testů a zároveň minimalizovat náklady spojené s opakovanými voláními modelů.
+
 
 \section{Návrh uživatelského rozhraní}
+\subsection*{Celkové rozvržení a UX principy}
+Aplikace bude koncipována po vzoru moderních vývojových prostředí (Visual Studio Code, JetBrains IDEs), které jsou pro vývojáře dobře známé a intuitivní.
+Na obrázku \ref{fig:ui} je zobrazen návrh uživatelského rozhraní, které bude rozděleno do tří hlavních částí - levý navigační panel, hlavní pracovní plocha a pravá vizualizační část.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/gui-prototype.pdf}
+    \caption{Návrh uživatelského rozhraní.}
+    \label{fig:ui}
+\end{figure}
+
+Využit bude boční navigační panel na levé straně, který bude obsahovat sekce pro správu projektů a k nim přiřazených uživatelských příběhů.
+Zároveň by mohl také obsahovat proklik do nastavení, kde by se mohly upravovat konfigurace agenta (volba LLM modelu, volba nástrojů).
+
+Hlavní pracovní plocha bude sloužit pro specifikaci uživatelských příběhů - bude zde zobrazen formulář, díky němuž půjdou snadno vytvářet a případně editovat 
+uživatelské příběhy. Pod tímto formulářem by se měla nacházet i sekce pro spuštění generování testů a případně i ovládací prvek pro zastavení běhu agenta.
+Viditelný by měl být i aktuálně využívaný model (aby uživatel nemusel otevírat nastavení) a případně využívané nástroje.
+
+Pravá část plochy bude sloužit pro vizualizaci všeho ohledně testů - od samotného průběhu generování (co agent dělá), po výsledný kód vygenerovaných testů a případně živý náhled 
+do lokálního souborového systému, kde jsou testy uloženy. 
+
+\subsection*{Vizualizace procesu agenta}
+Tato sekce bude klíčová pro zajištění transparentnosti a důvěry uživatelů v systém. 
+Bude zobrazovat celý průběh generování testů - od prvotního zamyšlení agenta, přes volání nástrojů až po finální validaci a generaci kódu. Pokud to 
+daný krok umožní, bude zobrazet i konkrétní výstup (např. výsledek tool callu). Po vygenerování testu bude (kromě samotného kódu) zobrazeno 
+i krátké shrnutí v podobě počtu zkonzumovaných tokenů, celkové ceny a případně i možnost regenerovat test na základě zpětné vazby od uživatele.
+
+\subsection*{Sekce pro spuštění testů a zobrazení výsledků}
+Tato sekce by měla nahradit potřebu přepínat mezi běžícím systémem pro generování testů a vývojovým prostředím, čímž se vývojáři ušetří čas.
+Uživatel by měl mít možnost vidět a spravovat testy, které má v aktuálním repozitáři - a pokud možno, tak je rovnou i spouštět a vidět výsledky jejich běhu.
+
+
 
 \section{Shrnutí}
-TODO dopsat
+V této kapitole byl představen kompletní návrh softwarového řešení včetně uživatelského rozhraní.
+Na základě analýzy artefaktů byl vytvořen vlastní normalizovaný doménový model a definována 
+striktní pravidla pro minimalizaci rizika halucinací jazykových modelů v agentské smyčce.
+Pro maximální uživatelskou přívětivost a adopci byl zvolen \textit{local-first} distribuční model,
+který spolu s MCP serverem a AI Gateway představuje základ pro udržitelnou a snadno rozšiřitelnou architekturu.
+Definovány byly i konkrétní funkční a nefunkční požadavky, které budou později sloužit k ověření úspěšnosti implementace a naplnění cílů této práce.
+Konkrétní technologie, které budou pro implementaci tohoto systému použity, jsou předmětem další kapitoly, která se zaměří na výběr vhodného technologického stacku.
+
 \chapter{Technologický stack}
 
 \section{Volba frontendového řešení}
