@@ -697,8 +697,7 @@ konkrétní požadavky a architektura řešení, čemuž se podrobně věnuje n�
 
 \chapter{Návrh systému}
 TODO dopsat
-\section{Analýza vstupních artefaktů a jejich mapování}
-\subsection{Struktura a sémantika vstupních dat}
+\section{Analýza struktury a sémantiky vstupních artefaktů}
 Důležitým faktorem pro úspěšnou automatizaci testů je správné pochopení a zpracování vstupních artefaktů, které jsou základem pro generování testů.
 Jak bylo zmíněno v kapitole 2, tyto artefakty mohou mít různou formu - od textových dokumentů (např. uživatelské příběhy, akceptační kritéria) až po strukturované formáty (např. Gherkin).
 V ALM nástrojích uživatelské příběhy často nemají jednotnou strukturu, což výrazně ztěžuje jejich zpracování. Zejména nástroje jako \texttt{Jira} nabízí 
@@ -842,6 +841,40 @@ NFR-05 & \textbf{Rozšiřitelnost nástrojů:} Architektura by mohla umožňovat
 \end{table}
 
 \section{Koncepční architektura systému}
+\subsection{Doménový model aplikace}
+Jak ukázala analýza veřejných instancí ALM nástrojů (viz sekce 3.1), vstupní artefakty napříč projekty a odvětvími postrádají jednotnou strukturu.
+Pokud by agent přistupoval přímo k surovým datům z těchto různorodých systémů, byla by extrakce informací velmi nespolehlivá a náročná.
+Tento systém proto zavádí vlastní, normalizovaný doménový model, který funguje jako standardizovaná mezivrstva mezi nestrukturovanými daty z externích nástrojů a čistým kontextem,
+který bude agentovi předán. Díky tomu bude možné zajistit, že agent bude pracovat s předvídatelným a konzistentním formátem dat, což výrazně zlepší spolehlivost a 
+efektivitu generování testů (čímž naplňuje požadavek FR-01).
+
+Struktura obsahuje tři klíčové entity:
+
+\begin{enumerate}
+    \item \textbf{Projekt} - Reprezentuje konkrétní testovanou aplikaci. Obsahuje její základní informace (název, popis, URL).
+    \item \textbf{Uživatelský příběh} - Reprezentuje jeden konkrétní ticket. Obsahuje relevantní informace pro generaci testů - název, popis, akceptační kritéria a nepovinný dodatečný kontext (např. odkazy na dokumentaci, konkrétní požadavky na testy...).
+    \item \textbf{Vygenerovaný test} - Reprezentuje testovací scénář vygenerovaný agentem. Kromě samotného kódu obsahuje i metadata o generování testu (název, použitý model, množství tokenů, celková cena).
+\end{enumerate}
+
+Model je znázorněn na obrázku \ref{fig:domain_model}. Mezi entitami jsou definovány relace - mezi projektem a uživatelským příběhem je relace 1:N - projekt může mít více uživatelských 
+příběhů, ale každý uživatelský příběh patří pouze jednomu jedinému projektu. V praxi by se našly i výjimky, kdy by uživatelský příběh mohl být sdílen mezi více projekty (např. společná funkcionalita či separátní projekt pro frontend a backend), 
+ale dle dříve zanalyzovaných ticketů (které v drtivé většině případů obsahovaly vazbu pouze na jeden projekt) a pro zjednodušení modelu byla tato možnost vyloučena. 
+Relace mezi uživatelským příběhem a vygenerovaným testem je také 1:N - jeden uživatelský příběh může mít více vygenerovaných testů, 
+ale každý vygenerovaný test patří pouze jednomu jedinému uživatelskému příběhu.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/business.pdf}
+    \caption{Doménový model systému.}
+    \label{fig:domain_model}
+\end{figure}
+
+Ostatní prvky identifikované v analýze (např. metadata ticketů) jsou záměrně vynechány, protože pro generování testů nepřináší žádnou přidanou hodnotu a navíc jejich 
+zahrnování v agentově kontextu by mohlo vést k zvětšení množství tokenů a tím i nákladů na generování testů. 
+
+\subsection{Architektura komponent}
+
+\subsection{Architektura agenta a exekuční smyčka}
 
 \section{Návrh uživatelského rozhraní}
 
