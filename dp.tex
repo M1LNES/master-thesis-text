@@ -1057,18 +1057,96 @@ který spolu s MCP serverem a AI Gateway představuje základ pro udržitelnou a
 Definovány byly i konkrétní funkční a nefunkční požadavky, které budou později sloužit k ověření úspěšnosti implementace a naplnění cílů této práce.
 Konkrétní technologie, které budou pro implementaci tohoto systému použity, jsou předmětem další kapitoly, která se zaměří na výběr vhodného technologického stacku.
 
-\chapter{Technologický stack}
+\chapter{Použité technologie}
+Pro transformaci navržené architektury do podoby reálného softwaru 
+bylo nezbytné vhodně zvolit technologie, které bude systém využívat. 
+Tato kapitola představuje hlavní nástroje, knihovny a frameworky, na kterých bude systém postaven.
+ Cílem výběru nebylo pouze využití moderních technologií, ale primárně nalezení kombinace, která 
+ zajistí vysokou míru typové bezpečnosti, vzájemnou kompatibilitu a nativní podporu pro specifické požadavky autonomního agenta.
 
-\section{Volba frontendového řešení}
+\section{TypeScript}
+Jako primární programovací jazyk celého systému byl zvolen TypeScript.
+Jedná se o striktně typovanou nadstavbu jazyka JavaScript, která do webového vývoje přináší statickou kontrolu typů \cite{bierman2014understanding, richards2015concrete}.
+Hlavní výhodou této technologie je schopnost detekovat typové a strukturální chyby již během fáze vývoje a kompilace, na rozdíl 
+od JavaScriptu, který tyto chyby odhalí až při samotném běhu aplikace. Tato schopnost je pro navrhovaný systém klíčová, 
+protože vzhledem k neustálé a dynamické výměně dat mezi frontendem, backendem a velkými jazykovými modely je 
+zajištění konzistentních datových struktur naprosto nezbytné pro správnou funkčnost, spolehlivost a udržitelnost.
 
-\section{Volba backendového řešení}
+To bude realizováno prostřednictvím DTO (Data Transfer Object) patternu, kdy budou definovány konkrétní 
+datové typy a rozhraní pro všechny klíčové entity systému (projekty, uživatelské příběhy, vygenerované testy).
+Díky tomu bude možné sdílená rozhraní definovat pouze jednou napříč celou aplikací, 
+což výrazně zjednodušuje vývoj, eliminuje redundantní kód a snižuje riziko chyb.
 
-\section{Výběr E2E frameworku a automatizačního nástroje}
+\section{React}
+Pro vývoj uživatelského rozhraní byla zvolena populární javascriptová knihovna React. 
+Disponuje deklarativním a komponentovým přístupem, díky němuž je možné rozdělit komplexní rozhraní do menších, znovupoužitelných částí.
+Vzhledem k důrazu na maximální interaktivitu navrhovaného systému (zejména pro dynamické vykreslování myšlenkových pochodů agenta, 
+správu stavu rozhraní pro specifikaci uživatelských příběhů či zobrazení výsledků vygenerovaných testů) je efektivní správa stavu 
+komponent klíčová. Zásadním benefitem Reactu je využití tzv. virtuálního DOMu (Virtual DOM), který zaručuje, 
+že se při změně stavu překreslí pouze ta část uživatelského rozhraní, jež se skutečně změnila \cite{chen2019front}. To výrazně 
+zlepšuje výkon a zajišťuje plynulý chod aplikace i při velkém počtu příchozích událostí.
+Dalším rozhodujícím faktorem pro volbu této knihovny byla podpora jazyka TypeScript skrz syntaxi TSX,
+což umožňuje bezproblémově napojit frontend na sdílené DTO modely a zachovat striktní typovou bezpečnost napříč celou aplikací.
 
-\section{Volba LLM modelu a orchestrace}
+\section{NestJS}
+Pro vývoj backendové části aplikace byl zvolen framework NestJS založený na platformě Node.js.
+Tento framework byl vybrán především pro svou modulární architekturu a integrovanou podporu pro \textit{Dependency Injection} -
+klíčový návrhový vzor pro udržitelnost a testovatelnost kódu \cite{munirov2025nestjs}. Vzhledem k tomu, že agent bude obsahovat komplexní logiku,
+která zahrnuje komunikaci s LLM modely, správu lokálního souborového systému, správu uživatelských příběhů a projektů, 
+je důležité, aby tyto domény byly striktně logicky oddělené do samostatných modulů, což povede k lepší čitelnosti, testovatelnosti 
+a dlouhodobé udržitelnosti celého backendu. NestJS navíc nabízí nástroj \texttt{Nest CLI}, který umožňuje 
+rychlé generování boilerplate kódu pro nové moduly, služby a kontrolery, což výrazně usnadňuje a zrychluje vývoj.
+Na rozdíl od klasického Express.js podporuje nativně i asynchronní streamování dat pomocí SSE, díky čemuž je eliminována 
+potřeba implementovat komplexnější řešení na bázi WebSocketů. 
 
+
+Jak je vidět na obrázku \ref{fig:sseVsSocket}, pro tento případ použití je SSE vhodnou volbou. 
+Zatímco WebSockety vyžadují udržování obousměrného spojení, SSE funguje na principu standardního HTTP požadavku, 
+kdy klient pouze otevře spojení (\texttt{GET /sse}) a následně server už jen jednosměrně odesílá průběžné aktualizace směrem k uživateli.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/sseVsWebsocket.pdf}
+    \caption{Schéma komunikace pomocí SSE vs WebSocketů.}
+    \label{fig:sseVsSocket}
+\end{figure}
+
+
+\section{Vercel AI SDK}
+Pro komunikaci s velkými jazykovými modely (LLM) byla zvolena knihovna Vercel AI SDK. 
+Jak již bylo zmíněno v předchozí kapitole, největším úskalím integrace různých poskytovatelů umělé 
+inteligence je značná rozdílnost specifikací jejich API. Vercel AI SDK tento problém elegantně řeší tím,
+ že funguje jako univerzální adaptér. Poskytuje jednotné rozhraní, díky kterému lze, jak uvádí 
+ Patil et al. \cite{patil2024real}, plynule přecházet mezi různými modely pouhou úpravou konfigurace, 
+ aniž by bylo nutné zasahovat do vnitřní logiky agenta.
+
+Zásadnějším důvodem ale byla podpora pro volání nástrojů - knihovna nativně řeší překlad definic nástrojů (pomocí JSON schémat)
+do formátů specifické pro jednotlivé  poskytovatele a automaticky parsuje a validuje odpovědi od modelů zpět do striktně typovaných TypeScript objektů.
+
+V neposlední nabízí i spoustu předpřipravených hooků pro React/Next.js aplikace a podporuje streamování odpovědí.
+
+
+\section{Playwright a Model Context Protocol (MCP)}
+Jako finální testovací framework byl zvolen Playwright. 
+Jak popisuje studie \cite{talakola2024automated}, Playwright efektivně řeší specifické výzvy moderních dynamických aplikací, 
+jako jsou asynchronní operace, složité překreslování komponent a komplexní správa stavu. 
+Přestože byly základní výhody tohoto nástroje představeny v teoretické části, 
+níže jsou na základě zmíněné studie shrnuty ty nejzásadnější, které rozhodly o jeho výběru pro tento systém:
+
+\begin{itemize}
+    \item \textbf{Pokročilý Auto-waiting a stabilita:} Framework automaticky vyčkává na interaktivitu prvků, čímž eliminuje potřebu statických čekacích dob a radikálně snižuje nestabilitu testů.
+    \item \textbf{Network Interception a API Mocking:} Nativní podpora zachytávání síťového provozu umožňuje simulovat chybové stavy a podvrhovat API odpovědi bez nutnosti úprav na skutečném backendu.
+    \item \textbf{Složité uživatelské interakce:} Nástroj spolehlivě zvládá práci se Shadow DOM, testování napříč vícero záložkami a komplexní akce typu \textit{drag-and-drop}.
+\end{itemize}
+
+Pro integraci s autonomním agentem je navíc klíčová dostupnost NPM balíčku \texttt{@playwright/mcp}, 
+který běží jako samostatný proces a komunikuje s backendem přímo přes protokol MCP.
+ 
 \section{Shrnutí}
-
+V této kapitole byl představen a zdůvodněn výběr technologií, které budou použity pro implementaci navrženého systému.
+Zvolený technologický stack sahá od striktní typové kontroly (TypeScript), přes reaktivní uživatelské rozhraní (React) a modulární backend (NestJS), 
+až po specializované nástroje pro komunikaci s LLM modely (Vercel AI SDK) a testování webových aplikací (Playwright s podporou MCP protokolu). 
+Konkrétní použití těchto technologií bude detailně představeno v další kapitole, jež se bude věnovat samotné implementaci.
 
 
 \chapter{Závěr}
