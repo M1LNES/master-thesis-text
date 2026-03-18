@@ -166,7 +166,7 @@ Budou vysvětleny jejich základní principy, technické parametry a limity spoj
 které propojují svět testování a umělé inteligence skrze pokročilé architektury a komunikační protokoly. Tento ucelený přehled metodik a technologií poslouží jako základ pro následný praktický 
 návrh vlastního řešení.
 \section{Agilní vývoj a specifikace požadavků}
-\subsection{Agilní metodiky}
+
 IT je jedním z nejrychleji se rozvíjejících odvětví, a to nejen z pohledu technologií,
 ale i přístupu k vývoji softwaru. Jak \cite{articleFromWaterfallToAgile} uvádí, tento aspekt vedl k vývoji metodik (např. 
 agilní metodiky či vodopádový model), které navrhují řízení v závislosti na vlastnostech produktu, organizačních strukturách či dynamickém prostředí.
@@ -193,17 +193,22 @@ které specifikují požadované funkcionality z pohledu uživatele \cite{sachde
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{pictures/scrum_cropped.pdf}
-\caption{Vizualizace Scrum procesu a jeho klíčových fází\protect\footnotemark}
+\includegraphics[width=1\textwidth]{pictures/Scrum-process-flow-1.png}
+\caption{Vizualizace Scrum procesu a jeho klíčových fází \cite{faniran2017adopting}.}
 \label{fig:scrum_process}
 \end{figure}
 
-Vzájemná interakce těchto rolí a posloupnost jednotlivých aktivit je znázorněna na obrázku \ref{fig:scrum_process}. Celý proces probíhá v cyklech délky 
-2-4 týdnů, během nichž tým postupuje od plánování a výběru priorit ze sprint backlogu až po samotnou implementaci a následnou revizi zhotovené práce.
-Klíčovým výstupem každého sprintu je funkční přírůstek softwaru a zpětná vazba od zákazníka. A právě uživatelské příběhy 
-tvoří základní pilíř pro specifikování těchto přírůstků.
+Vzájemná interakce těchto rolí a posloupnost jednotlivých aktivit je znázorněna na obrázku \ref{fig:scrum_process}. 
+Celý proces probíhá v iterativních cyklech (tzv. sprintech), které zpravidla trvají 2-4 týdny
+(na zmiňovaném schématu je pro ilustraci uvedena historicky tradiční délka 30 dnů). Během nich 
+tým postupuje od výběru prioritních požadavků zákazníka z produktového backlogu (\textit{Product Backlog}), 
+přes vytvoření menšího backlogu pro daný sprint (\textit{Sprint Backlog}), až po samotnou implementaci,
+která je prokládána každodenními krátkými (15-minutovými) schůzkami. 
+Klíčovým výstupem každého sprintu je funkční přírůstek softwaru a zpětná vazba od zákazníka.
+A právě uživatelské příběhy tvoří základní pilíř pro specifikování těchto přírůstků.
 
-\footnotetext{Zdroj: \textit{What is Scrum?} [online]. MarTech.org. Dostupné z: \href{https://martech.org/what-is-scrum-the-project-management-framework-agile-teams-rely-on/}{martech.org/what-is-scrum}}\subsection{Uživatelské příběhy}
+
+\subsection{Uživatelské příběhy}
 User story je nejpoužívanějším artefaktem v agilním vývoji \cite{9393933userstories} - jedná se o krátký, semi-strukturovaný 
 popis požadavků napsán v přirozeném jazyce. Na ukázce \ref{lst:user-story-template} je uvedena standardní šablona, 
 podle níž se uživatelské příběhy píší \cite{9393933userstories,9771182userStories, 9325670userStories}.
@@ -251,7 +256,7 @@ jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkr
  story považována za splněnou. Týkají se zejména funkcionality (tlačítko dělá to co má), kvalitativních charakteristik 
  (systém reaguje do X milisekund) a obchodní logiky \cite{ferreira2022towards}. 
 
- Akceptační kritéria mohou být zapsána různou formou - ať už prostý seznam, kde každý bod představuje právě jedno kriéterium, 
+ Akceptační kritéria mohou být zapsána různou formou - ať už prostý seznam, kde každý bod představuje právě jedno kritérium, 
  nebo formou scénářů, které jsou popisovány pomocí jazyka Gherkin. Tento způsob testování (kdy jsou nejprve napsány testovací 
  scénáře v přirozeném jazyce a následně se implementují samotné testy) se nazývá \texttt{Behavior-Driven Development} (\texttt{BDD}) \cite{9825769gherkin}.
  
@@ -295,13 +300,12 @@ Ukázka takového seznamu je uvedena na ukázce \ref{lst:list-ac-example} - kaž
 
 V praxi bývají akceptační kritéria (spolu s uživatelskými příběhy) nejčastěji obsažena v \texttt{ALM} nástrojích (\texttt{Application Lifecycle Management}) 
 jako jsou \texttt{Jira}, \texttt{Azure DevOps}, \texttt{Rally} či \texttt{GitHub Projects}. Tyto nástroje nevyžadují specifický formát zápisu, ale umožňují flexibilitu - ať už jde o prostý seznam, Gherkin scénáře nebo 
-kombinaci obojího. Např. studie \cite{schwedt2025bugs} zaměřená na generování akceptačních testů vycházela z běžných user stories a jejich 
+kombinaci obojího. Např. studie \textit{From bugs to benefits: Improving user stories by leveraging crowd knowledge with cruise-ac} \cite{schwedt2025bugs} zaměřená na generování akceptačních testů vycházela z běžných user stories a jejich 
 textových popisů, z něhož následně generovala Gherkin scénáře, z nichž až poté byly implementovány automatizované testy.
 
 \section{Automatizované testování softwaru}
-\subsection{Metodika a pyramida testování}
 Softwarové testování lze definovat jako hledání chyb či chybějících požadavků v softwaru \cite{7814898swtesting}. Dá se na něj 
-nahlížet i z pohledu snižování rizika, což vede v posílení důvěry uživatelů a zlepšení kvality softwaru. Jak také studie \cite{7814898swtesting} uvádí,
+nahlížet i z pohledu snižování rizika, což vede v posílení důvěry uživatelů a zlepšení kvality softwaru. Jak také \textit{Software Testing Techniques: A Literature Review} \cite{7814898swtesting} uvádí,
 testování je důležitou součástí \texttt{QA} - čím dříve jsou chyby odhaleny, tím levnější je jejich oprava. Testování lze rozdělit 
 do několika tříd, jež jsou znázorněny v tabulce \ref{tab:druhy_testu}, která vychází z knihy \cite{herout_testovani_programatory}.
 
@@ -312,10 +316,10 @@ do několika tříd, jež jsou znázorněny v tabulce \ref{tab:druhy_testu}, kte
 \textbf{Název testu} & \textbf{Popis} \\ \hline
 \textbf{Testování podle scénářů} & Tester dle předpřipravených scénářů manuálně prochází aplikaci a kontroluje očekávané chování jednotlivých testovacích kroků. \\ \hline
 \textbf{Průzkumné testování} & Tester bez předem známých scénářů prozkoumává aplikaci a hledá chyby. \\ \hline
-\textbf{Regresní testy} & Ověřují, zda nově přidané featury nezhoršily existující funkce. \\ \hline
+\textbf{Regresní testy} & Ověřují, zda nově přidané featury nerozbily existující funkce. \\ \hline
 \textbf{Jednotkové (unit) testy} & Automatizované skripty, které izolovaně ověřují funkčnost nejmenších částí zdrojového kódu (funkce, metody). \\ \hline
 \textbf{Beta testy} & Poskytnutí aplikace omezené skupině uživatelů. \\ \hline
-\textbf{Smoke testy} & Rychlé počáteční testy ověřující sestavení aplikace a její stabilitu. \\ \hline
+\textbf{Smoke testy} & Rychlé testy ověřující sestavení aplikace a její stabilitu. \\ \hline
 \textbf{Konfirmační testy} & Potvrzení, že aplikace po odstranění defektu funguje správně. \\ \hline
 \end{tabular}
 \caption{Druhy testů dle \cite{herout_testovani_programatory}.}
@@ -390,7 +394,7 @@ V oblasti webové automatizace existuje velké množství frameworků, které se
 Zde je uveden přehled těch nejpopulárnějších a nejčastěji používaných,
 
 \subsubsection*{Selenium (WebDriver)}
-Jeden z nejrozšířenějších a nejstarších nástrojů. Podporuje širokou škálu jazyků (Java, Python, C\#, JavaScript) a prohlížeců prostřednictvím WebDriveru \cite{selenium_docs}. Díky rozšířené 
+Jeden z nejrozšířenějších a nejstarších nástrojů. Podporuje širokou škálu jazyků (Java, Python, C\#, JavaScript) a prohlížečů prostřednictvím WebDriveru \cite{selenium_docs}. Díky rozšířené 
 komunitě, množství dostupných zdrojů a existujících knihoven je Selenium stále velmi populární volbou. Nevýhodou je 
 složitější prvotní konfigurace a manuální správa testů, která může (při nesprávném použití) vést k nestabilním testům.
 
@@ -414,18 +418,18 @@ Nevýhodou je omezená podpora napříč jazyky, prohlížeči a testování ví
 
 \subsection{Výzvy automatizace v agilním prostředí}
 
-Studie \cite{butt2023conceptual} identifikovala několik klíčových výzev, které
+Studie \textit{A conceptual model supporting decision-making for test automation in Agile-based Software Development} \cite{butt2023conceptual} identifikovala několik klíčových výzev, které
 se vyskytují při implementaci automatizace testů v agilním prostředí. 
 
 \subsubsection*{Údržba a technický dluh}
-Studie uvádí, že tento proces je časově náročný a náchylný k chybám. S rostoucím počtem uživatelských příběhů se manuální tvorba 
+Jak vyplývá ze zmíněné studie, tento proces je časově náročný a náchylný k chybám. S rostoucím počtem uživatelských příběhů se manuální tvorba 
 test casů (testovacích případů) stává bottleneckem, což může vést k následnému nárůstu technického dluhu, kdy se testy stávají zastaralými a všechny 
 scénáře nemusí být pokryty, což zvyšuje riziko chyb. 
 
 
 \subsubsection*{Regresní testování}
 Jelikož agilní vývoj vyžaduje rychlé a časté změny, je klíčové zajistit, aby po každé z nich bylo co nejdříve ověřeno na regresních testech, 
-že nedošlo k narušení stávající funkcionality. Tento problém je možno částečně řešit automatickým generovaním testů přímo z požadavků, aby se 
+že nedošlo k narušení stávající funkcionality. Tento problém je možno částečně řešit automatickým generováním testů přímo z požadavků, aby se 
 minimalizoval čas mezi implementací a testováním.
 
 \subsubsection*{Rozdíl mezi specifikací a kódem}
@@ -433,14 +437,12 @@ Tato výzva souvisí s jasností požadavků na produkt. Jelikož jsou požadavk
 které mohou vést k nesprávné implementaci či chybám. To má poté za následek:
 
 \begin{itemize}
-    \item Nestabilní testovácí orákulum - pokud mechanismus pro ověření výsledků není stabilní a předvídatelný, může docházet k velkému množství falešně pozitivních nálezů či křehkým testům.
+    \item Nestabilní testovací orákulum - pokud mechanismus pro ověření výsledků není stabilní a předvídatelný, může docházet k velkému množství falešně pozitivních nálezů či křehkým testům.
     \item Náklady na opravu - opakovaná reimplementace funkcionalit vynucuje souběžnou údržbu testů, což výrazně snižuje návratnost (ROI) investic.
     \item Nízká testovatelnost - zaměření na testovatelnost od prvotních fází vývoje výrazně zvyšuje efektivitu automatizace.
 \end{itemize}
 
 \section{Velké jazykové modely ve vývoji softwaru}
-
-\subsection{Architektura a principy LLM}
 Velké jazykové modely jsou rozsáhlé, předtrénované, statistické modely založené na neuronových sítí. 
 Jedná se zejména o modely založené na architektuře Transformer, které obsahují miliardy parametrů a jsou trénovány na masivním množství 
 textových dat. Díky tomuto objemu parametrů jsou schopni zachytit komplexní vzory a vztahy v jazyce (na základě statistické analýzy) a generovat 
@@ -451,7 +453,7 @@ Evoluce jazykových modelů prošla 4 hlavními generacemi \cite{wang2025history
 
 \begin{itemize}
     \item \textbf{Statistické jazykové modely (SLM)} - Vznik v 90. letech 20. století, založené na pravděpodobnostních modelech a n-gramových přístupech.
-    \item \textbf{Neurální jazykové modely (NLM)} - Slova mapovaná na vektory (embeddings), k predikci dalších slov využívány rekurentní neuronové sítě (RNN) a později LSTM (Long Short-Term Memory).
+    \item \textbf{Neuronové jazykové modely (NLM)} - Slova mapovaná na vektory (embeddings), k predikci dalších slov využívány rekurentní neuronové sítě (RNN) a později LSTM (Long Short-Term Memory).
     \item \textbf{Předtrénované jazykové modely (PLM)} - Předtrénované na obrovském množství neoznačeného textu a využití fine-tuningu pro zaměření na konkrétní úlohy.
     \item \textbf{Velké jazykové modely (LLM)} - Současné modely s miliardami parametrů vycházející z PLM, které díky masivnímu nárustu dat a výpočetnímu výkonu nevyžadují ani dolaďování (emergent abilities).
 \end{itemize}
@@ -616,12 +618,12 @@ Ve své základní podobě se skládá ze tří klíčových komponent \cite{ope
 \begin{itemize}
     \item \textbf{Model} - Konkrétní velký jazykový model, který řídí uvažování, rozhodování a celkovou exekuci workflow agenta.
     \item \textbf{Nástroje (Tools)} - Externí funkce nebo API, jenž agent využívá k interakci s vnějším prostředím.
-    \item \textbf{Instrukce (Instructions)} - Explicitní pravidla definující agentovo chování - zmenšují prostor pro nejednoznačnosti což vede k efektivníějšímu chování a minimalizaci halucinací.
+    \item \textbf{Instrukce (Instructions)} - Explicitní pravidla definující agentovo chování - zmenšují prostor pro nejednoznačnosti což vede k efektivnějšímu chování a minimalizaci halucinací.
 \end{itemize}
 
 
 Pro plné fungování v rámci komplexnějších architektur je často zmiňují i další klíčové aspekty, které pomáhají agentům řešit náročnější úlohy. Mezi ně patří 
-pamět (\texttt{Memory}), která umožňuje agentovi uchovávat a využívat informace z předchozích interakcí, a dále plánování (\texttt{Planning}), jež umožňuje 
+paměť (\texttt{Memory}), která umožňuje agentovi uchovávat a využívat informace z předchozích interakcí, a dále plánování (\texttt{Planning}), jež umožňuje 
 agentovi dekomponovat složitý problém na sadu menších proveditelných kroků \cite{sarkar2025survey}.
 
 
@@ -660,7 +662,7 @@ tak spolehlivost celého systému.
 
 Model Context Protocol (MCP), představený firmou \texttt{Anthropic} ke konci roku 2024, je otevřený standard pro interoperabilitu, jehož cílem 
 je sjednotit a zjednodušit způsob, jakým se modely umělé inteligence propojují s externími nástroji, systémy a daty.\footnote{\href{https://modelcontextprotocol.io/docs/getting-started/intro}{Oficiální dokumentace MCP}} MCP, 
-jež si vysloužil přezdívku ``USB-C for AI applications``, poskytuje jednotné a standardní rozhraní pro komunikaci - je postaven na 
+jenž si vysloužil přezdívku ``USB-C for AI applications``, poskytuje jednotné a standardní rozhraní pro komunikaci - je postaven na 
 robustním modelu komunikace Client-Host-Server s využitím formátu JSON-RPC 2.0 \cite{sarkar2025survey}:
 
 \begin{itemize}
@@ -1061,7 +1063,7 @@ Konkrétní technologie, které budou pro implementaci tohoto systému použity,
 Pro transformaci navržené architektury do podoby reálného softwaru 
 bylo nezbytné vhodně zvolit technologie, které bude systém využívat. 
 Tato kapitola představuje hlavní nástroje, knihovny a frameworky, na kterých bude systém postaven.
- Cílem výběru nebylo pouze využití moderních technologií, ale primárně nalezení kombinace, která 
+Cílem výběru nebylo pouze využití moderních technologií, ale primárně nalezení kombinace, která 
  zajistí vysokou míru typové bezpečnosti, vzájemnou kompatibilitu a nativní podporu pro specifické požadavky autonomního agenta.
 
 \section{TypeScript}
@@ -1085,7 +1087,7 @@ správu stavu rozhraní pro specifikaci uživatelských příběhů či zobrazen
 komponent klíčová. Zásadním benefitem Reactu je využití tzv. virtuálního DOMu (Virtual DOM), který zaručuje, 
 že se při změně stavu překreslí pouze ta část uživatelského rozhraní, jež se skutečně změnila \cite{chen2019front}. To výrazně 
 zlepšuje výkon a zajišťuje plynulý chod aplikace i při velkém počtu příchozích událostí.
-Dalším rozhodujícím faktorem pro volbu této knihovny byla podpora jazyka TypeScript skrz syntaxi TSX,
+Dalším rozhodujícím faktorem pro volbu této knihovny byla podpora jazyka TypeScript prostřednictvím syntaxe TSX,
 což umožňuje bezproblémově napojit frontend na sdílené DTO modely a zachovat striktní typovou bezpečnost napříč celou aplikací.
 
 \section{NestJS}
@@ -1117,18 +1119,18 @@ Pro komunikaci s velkými jazykovými modely (LLM) byla zvolena knihovna Vercel 
 Jak již bylo zmíněno v předchozí kapitole, největším úskalím integrace různých poskytovatelů umělé 
 inteligence je značná rozdílnost specifikací jejich API. Vercel AI SDK tento problém elegantně řeší tím,
  že funguje jako univerzální adaptér. Poskytuje jednotné rozhraní, díky kterému lze, jak uvádí 
- Patil et al. \cite{patil2024real}, plynule přecházet mezi různými modely pouhou úpravou konfigurace, 
+ Patil et al. ve studii \textit{Real time inventory management system powered by generative user interface} \cite{patil2024real}, plynule přecházet mezi různými modely pouhou úpravou konfigurace, 
  aniž by bylo nutné zasahovat do vnitřní logiky agenta.
 
-Zásadnějším důvodem ale byla podpora pro volání nástrojů - knihovna nativně řeší překlad definic nástrojů (pomocí JSON schémat)
-do formátů specifické pro jednotlivé  poskytovatele a automaticky parsuje a validuje odpovědi od modelů zpět do striktně typovaných TypeScript objektů.
+Zásadním důvodem ale byla podpora pro volání nástrojů - knihovna nativně řeší překlad definic nástrojů (pomocí JSON schémat)
+do formátů specifických pro jednotlivé poskytovatele a automaticky parsuje a validuje odpovědi od modelů zpět do striktně typovaných TypeScript objektů.
 
-V neposlední nabízí i spoustu předpřipravených hooků pro React/Next.js aplikace a podporuje streamování odpovědí.
+V neposlední řadě nabízí i spoustu předpřipravených hooků pro React/Next.js aplikace a podporuje streamování odpovědí.
 
 
 \section{Playwright a Model Context Protocol (MCP)}
 Jako finální testovací framework byl zvolen Playwright. 
-Jak popisuje studie \cite{talakola2024automated}, Playwright efektivně řeší specifické výzvy moderních dynamických aplikací, 
+Jak popisuje studie \textit{Automated end to end testing with Playwright for React applications} \cite{talakola2024automated}, Playwright efektivně řeší specifické výzvy moderních dynamických aplikací, 
 jako jsou asynchronní operace, složité překreslování komponent a komplexní správa stavu. 
 Přestože byly základní výhody tohoto nástroje představeny v teoretické části, 
 níže jsou na základě zmíněné studie shrnuty ty nejzásadnější, které rozhodly o jeho výběru pro tento systém:
@@ -1136,7 +1138,7 @@ níže jsou na základě zmíněné studie shrnuty ty nejzásadnější, které 
 \begin{itemize}
     \item \textbf{Pokročilý Auto-waiting a stabilita:} Framework automaticky vyčkává na interaktivitu prvků, čímž eliminuje potřebu statických čekacích dob a radikálně snižuje nestabilitu testů.
     \item \textbf{Network Interception a API Mocking:} Nativní podpora zachytávání síťového provozu umožňuje simulovat chybové stavy a podvrhovat API odpovědi bez nutnosti úprav na skutečném backendu.
-    \item \textbf{Složité uživatelské interakce:} Nástroj spolehlivě zvládá práci se Shadow DOM, testování napříč vícero záložkami a komplexní akce typu \textit{drag-and-drop}.
+    \item \textbf{Složité uživatelské interakce:} Nástroj spolehlivě zvládá práci se Shadow DOM, testování napříč více záložkami a komplexní akce typu \textit{drag-and-drop}.
 \end{itemize}
 
 Pro integraci s autonomním agentem je navíc klíčová dostupnost NPM balíčku \texttt{@playwright/mcp}, 

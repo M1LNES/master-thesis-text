@@ -1,4 +1,0 @@
-- Upravit poznámky od Dostyho
-- správně odkazovat na studie (prefixovat nejen přes \cite, ale i název studie když o nich yappuju)
-- projet, jestli se někde zbytečně neopakuju
-- projet gramatiku 4ky (technologie)
