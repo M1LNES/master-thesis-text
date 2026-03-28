@@ -406,7 +406,7 @@ webových aplikací a testů může být nevýhodou nižší flexibilita a nutno
 
 \subsubsection*{Playwright}
 Moderní testovací framework vyvinutý společností Microsoft. Podporuje více jazyků (JavaScript/TypeScript, Python, Java, .NET) a 
-nabízí robustní API pro interakci s webovými stránkami \cite{playwright_docs}. Výhodou je rychlost testů a podpora pro více prohlížečů (Firefox, WebKit, Chromium) bez 
+nabízí robustní API (Application Programming Interface) pro interakci s webovými stránkami \cite{playwright_docs}. Výhodou je rychlost testů a podpora pro více prohlížečů (Firefox, WebKit, Chromium) bez 
 nutnosti externích driverů. Klíčovou funkcí je také \texttt{Auto-waiting}, který pomáhá eliminovat křehkost testů. Nevýhodou je menší komunita a méně dostupných zdrojů,
 jelikož se jedná o relativně nový nástroj.
 
@@ -1150,6 +1150,99 @@ Zvolený technologický stack sahá od striktní typové kontroly (TypeScript), 
 až po specializované nástroje pro komunikaci s LLM modely (Vercel AI SDK) a testování webových aplikací (Playwright s podporou MCP protokolu). 
 Konkrétní použití těchto technologií bude detailně představeno v další kapitole, jež se bude věnovat samotné implementaci.
 
+\chapter{Implementace}
+TODO
+
+
+\section{Struktura a organizace projektu}
+
+Celý systém byl implementován jako tzv. monorepo (monolithic repository) s využitím nástroje Turborepo,
+který umožňuje spravovat více logicky oddělených aplikací, knihoven či služeb v rámci jednoho repozitáře.
+Díky tomu je možné sdílet kód, typy a rozhraní napříč různými častmi systému bez nutnosti publikovat a spravovat
+samostatné balíčky pro každou z těchto částí. Nástroj Turborepo navíc optimalizuje proces sestavování (build process)
+díky inteligentnímu cachování, které zajišťuje, že se znovu sestaví pouze ty části systému, které byly skutečně změněny, 
+což výrazně zrychluje vývoj a testování.
+
+Základní struktura projektu je rozdělena do dvou hlavních adresářů - složka \texttt{apps} pro spustitelné aplikace (backend a frontend) a 
+složka \texttt{packages} pro sdílené knihovny (např. pro DTO modely, CLI nástroje).
+Zjednodušené zobrazení této struktury je znázorněno níže:
+
+\vspace{1em}
+\dirtree{%
+.0 {}.
+.1 \faFolder{} testpilotai.
+.2 \faFolder{} apps.
+.3 \faFolder{} api \dotfill\hspace{0.5em}\parbox[t]{8cm}{\raggedright Backendová část aplikace (NestJS)}.
+.3 \faFolder{} client \dotfill\hspace{0.5em}\parbox[t]{8cm}{\raggedright Klientské rozhraní (React)}.
+.2 \faFolder{} packages.
+.3 \faFolder{} cli \dotfill\hspace{0.5em}\parbox[t]{8cm}{\raggedright Knihovna pro distribuci přes CLI}.
+.3 \faFolder{} shared \dotfill\hspace{0.5em}\parbox[t]{8cm}{\raggedright Sdílené typy, rozhraní a DTO modely}.
+.2 \faFile[regular]{} package.json \dotfill\hspace{0.5em}\parbox[t]{8cm}{\raggedright Konfigurace projektu a závislostí}.
+.2 \faFile[regular]{} turbo.json \dotfill\hspace{0.5em}\parbox[t]{8cm}{\raggedright Konfigurace Turborepo pipeline}.
+} 
+\vspace{1em}
+
+Důležitou částí této struktury je složka \texttt{./packages/shared}, která obsahuje veškerá doménová data, komunikační DTO modely a definice typů.
+Jelikož je tato logika využívána jak backendem (\texttt{api}), tak frontendem (\texttt{client}), je zaručeno, 
+že obě vrstvy komunikují pomocí identických datových struktur a že jakákoliv změna v datovém modelu se díky TypeScriptu okamžitě projeví chybou při 
+kompilaci, čímž se výrazně snižuje riziko neúmyslných chyb a naplňuje tak požadavek na striktní typovou bezpečnost napříč celou aplikací.
+
+
+\section{Implementace backendové části}
+Zatímco předchozí sekce nastínila celkovou strukturu projektu a jeho uspořádání,
+tato část se zaměří na konkrétní implementaci backendové části z vyšší perspektivy.
+Cílem je představit logickou architekturu serveru, klíčové moduly a jejich zodpovědnosti - konkrétní 
+detaily implementace budou představeny v rámci dalších sekcí. 
+
+
+\subsection{Doménové moduly a vrstvená architektura}
+
+Backendová část (\texttt{apps/api}) je postavena na frameworku NestJS a dodržuje jeho modulární architekturu.
+Aplikace je rozdělena do nezávislých doménových modulů, které jsou pak jako jednotlivé funkční celky sdružené v hlavním vstupním bodě 
+(\texttt{AppModule}). Architektura je logicky vrstvena do tří hlavních domén, které jsou zobrazeny na
+obrázku \ref{fig:backend_modules}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/app_architecture.png}
+    \caption{Zjednodušený diagram vrstvených závislostí backendových modulů.}
+    \label{fig:backend_modules}
+\end{figure}
+Díky této separaci je zajištěno, že každý modul má jasně definovanou zodpovědnost, což výrazně zlepšuje nejen čitelnost a udržitelnost kódu,
+ale i jeho testovatelnost. Každý modul může být jednoduše testován izolovaně pomocí unit testů a následně i integračních testů,
+které ověří správnou spolupráci mezi moduly.
+
+
+Tok dat (Request/Response flow) uvnitř backendu je striktně vrstvený a dodržuje best practices zapouzdření. 
+Požadavek z klientské aplikace je nejdříve zachycen v příslušném kontroleru dané domény (např. \texttt{AgentController}),
+který provádí počáteční validaci vstupních parametrů pomocí DTO a Zod schémat. Kontroler nikdy nekomunikuje s konkrétními 
+službami z jiných modulů - od toho je tu dedikovaná servisní vrstva (např. \texttt{AgentOrchestrationService}), 
+která zapouzdřuje veškerou business logiku.
+Až tato vrstva deleguje dílčí úkoly dál a bezpečně komunikuje se specializovanými službami (Services) z jiných modulů. 
+
+\subsubsection*{Core AI Orchestration}
+Tato vrstva tvoří jádro celého systému a obsahuje moduly zodpovědné za interakci s velkými jazykovými modely a jejich orchestraci.
+\texttt{AgentModule} implementuje řídící smyčku agenta a orchestrace běží přes služby \texttt{AgentService} a \texttt{AgentOrchestrationService}.
+Zároveň tento modul přímo integruje \texttt{LlmModule}, \texttt{ToolsModule}, \texttt{ProjectsModule}, \texttt{UserStoriesModule}, \texttt{StorageModule} a \texttt{FileStorageModule},
+což z něj dělá hlavní integrační bod backendu.
+\texttt{LlmModule} poskytuje jednotné rozhraní pro volání různých poskytovatelů modelů přes AI Gateway,
+\texttt{ToolsModule} pak dále zajišťuje načtení dostupných nástrojů a jejich exekuci přes MCP vrstvu (aktuálně s podporou Playwright nástrojů).
+
+\subsubsection*{Business Domain Modules}
+Tyto moduly reprezentují doménovou logiku aplikace. \texttt{ProjectsModule} zajišťuje správu projektů a jejich konfigurací,
+\texttt{UserStoriesModule} spravuje uživatelské příběhy a jejich artefakty (název, popis, akceptační kritéria), 
+a \texttt{TestsModule} zajišťuje načítání, spouštění a mazání již vygenerovaných Playwright testů.
+Samotné generování testů je řízeno přes endpointy modulu \texttt{AgentModule}; \texttt{TestsModule} slouží primárně pro exekuci a správu výsledných testovacích souborů.
+
+\subsubsection*{Infrastructure \& Persistence}
+Nejnižší vrstva zajišťuje veškeré nefunkční aspekty - od konfigurace přes management dat v cache až po bezpečný zápis do souborového systému.
+\texttt{ConfigModule} zajišťuje načtení proměnných prostředí a práci s lokálním konfiguračním souborem,
+\texttt{StorageModule} ukládá metadata o generování do souboru.
+\texttt{FileStorageModule} se stará o zápis vygenerovaných testů do cílového adresáře, vytváření složek a řešení kolizí názvů souborů.
+
+
+\subsection{Perzistence dat a synchronizace}
+
 
 \chapter{Závěr}
 xxxx
@@ -1158,8 +1251,25 @@ xxxx
 \addcontentsline{toc}{chapter}{Přehled zkratek}
 
 \begin{itemize}[align=left, labelwidth=1.5cm, labelsep=10pt, leftmargin=!]
-    \item[\textbf{X}]    xxx
-    \item[\textbf{Y}]    yyy
+    \item[\textbf{AI}]    Artificial Intelligence 
+    \item[\textbf{ALM}]    Application Lifecycle Management 
+    \item[\textbf{API}]    Application Programming Interface 
+    \item[\textbf{BDD}]    Behavior-Driven Development 
+    \item[\textbf{CLI}]    Command Line Interface 
+    \item[\textbf{DTO}]    Data Transfer Object 
+    \item[\textbf{DoD}]    Definition of Done 
+    \item[\textbf{DOM}]    Document Object Model 
+    \item[\textbf{E2E}]    End-to-End 
+    \item[\textbf{GUI}]    Graphical User Interface 
+    \item[\textbf{JSON}]    JavaScript Object Notation
+    \item[\textbf{JQL}]    Jira Query Language
+    \item[\textbf{LLM}]    Large Language Model 
+    \item[\textbf{MCP}]    Model Context Protocol 
+    \item[\textbf{NPM}]    Node Package Manager
+    \item[\textbf{QA}]    Quality Assurance 
+    \item[\textbf{SSE}]    Server-Sent Events 
+    \item[\textbf{UI}]    User Interface 
+    \item[\textbf{UX}]    User Experience 
 \end{itemize}
 
 \appendix
