@@ -100,9 +100,11 @@
     rulecolor=\color{framegray},
     backgroundcolor=\color{gray!3},
     breaklines=true,
+    breakatwhitespace=false,
+    breakindent=0pt,
     captionpos=b,
-    xleftmargin=2em,
-    xrightmargin=2em,
+    xleftmargin=1em,
+    xrightmargin=1em,
     framesep=0.5em,
     columns=fullflexible,
     keepspaces=true,
@@ -125,7 +127,7 @@
 
 \lstdefinelanguage{TypeScript}{
     morekeywords={
-        export, interface, type, class, extends, implements, constructor,
+        import, from, export, interface, type, class, extends, implements, constructor,
         public, private, protected, readonly, async, await, return,
         if, else, try, catch, finally, throw, new, const, let,
         true, false, null, undefined, string
@@ -139,14 +141,24 @@
 
 \lstdefinestyle{tscode}{
     language=TypeScript,
-    basicstyle=\ttfamily\small,
+    basicstyle=\ttfamily\footnotesize,
     keywordstyle=\color{blue!70!black}\bfseries,
     commentstyle=\color{gray!70!black}\itshape,
     stringstyle=\color{green!35!black},
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    linewidth=\linewidth,
+    float,
+    floatplacement=H,
     numbers=left,
     numberstyle=\tiny\color{gray!80},
     stepnumber=1,
-    numbersep=8pt
+    numbersep=6pt,
+    xleftmargin=0.8em,
+    xrightmargin=0.2em,
+    framesep=0.4em
 }
 
 \lstdefinelanguage{json}{
@@ -161,6 +173,8 @@
 \lstdefinestyle{jsoncode}{
     language=json,
     basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    breakatwhitespace=false,
     numbers=left,
     xleftmargin=0.5em,
     xrightmargin=0.5em,
@@ -1438,6 +1452,100 @@ Při paralelních požadavcích by mohlo dojít k nechtěnému přepsání, ztr�
 Proto byl pro eliminaci tohoto rizika implementován asynchronní zámek (promise-based mutex), který zajistí, 
 že všechny operace, které modifikují obsah těchto souborů, budou striktně serializované. Před každým zápisem je navíc 
 načtený obsah souborů validován proti definovaným Zod schématům, což zajišťuje další úroveň ochrany proti nekonzistentním datům.
+
+\section{Implementace komunikace s LLM}
+Modul \texttt{LlmModule} představuje komunikační rozhraní mezi vnitřní logikou systému 
+(autonomním agentem) a providery velkých jazykových modelů.
+Hlavním úkolem této vrstvy bylo zajistit takovou abstrakci, 
+která by umožnila snadnou integraci nových poskytovatelů a modelů, čímž 
+se minimalizovalo riziko závislosti na konkrétním provideru (\textit{vendor lock-in}).
+Díky tomu je přidání podpory pro nové modely pouze záležitostí několika
+řádků kódu (v případě nového providera vytvoření nového souboru s jeho modely).
+
+\subsection{Abstrakce poskytovatelů a Vercel AI SDK}
+Jak již bylo zmíněno, problém abstrakce různých poskytovatelů řeší knihovna Vercel AI SDK.
+Systém na úrovni \texttt{LlmService} pracuje s jednotným formátem zpráv a nástrojů.
+Na ukázce \ref{lst:llm-generic} je zobrazen způsob volání modelu přes funkci \texttt{generateText}.
+Je vidět, že se předávají pouze obecné parametry jako je identifikátor modelu, systémový prompt, 
+předchozí zprávy a dostupné nástroje - žádné konkrétně nadefinované struktury pro jednotlivé providery.
+
+\begin{lstlisting}[style=tscode, caption={Ukázkové volání LLM přes Vercel AI SDK.}, label={lst:llm-generic}]
+import { generateText } from 'ai';
+
+const result = await generateText({
+    model: "anthropic/claude-sonnet-4.6",
+    system,
+    messages,
+    tools,
+    temperature,
+});
+
+return {
+    text: result.text,
+    toolCalls: result.toolCalls,
+    usage: result.usage,
+};
+\end{lstlisting}
+
+Pak již stačí jen do systémových proměnných nastavit odpovídající klíče jednotlivých providerů 
+a je možné bez jakýchkoliv dalších úprav přepínat mezi modely pouhou změnou identifikátoru modelu v proměnné \texttt{model}.
+Nevýhodou tohoto přístupu v komerční praxi je, že pokud by chtěl uživatel volat všechny firemní modely, 
+musel by mít přístup ke všem potřebným klíčům a nastavit je v prostředí, což není ideální z pohledu bezpečnosti a správy přístupů.
+S tím souvisí i pricing - pokud by uživatel začal neúmyslně volat dražší modely, mohl by se mu rychle navýšit účet za využití API.
+
+Tento problém v implementovaném řešení eliminuje vlastní integrační vrstva. 
+Ta za pomoci funkce \texttt{createOpenAICompatible}, která je součástí Vercel AI SDK, 
+umožňuje definovat vlastní mapování modelů a jejich identifikátorů. V praxi to znamená, 
+že systém v rámci konfigurace využívá jeden univerzální API klíč pro podnikovou AI Gateway a 
+pomocí něj má přístup ke všem podporovaným modelům. Tím se zásadně zvyšuje bezpečnost - klíče 
+různých poskytovatelů nejsou distribuované napříč klientskými zařízeními, ale jsou bezpečně spravovány 
+na straně gateway. Koncový uživatel (nebo konkrétní instance aplikace) pak využívá pouze jeden vygenerovaný klíč, 
+což umožňuje detailní monitoring a případné omezení využití jednotlivých modelů (rate limiting). To je naprosto klíčové 
+pro kontrolu nákladů.
+
+V rámci této práce byl proto využit právě tento přístup, kdy uživatel dostane jeden univerzální API klíč pro AI Gateway firmy 
+Emplifi, přes níž se následně volají všechny podporované modely. To výrazně zjednodušuje použití tohoto systému 
+zaměstnanci a zároveň umožní na konci vývoje a testování určit, kolik nákladů bylo na tento systém vynaloženo, což
+bude důležitá metrika pro zhodnocení efektivity navrženého řešení.
+
+\begin{lstlisting}[style=tscode, caption={Zjednodušené napojení Vercel AI SDK na vlastní AI Gateway}, label={lst:llm-custom-provider}]
+private gateway = createOpenAICompatible({
+    name: 'ai-gateway',
+    apiKey: this.configService.aiGatewayKey,
+    baseURL: this.configService.aiGatewayBaseUrl,
+});
+
+async generate(request: Request, signal?: AbortSignal): Promise<Response> {
+    const model = this.models.get(request.model)!;
+    const modelId = this.resolveGatewayModelId(model); 
+    const messages = this.convertMessagesToAISdk(request.messages);
+    const tools = this.convertToolsToAISdk(request.tools);
+    const temperature = request.temperature ?? 0;
+
+    const result = await generateText({
+        model: this.gateway(modelId),
+        system: request.system,
+        messages,
+        tools,
+        ...(model.supportsTemperature !== false && { temperature }),
+        abortSignal: signal,
+    });
+
+    return this.convertResponse(result, model);
+}
+\end{lstlisting}
+
+Na ukázce \ref{lst:llm-custom-provider} je zobrazen způsob, jakým je Vercel AI SDK napojeno na vlastní AI Gateway.
+Nejprve se pomocí funkce \texttt{createOpenAICompatible} vytvoří instance gateway, 
+která je nakonfigurovaná s univerzálním API klíčem a základní URL pro volání modelů.
+Následně se v metodě \texttt{generate} připraví všechny potřebné parametry pro volání modelu - 
+identifikátor modelu se přeloží na odpovídající ID pro AI Gateway (jelikož např. Anthropic modely jsou 
+poskytovány přes AWS Bedrock, a proto mají jiné ID než stejné modely volané přímo přes Anthropic API),
+zprávy a tooly se převedou do očekávaného formátu pro Vercel AI SDK a nakonec se zavolá 
+funkce \texttt{generateText} s připravenými parametry. Výsledek se pak převede do interního formátu.
+Jak je vidět, funkce \textsl{generateText} umožňuje nastavovat i další parametry jako je \texttt{temperature} pro modely, 
+které tento parametr podporují, či \texttt{abortSignal} pro možnost přerušení běhu generování, což je klíčové pro zajištění 
+dobré uživatelské přívětivosti a kontroly nad procesem generování testů.
 
 \chapter{Závěr}
 xxxx
