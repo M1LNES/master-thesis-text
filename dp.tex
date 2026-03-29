@@ -123,6 +123,52 @@
     sensitive=true
 }
 
+\lstdefinelanguage{TypeScript}{
+    morekeywords={
+        export, interface, type, class, extends, implements, constructor,
+        public, private, protected, readonly, async, await, return,
+        if, else, try, catch, finally, throw, new, const, let,
+        true, false, null, undefined, string
+    },
+    sensitive=true,
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]",
+    morestring=[b]'
+}
+
+\lstdefinestyle{tscode}{
+    language=TypeScript,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue!70!black}\bfseries,
+    commentstyle=\color{gray!70!black}\itshape,
+    stringstyle=\color{green!35!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray!80},
+    stepnumber=1,
+    numbersep=8pt
+}
+
+\lstdefinelanguage{json}{
+    morekeywords={true,false,null},
+    sensitive=false,
+    morecomment=[l]{//},
+    morestring=[b]",
+    stringstyle=\color{green!35!black},
+    keywordstyle=\color{blue!70!black}\bfseries
+}
+
+\lstdefinestyle{jsoncode}{
+    language=json,
+    basicstyle=\ttfamily\scriptsize,
+    numbers=left,
+    xleftmargin=0.5em,
+    xrightmargin=0.5em,
+    framesep=0.3em,
+    aboveskip=0.6em,
+    belowskip=0.6em
+}
+
 % _____________________________________________________________________________
 %
 %
@@ -1195,7 +1241,7 @@ Cílem je představit logickou architekturu serveru, klíčové moduly a jejich 
 detaily implementace budou představeny v rámci dalších sekcí. 
 
 
-\subsection{Doménové moduly a vrstvená architektura}
+\subsection{Doménové moduly}
 
 Backendová část (\texttt{apps/api}) je postavena na frameworku NestJS a dodržuje jeho modulární architekturu.
 Aplikace je rozdělena do nezávislých doménových modulů, které jsou pak jako jednotlivé funkční celky sdružené v hlavním vstupním bodě 
@@ -1241,8 +1287,157 @@ Nejnižší vrstva zajišťuje veškeré nefunkční aspekty - od konfigurace p�
 \texttt{FileStorageModule} se stará o zápis vygenerovaných testů do cílového adresáře, vytváření složek a řešení kolizí názvů souborů.
 
 
-\subsection{Perzistence dat a synchronizace}
+\subsection{Implementace doménového modelu a sdílených DTO}
+Navrhovaný doménový model z kapitoly 3 byl v rámci implementace převeden do sdílených TypeScript interfaců, které jsou umístěny v balíčku \texttt{packages/shared} 
+a přímo využívány jak frontendem, tak backendem. Struktura balíčku \texttt{shared} je rozdělena do dvou hlavních složek:
+\begin{itemize}
+    \item \texttt{/types} - Obsahuje doménové entity jako \texttt{Project}, \texttt{UserStory} a \texttt{TestPilotConfig}. 
+    Jedná se o konkrétní doménové objekty, které reprezentují perzistovaná data v systému.
+    \item \texttt{/dto} - Obsahuje Data Transfer Objects pro jednotlivé operace (Create, Update, Response). 
+    Zajišťují konzistentní datové struktury pro API vrstvu a komunikaci mezi klientem a serverem.
+\end{itemize}
 
+Definice dvou klíčových doménových entit - \texttt{Project} a \texttt{UserStory} - 
+jsou zobrazeny ve zdrojovém kódu \ref{lst:shared-entities}. Jak je vidět, tyto entity byly oproti původnímu návrhu 
+rozšířeny o metainformace jako \texttt{createdAt} a \texttt{updatedAt}, 
+které umožňují sledovat historii změn a případně implementovat funkce pro 
+auditování nebo zobrazení časové osy projektu.
+
+\begin{lstlisting}[style=tscode, caption={\protect\centering Ukázka sdílených doménových entit v balíčku \texttt{@testpilotai/shared}.}, label={lst:shared-entities}]
+export interface Project {
+    id: string;
+    name: string;
+    description: string;
+    baseUrl: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface UserStory {
+    id: string;
+    projectId: string;
+    title: string;
+    description: string;
+    acceptanceCriteria: string;
+    extraInfo: string;
+    createdAt: string;
+    updatedAt: string;
+}
+\end{lstlisting}
+
+Kromě entit jsou v balíčku \texttt{shared} definovány i DTO objekty pro jednotlivé API operace. 
+Ty umožňují seskupovat pouze relevantní pole pro danou operaci - např. při vytváření projektu klient 
+neposílá identifikátor a časová razítka (ta generuje server), ale pouze \texttt{name}, \texttt{description} a \texttt{baseUrl}. 
+Při aktualizaci jsou všechna pole nepovinná, aby klient mohl modifikovat pouze ty atributy, které se změnily.
+Příklady DTO objektů pro operace nad user stories jsou uvedeny v kódu \ref{lst:shared-dtos}.
+
+\begin{lstlisting}[style=tscode, caption={\protect\centering Ukázka DTO objektů pro vytváření a aktualizaci user stories.}, label={lst:shared-dtos}]
+export interface CreateUserStoryDto {
+  projectId: string;
+  title: string;
+  description: string;
+  acceptanceCriteria: string;
+  extraInfo: string;
+}
+
+export interface UpdateUserStoryDto {
+  title?: string;
+  description?: string;
+  acceptanceCriteria?: string;
+  extraInfo?: string;
+}
+\end{lstlisting}
+
+
+\subsection{Perzistence a konzistence dat}
+S využitím \textit{local-first} přístupu je ukládání dat řešeno pomocí souborů namísto klasické 
+relační databáze. Systém využívá dva hlavní soubory pro perzistenci - 
+\texttt{test-pilot.json}, který obsahuje základní konfiguraci aplikace a doménová data, 
+a dále \texttt{.testpilot-cache.json}, 
+který slouží pro ukládání metadat z jednotlivých běhů generování testů.
+
+\begin{lstlisting}[style=jsoncode, float, floatplacement=H, caption={\protect\centering Zkrácená ukázka struktury souboru \texttt{test-pilot.json}.}, label={lst:test-pilot-structure}]
+{
+    "config": {
+        "output": {
+            "directory": "./tests/generated"
+        }
+    },
+    "projects": [
+        {
+            "id": "project-1770809040081",
+            "name": "Example project",
+            "description": "Short desc",
+            "baseUrl": "https://app.test.com",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "updatedAt": "2026-01-01T01:22:33Z"
+        },
+        ...
+    ],
+    "userStories": [
+        {
+            "id": "1772119522231-grcz5m2",
+            "projectId": "project-1770809040081",
+            "title": "Login",
+            "description": "As a user, I want...",
+            "acceptanceCriteria": "AC1; AC2",
+            "extraInfo": "Use stable selector",
+            "createdAt": "2026-01-02T00:00:00Z",
+            "updatedAt": "2026-01-03T12:34:56Z"
+        },
+        ...
+    ]
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=jsoncode, float, floatplacement=H, caption={\protect\centering Zkrácená ukázka struktury souboru \texttt{.testpilot-cache.json}.}, label={lst:cache-structure}]
+{
+    "version": "1.0.0",
+    "generationRecords": [
+        {
+            "userStoryId": "1772119522231-grcz5m2",
+            "model": "gpt-5",
+            "generatedCode": "test(...)",
+            "status": "success",
+            "tokenUsage": {
+                "input": 112964,
+                "output": 7192,
+                "cached": 88448
+            },
+            "cost": {
+                "input": 0.030645,
+                "output": 0.07192,
+                "cached": 0.05527
+            },
+            "id": "gen-1772634117252-66tj9guye",
+            "timestamp": "2026-03-04T14:21:57.252Z"
+        },
+        ...
+    ],
+    "lastUpdated": "2026-03-27T13:09:06.289Z"
+}
+\end{lstlisting}
+
+
+Na ukázkách \ref{lst:test-pilot-structure} a \ref{lst:cache-structure} je zobrazen obsah těchto souborů. Jak je vidět, soubor \texttt{test-pilot.json} obsahuje klíč \texttt{config}, který 
+umožňuje specifikovat globální nastavení aplikace (momentálně pouze cílový adresář pro ukládání vygenerovaných testů).
+Dále obsahuje pole objektů \texttt{projects} a \texttt{userStories}, 
+jejichž struktura odpovídá definovaným TypeScript entitám. 
+
+Cachovací soubor \texttt{.testpilot-cache.json} 
+(kromě metadat o poslední aktualizaci souboru a verzi systému)
+obsahuje pole \texttt{generationRecords}, které uchovává záznamy o jednotlivých bězích generování testů.
+Obsahují základní informace o tom, jak vygenerování testu probíhalo - jaký byl využit model,
+kolik tokenů bylo zkonzumováno, jaká byla celková cena a (v případě úspěchu) i samotný vygenerovaný kód testu. 
+Tyto informace jsou klíčové pro zpětnou vazbu uživatelům a budou dále zmíněny a využity v další kapitole,
+která se zaměří na testování funkčnosti systému a celkové náklady generování testů.
+
+
+Klíčovým problémem při práci s těmito soubory je synchronizace kritických sekcí typu \textit{read-modify-write}.
+Při paralelních požadavcích by mohlo dojít k nechtěnému přepsání, ztrátě či poškození dat (např. v případě kolizí při souběžném zápisu do souborů).
+Proto byl pro eliminaci tohoto rizika implementován asynchronní zámek (promise-based mutex), který zajistí, 
+že všechny operace, které modifikují obsah těchto souborů, budou striktně serializované. Před každým zápisem je navíc 
+načtený obsah souborů validován proti definovaným Zod schématům, což zajišťuje další úroveň ochrany proti nekonzistentním datům.
 
 \chapter{Závěr}
 xxxx
