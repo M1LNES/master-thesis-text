@@ -130,7 +130,7 @@
         import, from, export, interface, type, class, extends, implements, constructor,
         public, private, protected, readonly, async, await, return,
         if, else, try, catch, finally, throw, new, const, let,
-        true, false, null, undefined, string
+        true, false, null, undefined, string, number, boolean, void, any, unknown, this
     },
     sensitive=true,
     morecomment=[l]{//},
@@ -1546,6 +1546,107 @@ funkce \texttt{generateText} s připravenými parametry. Výsledek se pak převe
 Jak je vidět, funkce \textsl{generateText} umožňuje nastavovat i další parametry jako je \texttt{temperature} pro modely, 
 které tento parametr podporují, či \texttt{abortSignal} pro možnost přerušení běhu generování, což je klíčové pro zajištění 
 dobré uživatelské přívětivosti a kontroly nad procesem generování testů.
+
+
+\subsection{Správa dostupných modelů}
+
+Po vyřešení komunikace s jednotlivými poskytovateli bylo nutné navrhnout způsob,
+jakým budou do systému přidávány a evidovány jednotlivé modely.
+Muselo se jednat o rychlý, jednoduchý a flexibilní mechanismus,
+který umožní přidávat definice nových modelů včetně jejich cenových údajů a metadat.
+
+\subsubsection*{Struktura definice modelu}
+Základem pro správu modelů je sdílený typ \texttt{LLMModelDefinition} v balíčku
+\texttt{@testpilotai/shared}. Jak je vidět na ukázce \ref{lst:llm-model-definition},
+tento typ obsahuje klíčové atributy - od základních informací jako je \texttt{id}, \texttt{displayName} a 
+\texttt{description}, až po ekonomické parametry v podobě \texttt{pricing} pro jednotlivé typy tokenů, kde 
+se jedná o cenu za milion tokenů v USD.
+
+\begin{lstlisting}[style=tscode, caption={\protect\centering Datová struktura pro konfiguraci LLM modelů.}, label={lst:llm-model-definition}]
+export type LLMModelDefinition = {
+    id: string;
+    shortId: string;
+    displayName: string;
+    description?: string;
+    supportsTemperature?: boolean;
+    pricing: {
+        input: number;   
+        output: number;  
+        cached?: number; 
+    };
+};
+\end{lstlisting}
+
+
+\subsubsection*{Vybrané modely a ceník}
+V tabulce \ref{tab:impl_model_registry} jsou uvedeny modely, které jsou v systému 
+registrovány a využívány. 
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{} l X c c c @{} }
+\toprule
+\textbf{Provider} & \textbf{Model} & \textbf{In (\$/1M)} & \textbf{Out (\$/1M)} & \textbf{Cached (\$/1M)} \\ \midrule
+Anthropic & Claude Haiku 3 & 0.25 & 1.25 & 0.03 \\
+Anthropic & Claude Haiku 3.5 & 0.80 & 4.00 & 0.08 \\
+Anthropic & Claude Sonnet 3.5 & 3.00 & 15.00 & 0.30 \\ \midrule
+OpenAI & GPT-4o & 2.50 & 10.00 & 1.25 \\
+OpenAI & GPT-4.1 & 2.00 & 8.00 & 0.50 \\
+OpenAI & GPT-5 Mini & 0.25 & 2.00 & 0.125 \\
+OpenAI & GPT-5 & 1.25 & 10.00 & 0.625 \\ \midrule
+Google & Gemini 2.5 Flash & 0.30 & 2.50 & 0.075 \\
+Google & Gemini 2.5 Pro & 2.50 & 15.00 & 0.625 \\ \bottomrule
+\end{tabularx}
+\caption{Modely registrované v \texttt{LlmService} a jejich ceny.}
+\label{tab:impl_model_registry}
+\end{table}
+
+Modely byly zvoleny tak, aby bylo v rámci testování možné porovnat různé cenové a kvalitativní úrovně.
+
+\begin{itemize}
+    \item \textbf{Levnější modely} (např. Claude Haiku 3, GPT-5 Mini, Gemini 2.5 Flash) jsou vhodné pro rychlé iterace, 
+    ladění promptů a objemově větší testování.
+    \item \textbf{Výkonnější modely} (např. GPT-5, GPT-4.1, Gemini 2.5 Pro, Claude Sonnet 3.5) se využívají tam, 
+    kde je potřeba kvalitnější reasoning a přesnější výstup.
+    \item \textbf{Více providerů} (OpenAI, Anthropic, Google) dává možnost průběžně porovnávat poměr cena/výkon napříč 
+    různými poskytovateli.
+\end{itemize}
+
+Díky této kombinaci má uživatel možnost (dle komplexity scénáře, požadované kvality apod.) 
+zvolit model, který nejlépe odpovídá jeho potřebám. Nejdražší a nejnovější modely 
+(např. Claude Opus 4.6) nebyly do experimentu zahrnuty, jelikož jejich provozní náklady 
+by výrazně omezily rozsah testování. Cílem práce je ověřit navržené řešení v reálných podmínkách, 
+což zahrnuje i důraz na ekonomickou efektivitu, nikoliv pouze dosažení nejlepší možné kvality bez ohledu na náklady.
+
+\subsubsection*{Výpočet ceny generování}
+Po každém volání modelu se z \texttt{result.usage} načtou počty tokenů
+\texttt{inputTokens}, \texttt{outputTokens} a \texttt{cachedInputTokens}.
+Poté se cena vypočte přímo v metodě \texttt{calculateCost} (jak je uvedeno v ukázce \ref{lst:llm-cost-calc}) a následně 
+přičte k záznamu o generování, který se po skončení běhu uloží do cache souboru \texttt{.testpilot-cache.json}.
+
+
+\begin{lstlisting}[style=tscode, basicstyle=\ttfamily\scriptsize, caption={\protect\centering Výpočet ceny LLM dotazu.}, label={lst:llm-cost-calc}]
+private calculateCost(
+    inputTokens: number, 
+    outputTokens: number, 
+    cachedTokens: number, 
+    pricing: LLMModelDefinition['pricing']
+) {
+    const nonCachedInputTokens = Math.max(0, inputTokens - cachedTokens);
+    const cachedRate = pricing.cached ?? 0;
+
+    return {
+        input: (nonCachedInputTokens / 1e6) * pricing.input,
+        output: (outputTokens / 1e6) * pricing.output,
+        cached: (cachedTokens / 1e6) * cachedRate,
+    };
+
+}
+\end{lstlisting}
+
+\section{Implementace autonomního agenta}
+
 
 \chapter{Závěr}
 xxxx
