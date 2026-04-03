@@ -130,7 +130,7 @@
         import, from, export, interface, type, class, extends, implements, constructor,
         public, private, protected, readonly, async, await, return,
         if, else, try, catch, finally, throw, new, const, let,
-        true, false, null, undefined, string, number, boolean, void, any, unknown, this
+        true, false, null, undefined, string, number, boolean, void, any, unknown, this, while
     },
     sensitive=true,
     morecomment=[l]{//},
@@ -1646,6 +1646,284 @@ private calculateCost(
 \end{lstlisting}
 
 \section{Implementace autonomního agenta}
+Sem už vlepit nějaký obrázky
+Obrázek thinkings smyčky/opravy/validace
+
+\subsection{Integrace nástrojů přes Model Context Protocol}
+
+Pro integraci nástrojů backend nevolá Playwright API přímo, ale využívá dedikovanou vrstvu \texttt{PlaywrightMCPTools},
+jež inicializuje MCP klienta (\texttt{MCPClient}). Jak je vidět na ukázce \ref{lst:mcp-integration-code}, 
+klient je nakonfigurován pomocí příkazu \texttt{npx} a balíčku \texttt{@playwright/mcp}.
+Serverová část MCP tak běží jako samostatný proces komunikující přes I/O, což zajišťuje procesní izolaci a 
+zotavitelnost - selhání prohlížečového runtime nebo pád MCP serveru se neprojeví jako pád hlavního NestJS procesu,
+ale jako chyba volání konkrétního nástroje. 
+
+
+\begin{lstlisting}[style=tscode, caption={\protect\centering Zkrácený proces inicializace MCP.}, label={lst:mcp-integration-code}]
+const config = getToolsConfig();
+
+// Playwright wrapper: create MCP client with values from config
+this.mcpClient = new MCPClient(
+    'npx',
+    ['-y', config.playwright.mcpPackage], // '@playwright/mcp@0.0.68'
+    { connectTimeoutMs: config.playwright.connectTimeoutMs }, // 30000
+);
+
+// MCP client constructor: stdio transport over child process
+this.transport = new StdioClientTransport({
+    command: serverCommand,
+    args: serverArgs,
+});
+
+// MCP client connect(): explicit timeout guard
+await this.withTimeout(
+    this.client.connect(this.transport),
+    this.connectTimeoutMs,
+    `MCP connection timed out after ${this.connectTimeoutMs}ms`,
+);
+
+// If connection is successful, set connected flag
+this.connected = true;
+\end{lstlisting}
+
+Pro komunikaci mezi těmito dvěma procesy se využívá \texttt{StdioClientTransport}.
+Ten umožňuje přenášet zprávy prostřednictvím standardního vstupu a výstupu (stdio),
+což představuje efektivní a jednoduchý způsob pro lokálně spouštěné MCP servery.
+
+Poslední část ukázky demonstruje způsob, jakým se aplikace chrání před potenciálním uvíznutím.
+Jelikož se spouští zcela nový a nezávislý proces, existuje riziko, že spojení selže nebo server přestane 
+při inicializaci reagovat (např. kvůli problémům s prostředím, nedostatečným oprávněním, nebo jiným neočekávaným chybám).
+Z tohoto důvodu je proces navázání spojení (\texttt{client.connect}) obalen asynchronním timeoutem (\texttt{withTimeout}), 
+který zajistí, že pokud se spojení nepovede navázat do určitého časového limitu,
+ bude operace ukončena chybou a systém zůstane v konzistentním stavu (\texttt{connected = false}).
+
+
+\subsection{Řídící smyčka agenta a ochranné mechanismy}
+
+Veškerá agentova logika je implementována v rámci \texttt{AgentService}, 
+která je zodpovědná za řízení hlavní smyčky exekuce, správu vnitřního stavu a implementaci ochranných mechanismů.
+Tyto funkce jsou detailně popsány níže.
+
+
+\subsubsection*{Správa vnitřního stavu exekuce (State Management)}
+Jak bylo zmíněno v předchozích kapitolách, agent pracuje v rámci iterativních smyček, 
+a proto je nutné udržovat celý kontext napříč jednotlivými iteracemi.
+Pro tento účel byl navržen \texttt{AgentExecutionState}, který je zobrazen na ukázce \ref{lst:agent-state}. 
+
+\begin{lstlisting}[
+  style=tscode,
+  basicstyle=\ttfamily\scriptsize,
+  float=false,
+  caption={\protect\centering Struktura vnitřního stavu exekuce agenta.},
+  label={lst:agent-state},
+  morekeywords={ToolCallResult,Message,TokenUsage,Cost,AgentIterationLog}
+]
+interface AgentExecutionState {
+  iteration: number;
+  conversationMessages: Message[];
+  allToolCalls: ToolCallResult[];
+  successfulToolCalls: ToolCallResult[];
+  failedToolCalls: ToolCallResult[];
+  consecutiveToolFailures: number;
+  iterationLogs: AgentIterationLog[];
+  totalTokenUsage: TokenUsage;
+  totalCost: Cost;
+}
+\end{lstlisting}
+
+Jak je vidět, stav obsahuje všechny klíčové informace potřebné pro řízení exekuce.
+Počínaje číslem aktuální iterace (\texttt{iteration}), přes celou historii konverzace s LLM (\texttt{conversationMessages}), 
+až po detailní záznamy o všech voláních nástrojů (\texttt{allToolCalls}, \texttt{successfulToolCalls}, \texttt{failedToolCalls}, \texttt{consecutiveToolFailures}).
+Pro případnou zpětnou analýzu či ladění jsou uchovávány i kompletní záznamy o průběhu jednotlivých iterací (\texttt{iterationLogs}), 
+které obsahují informace o vstupních zprávách, nástrojích, odpovědích modelu, využití tokenů a dalších relevantních datech.
+V neposlední řadě jsou v rámci stavu udržovány i nasčítané statistiky o celkovém množství využitých tokenů (\texttt{totalTokenUsage}) 
+a celkových nákladech (\texttt{totalCost}).
+
+\subsubsection*{Ochranné mechanismy a řízení běhu}
+
+Přestože je chování modelu primárně řízeno systémovým promptem (viz další subsekce), 
+systém nemůže spoléhat pouze na to, že model bude vždy správně interpretovat a dodržovat instrukce (halucinování).
+Proto \texttt{AgentService} implementuje ochranné mechanismy představené v kapitole 3, které 
+agenta omezují zvenčí.
+
+Tyto mechanismy jsou zobrazeny v ukázce \ref{lst:agent-loop}, která představuje zjednodušený pseudokód hlavní řídící smyčky agenta.
+
+\begin{lstlisting}[
+  style=tscode,
+  basicstyle=\ttfamily\scriptsize,
+  caption={\protect\centering Zjednodušená řídicí smyčka agenta.},
+  label={lst:agent-loop}
+]
+while (state.iteration < config.maxIterations) {
+  // Cancellation Check  
+  if (signal?.aborted)
+    return this.handleCancellation(...);
+
+  // Circuit Breaker  
+  if (state.consecutiveToolFailures >= config.maxConsecutiveToolFailures)
+    await this.generationRecord.createFailure(...);
+
+  state.iteration++;
+  const response = await llmService.generate(...);
+  const toolUses = extractToolUses(response);
+
+  if (toolUses.length === 0) {
+    const result = await handleNoToolCalls(...);
+
+    if (result.type === 'continue') continue;
+    if (result.type === 'error') throw new Error(result.error);
+    if (result.type === 'success') return result.response;
+  }
+
+  await this.processToolCalls(...);
+}
+
+this.handleMaxIterationsReached(...);
+
+\end{lstlisting}
+
+
+
+Smyčka je omezena na maximální počet iterací (\texttt{config.maxIterations}), 
+aby se zabránilo nekonečnému běhu v případě halucinací, nečekaných chyb či jiných problémů.
+Pro případ, že by uživatel chtěl generování kdykoliv přerušit, obsahuje smyčka i kontrolu pro zrušení pomocí \texttt{AbortSignal}.
+Další důležitou ochranou je \textbf{Circuit Breaker}, který sleduje počet po sobě jdoucích selhání nástrojů.
+Pokud tento počet překročí nastavený limit (\texttt{config.maxConsecutiveFailures}), smyčka se okamžitě přeruší a vrátí chybu, 
+aby se opět zabránilo dalšímu volání LLM a s tím i spojeným nákladům. Následně se navýší číslo iterace, připraví se požadavek 
+pro LLM a vykoná pomocí metody \texttt{llmService.generate}. 
+Po obdržení odpovědi se z ní extrahují požadavky na nástroje. 
+
+Pokud LLM nepožaduje použití žádných nástrojů, spustí se metoda \texttt{handleNoToolCalls}, 
+která analyzuje odpověď a rozhodne, zda je potřeba pokračovat v dalších iteracích - 
+např. zmiňovaný \textbf{Tool Enforcement}, který vynutí použití dalších nástrojů - nebo zda 
+je odpověď potřeba opravit (Code Validation - bude vysvětlen v nadcházející subsekci). 
+Pokud se jedná již o finální zvalidovaný kód (\texttt{result.type === 'success'}), 
+smyčka se ukončí a vygenerované testy se vrátí uživateli.
+Pokud ale model nějaké volání nástrojů požaduje,
+spustí se metoda \texttt{processToolCalls}, která se postará o jejich vykonání, zpracování výsledků a aktualizaci stavu agenta.
+
+Tento přístup se opakuje do doby, než agent dosáhne úspěšného ukončení (získá validní testy bez potřeby volání dalších nástrojů) 
+nebo překročí nastavený limit iterací, případně dojde k přerušení uživatelem či aktivaci circuit breakeru. Pokud dojde ke zmiňovaným 
+přerušením, logika opustí smyčku a (v případě aktivace circuit breakeru) se metoda \texttt{handleMaxIterationsReached} postará o vytvoření 
+záznamu o neúspěšném pokusu o generování testů a informování uživatele o důvodu neúspěchu.
+
+\subsection{Návrh systémového promptu a řízení chování (Prompt Engineering)}
+Tato část se zaměřuje na nejdůležitější aspekt celého systému - návrh systémového promptu, 
+který je základem pro řízení chování LLM a tím i pro úspěšné generování testů.
+Z důvodu rozsáhlosti jsou plná znění systémového i regeneračního promptu k dispozici v příloze \ref{app:prompts}. 
+Prompty jsou zapsány v Markdown formátu, který umožňuje lepší strukturování a čitelnost instrukcí pro model.
+
+
+\subsubsection*{Struktura a fáze systémového promptu}
+Systémový prompt je dynamicky sestavován pomocí funkce \texttt{getSystemPrompt}, která do
+něj vkládá kontext konkrétního projektu (název, výchozí URL a popis) a uživatelského příběhu (název, popis, akceptační kritéria a případně 
+nepovinnou dodatečnou specifikaci). Model je poté instruován k dodržování přísných pravidel a postupů, 
+které jsou rozděleny do několika klíčových sekcí, jak je shrnuto v tabulce \ref{tab:prompt-structure}.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Sekce promptu} & \textbf{Účel a klíčové instrukce} \\ \hline
+\textbf{Mandatory Workflow} & Definuje jasnou sekvenci aktivit agenta, která odděluje průzkum 
+aplikace od generování kódu. Model je nucen nejprve získat reálný stav UI pomocí nástrojů a až poté na základě ověřených informací vytvářet testy. \\ \hline
+\textbf{Tool Failure Handling} & Specifikuje chování při selhání nástrojů – model 
+musí explicitně reflektovat chybu, nesmí pracovat s neověřenými daty a je nucen hledat alternativní způsob získání informací. \\ \hline
+\textbf{Selector Strategy} & Standardizuje výběr selektorů tak, aby výsledné testy byly
+ stabilní a udržovatelné, přičemž preferuje sémantické a explicitně definované identifikátory před křehkými strukturálními selektory. \\ \hline
+\textbf{Code Requirements} & Omezuje podobu generovaného kódu na konzistentní a 
+spustitelný výstup, včetně povinných asercí a struktury testů, čímž minimalizuje riziko nevalidního nebo neúplného testovacího scénáře. \\ \hline
+\textbf{Example Output} & Poskytuje referenční šablonu výstupu, která modelu 
+ukazuje očekávaný styl, strukturu i granularitu testů a slouží jako vodítko pro formátování odpovědi. \\ \hline
+\textbf{Final Output} & Vynucuje striktní oddělení generovaného kódu od jakéhokoliv 
+doprovodného textu, aby byl výstup přímo použitelný bez nutnosti další úpravy nebo parsování. \\ \hline
+\end{tabular}
+\caption{Architektura a klíčové sekce systémového promptu.}
+\label{tab:prompt-structure}
+\end{table}
+
+Důležité bylo zajistit, aby si agent uměl poradit nejen s ideálními scénaři, ale aby byl schopen i detekovat 
+funkcionální mezery - např. když uživatelský příběh požaduje určitou funkcionalitu, která v reálné aplikaci chybí nebo je rozbitá.
+Prompt tento problém řeší zavedením konceptu \textbf{řízeného selhání} - pokud agent zjistí, že 
+požadovaná funkcionalita chybí nebo je rozbitá, je instruován tak, aby se pokusil napsat test pokrývající správné, očekávané chování.
+Tento test se ale následně musí označit pomocí speciálního příznaku \texttt{test.fail()}, 
+aby bylo jasné, že se jedná o známou chybu implementace, a navíc se na začátku souboru s vygenerovaným testem 
+vytvoří v komentáři blok \texttt{IMPLEMENTATION NOTES}, který popisuje rozdíl mezi zadáním a realitou.
+
+
+\subsubsection*{Prompt pro regeneraci a iterativní zpětnou vazbu}
+
+Druhým klíčovým aspektem pro řízení chování agenta je schopnost regenerace testu na základě zpětné vazby od uživatele -
+a přesně to je realizováno pomocí regeneračního promptu (\texttt{getRegenerationPrompt}). Hlavní rozdíl mezi 
+systémovým a regeneračním promptem je v tom, že regenerační prompt obsahuje navíc i 
+\textbf{předchozí vygenerovaný kód} a \textbf{textovou zpětnou vazbu od uživatele}, která popisuje, co je potřeba opravit nebo změnit.
+Prompt má poté explicitní instrukci \textit{"Keep what works; change only what is required to address the feedback"}, 
+což by mělo vést k minimalizaci rizika, že agent při regeneraci přepíše nebo rozbije již existující funkční 
+testy, přičemž má ale stále povinnost ověřovat všechny změny přímo na běžící aplikaci pomocí nástrojů.
+
+
+\subsection{Validační pipeline a samoopravná smyčka}
+
+Jakmile jazykový model úspěšne dokončí fázi průzkumu a vygeneruje testy, 
+je potřeba zajistit, že výstupem je opravdu spustitelný kód.
+LLM vrací odpovědi ve formátu Markdown, což znamená, 
+že kód je potřeba nejprve extrahovat a až poté validovat, než se vrátí uživateli.
+K tomu slouží validační pipeline představená v kapitole 3, která je implementována v rámci 
+\texttt{CodeValidatorService}. Zpracování výstupu je zobrazeno na diagramu \ref{fig:validation-pipeline} 
+a skládá se že třech hlavních fází - extrakce kódu, sémantické kontroly a in-memory TypeScript kompilace, která
+může být následována samoopravnou smyčkou v případě zjištění chyb (tzv. \textit{self-correction}).
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/validation-flow.pdf}
+    \caption{Schéma validační pipeline a samoopravné smyčky.}
+    \label{fig:validation-pipeline}
+\end{figure}
+
+
+
+\subsubsection*{Extrakce kódu a sémantické kontroly}
+Prvním krokem je správné extrahování zdrojového kódu z odpovědi modelu.
+K detekci kódových bloků se využívají regulární výrazy, které hledají sekce ohraničené třemi zpětnými apostrofy (\texttt{```}) 
+s následným označením jazyka (např. \texttt{typescript} nebo \texttt{ts}).
+Pokud explicitní označení chybí, využívají se záložní metody pro nalezené generického kódového bloku (nejen s TypeScript tagem, ale i bez něj).
+Pokud kódový blok není nalezen vůbec, pipeline se ukončí s chybou a vrátí se zpětná vazba pro LLM, aby kód správně ohraničil.
+
+\subsubsection*{Sémantická kontrola}
+Dalším krokem je sémantická kontrola ověřující základní předpoklady pro Playwright testy.
+Konkrétně se jedná o:
+
+\begin{itemize}
+  \item Kontrola přítomnosti importu z knihovny \texttt{@playwright/test} v případě, že kód obsahuje volání \texttt{test()} nebo \texttt{expect()}.
+  \item Ověření, že každý test obsahuje alespoň jednu aserci (\texttt{expect()}), aby nebyl test prázdný.
+  \item Detekce použití klíčového slova \texttt{await} mimo \texttt{async} kontext (např. chybějící \texttt{async} u funkce nebo testu).
+  \item Kontrola běžných překlepů v API Playwrightu (např. \texttt{getByRoll} místo \texttt{getByRole}, \texttt{waitForSelecter} místo \texttt{waitForSelector} apod.).
+\end{itemize}
+
+\subsubsection*{In-memory TypeScript kompilace}
+Následuje in-memory kompilace pomocí TypeScript Compiler API, která ověří, 
+že kód je nejen syntakticky správný, ale také že neobsahuje hlubší sémantické chyby, které nemohou být odhaleny pouhými regulárními výrazy
+(např. ne deklarované proměnné či neplatné typy).
+Na rozdíl od klasické diskové kompilace tento přístup eliminuje potřebu vytváření a správu dočasných souborů,
+čímž eliminuje problémy s jejich pojmenováním, umístěním či mazáním 
+(to by mohlo být obzvláště problematické v prostředí, kde by mohlo docházet k paralelním běhům více agent instancí,
+které by mohly navzájem kolidovat s dočasnými soubory). Zároveň poskytuje rychlejší zpětnou vazbu, protože odpadá 
+režie spojená s I/O operacemi, což je klíčové pro udržení plynulosti a rychlosti agentovy smyčky.
+
+\subsubsection*{Samoopravná smyčka (Self-correction)}
+Pokud kód neprojde sémantickou kontrolou nebo in-memory kompilací, 
+systém aktivuje samoopravnou smyčku. Nejprve se zkontroluje, 
+zda nebyl překročen limit pro počet pokusů o opravu kódu (\texttt{maxRepairAttempts} s 
+výchozí hodnotou 3) a v případě, že byl, pipeline se ukončí s chybou a vrátí se zpětná vazba pro LLM.
+V opačném případě se zjištěné chyby (včetně detailů jako je typ chyby, chybová zpráva a číslo řádku) 
+zabalí do opravné zprávy (Repair Message), která se vrátí zpět modelu spolu s původním kódem a instrukcí k opravě. 
+
+\section{Implementace klientské části}
+
+\section{Shrnutí}
+TODO + prolinkovat funkční a nefunkční části systému s původními požadavky z kapitoly 3.
 
 
 \chapter{Závěr}
@@ -1677,6 +1955,211 @@ xxxx
 \end{itemize}
 
 \appendix
+\chapter{Specifikace promptů pro AI agenta}\label{app:prompts}
+
+V této příloze je uvedeno plné znění obou hlavních promptů, které řídí chování autonomního agenta. Prompty jsou v kódu definovány jako textové šablony, do kterých systém před odesláním požadavku dynamicky vkládá kontextové proměnné (ve výpisech označeny syntaxí \texttt{\$\{promenna\}}).
+
+\section{Systémový prompt}
+
+Tento prompt je využíván pro prvotní generování testů. Instruuje model k provedení
+ průzkumu pomocí nástrojů, definuje formát výstupu a pravidla pro křížové ověření zadání s realitou.
+
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  breakatwhitespace=true,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{gray},
+  caption={\protect\centering Plné znění systémového promptu s vyznačenými dynamickými bloky.},
+  label={lst:system-prompt-full}
+]
+You are Test Pilot AI, a Senior QA Automation Engineer specialized in Playwright and TypeScript. Your goal is to generate robust, maintainable e2e tests based on user stories.
+
+## PROJECT CONTEXT
+- **Project Name**: ${project.name}
+- **Base URL**: ${project.baseUrl}
+- **Description**: ${project.description}
+
+Use the Base URL as the starting point for navigation, unless a specific URL is mentioned in the user story.
+
+## USER STORY
+**Title**: ${userStory.title}
+
+**Description**:
+${userStory.description}
+
+**Acceptance Criteria**:
+${userStory.acceptanceCriteria}
+
+**Specification**:
+${userStory.extraInfo}
+
+Parse the acceptance criteria carefully - each criterion should map to one or more assertions. Cover both happy path and error/edge cases described.
+
+## MANDATORY WORKFLOW
+
+You have access to Playwright MCP tools. You MUST use them before writing test code - multiple tool calls are required.
+
+### Step 1: NAVIGATE & EXPLORE
+- Navigate to the Base URL using browser tools.
+- Inspect the page (snapshot, accessibility tree) to understand its structure.
+- Identify key UI elements, navigation, and layout.
+
+### Step 2: INTERACT & DISCOVER
+- Click through relevant pages/sections described in the user story.
+- Inspect forms, buttons, links, modals - find their actual selectors.
+- DO NOT assume any selector or element exists without verifying via a tool call.
+
+### Step 2.5: VERIFY AGAINST ACCEPTANCE CRITERIA
+Before writing any code, cross-reference each acceptance criterion against what you actually observed:
+- For each criterion, determine: does the live application support this behavior?
+- Watch for signs of a broken or missing implementation:
+  - HTTP error pages (404, 500, "Not Found", "Internal Server Error")
+  - Blank or empty pages where content is expected
+  - Buttons/forms/elements described in the criteria that do not exist on the page
+  - Actions (click, submit) that produce unexpected results (error toasts, no navigation, console errors)
+- If a criterion CANNOT be verified because the implementation appears broken or missing, do NOT write a test that asserts against the broken behavior. Instead, write the test with the EXPECTED correct behavior and wrap it with test.fail() plus a comment explaining why it is expected to fail. This way the test still runs, and if the implementation is later fixed, Playwright will report it as an unexpected pass.
+- Still generate normal tests for criteria that DO work correctly.
+
+### Step 3: PLAN & CODE
+- Based on verified observations, map each acceptance criterion to specific assertions.
+- Write test code using ONLY selectors you have actually observed.
+
+## TOOL FAILURE HANDLING
+When a tool call returns an error:
+1. Acknowledge the failure and the error message.
+2. Never pretend the tool succeeded - the result is invalid.
+3. Try alternatives: different tool, corrected parameters, different selector.
+4. If all attempts fail, report the issue clearly. Do NOT generate code that relies on unverified assumptions.
+
+**Recognizing broken implementations:**
+- If navigating to a page returns an error page (404, 500, blank), the feature is likely not implemented or is broken - flag it with test.fail().
+- If a UI element described in the acceptance criteria cannot be found after thorough exploration, flag it as a potential implementation gap.
+- If an action (click, form submit) produces an unexpected result that contradicts the acceptance criteria, note the discrepancy rather than asserting against the broken behavior.
+
+## SELECTOR STRATEGY
+Prefer (in order):
+1. Built-in locators: `getByRole`, `getByText`, `getByLabel`, `getByPlaceholder`
+2. Data attributes: `page.locator('[data-testid="..."]')`
+3. Avoid fragile CSS selectors or XPaths unless necessary
+
+## CODE REQUIREMENTS
+- Use TypeScript with proper type annotations
+- Store Base URL in a `baseUrl` constant
+- Wrap tests in `test('description', async ({ page }) => { ... })`
+- Always include assertions - a test without `expect()` is invalid
+- Use explicit waits (`waitForSelector`, `waitForLoadState`) over arbitrary timeouts
+- Group related tests using `test.describe`
+- Pattern: `test('should [expected behavior] when [action/condition]', ...)`
+
+## EXAMPLE OUTPUT
+```typescript
+import { test, expect } from '@playwright/test';
+
+const baseUrl = 'https://example.com';
+
+test.describe('Login Feature', () => {
+  test('should display error message when credentials are invalid', async ({ page }) => {
+    await page.goto(baseUrl + '/login');
+    await page.getByLabel('Email').fill('invalid@test.com');
+    await page.getByLabel('Password').fill('wrongpassword');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    
+    await expect(page.getByText('Invalid credentials')).toBeVisible();
+  });
+
+  test('should redirect to dashboard when login succeeds', async ({ page }) => {
+    await page.goto(baseUrl + '/login');
+    await page.getByLabel('Email').fill('user@test.com');
+    await page.getByLabel('Password').fill('correctpassword');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    
+    await page.waitForURL('**/dashboard');
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  });
+});
+```
+
+## FINAL OUTPUT
+- Return executable Playwright TypeScript test code only.
+- Wrap the code in a single ```typescript block.
+- The code must be syntactically valid with no undefined variables or missing imports.
+- If any acceptance criteria could NOT be verified against the live application, include an IMPLEMENTATION NOTES block at the top of the file summarizing what worked and what did not:
+
+```
+/**
+ * IMPLEMENTATION NOTES:
+ * - [PASS] Criterion that was verified and works correctly
+ * - [FAIL] Criterion - expected X, observed Y (possible implementation bug)
+ */
+```
+
+For criteria flagged as FAIL, write the test with the EXPECTED correct assertions and add `test.fail()` at the start of the test body. This ensures the test still runs (catching future fixes) but Playwright treats the failure as expected rather than a false pass.
+\end{lstlisting}
+
+\newpage
+
+\section{Prompt pro regeneraci testů}
+
+Tento prompt se využívá při iterativní úpravě již vygenerovaného testu na základě zpětné vazby od uživatele. 
+Kromě kontextu projektu a zadání je do něj explicitně vložen naposledy vygenerovaný kód a samotný uživatelský požadavek na změnu.
+
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  breakatwhitespace=true,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{gray},
+  caption={\protect\centering Plné znění regeneračního promptu s vyznačenými dynamickými bloky.},
+  label={lst:regeneration-prompt-full}
+]
+You are regenerating a Playwright E2E test based on the user story and feedback.
+
+## PROJECT CONTEXT
+- **Project Name**: ${project.name}
+- **Base URL**: ${project.baseUrl}
+- **Description**: ${project.description}
+
+Use the Base URL as the starting point for navigation, unless a specific URL is mentioned in the user story.
+
+## USER STORY
+**Title**: ${userStory.title}
+
+**Description**:
+${userStory.description}
+
+**Acceptance Criteria**:
+${userStory.acceptanceCriteria}
+
+**Specification**:
+${userStory.extraInfo}
+
+## PREVIOUS GENERATED CODE
+```typescript
+${previousCode}
+```
+
+## USER FEEDBACK
+${feedback}
+
+## REGENERATION REQUIREMENTS
+- Use Playwright MCP tools to re-inspect the page before finalizing code.
+- Keep what works; change only what is required to address the feedback.
+- Use TypeScript and Playwright (`test`, `expect`).
+- Ensure all acceptance criteria are covered with assertions.
+- Return ONLY executable test code in a ```typescript block.
+
+## VERIFY AGAINST ACCEPTANCE CRITERIA
+Before finalizing regenerated code, cross-reference each acceptance criterion against the live application:
+- If the implementation appears broken or missing for a criterion, write the test with the EXPECTED correct assertions and add `test.fail()` at the start of the test body plus a comment explaining expected vs. observed behavior.
+- Include an IMPLEMENTATION NOTES comment block at the top of the file if any criteria could not be verified.
+
+## TOOL FAILURE HANDLING
+If a tool fails, acknowledge it, try alternatives, and do not proceed with unverified assumptions.
+If navigation returns error pages (404, 500) or expected elements are missing, treat this as a potential implementation gap - use `test.fail()` with the expected correct assertions rather than asserting against the broken behavior.
+\end{lstlisting}
 \chapter{Uživatelská dokumentace}\label{app:docuDocs}
 xxx
 
