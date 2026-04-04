@@ -183,6 +183,17 @@
     belowskip=0.6em
 }
 
+\lstdefinestyle{console}{
+  basicstyle=\ttfamily\scriptsize,
+  numbers=left,
+  numbersep=8pt,
+  xleftmargin=2em,
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  captionpos=b 
+}
+
 % _____________________________________________________________________________
 %
 %
@@ -913,7 +924,7 @@ Jak ukázala analýza veřejných instancí ALM nástrojů (viz sekce 3.1), vstu
 Pokud by agent přistupoval přímo k surovým datům z těchto různorodých systémů, byla by extrakce informací velmi nespolehlivá a náročná.
 Tento systém proto zavádí vlastní, normalizovaný doménový model, který funguje jako standardizovaná mezivrstva mezi nestrukturovanými daty z externích nástrojů a čistým kontextem,
 který bude agentovi předán. Díky tomu bude možné zajistit, že agent bude pracovat s předvídatelným a konzistentním formátem dat, což výrazně zlepší spolehlivost a 
-efektivitu generování testů (čímž naplňuje požadavek FR-01).
+efektivitu generování testů.
 
 Struktura obsahuje tři klíčové entity:
 
@@ -1211,10 +1222,18 @@ až po specializované nástroje pro komunikaci s LLM modely (Vercel AI SDK) a t
 Konkrétní použití těchto technologií bude detailně představeno v další kapitole, jež se bude věnovat samotné implementaci.
 
 \chapter{Implementace}
-TODO
+Tato kapitola popisuje konkrétní technickou implementaci navrženého systému.
+Nejprve představuje organizaci zdrojového kódu a rozbor backendové části postavené na 
+frameworku NestJS s důrazem na popis modulární architektury.
+Dále je popsán způsob bezpečné komunikace s velkými jazykovými modely a následným 
+detailním zaměřením na jádro řešení autonomního agenta - od integrace nástrojů pomocí MCP,
+řídící ReAct smyčku, až po prompt engineering a validační mechanismy zajišťující generaci syntakticky správného a spustitelného kódu.
+Závěrečná část kapitoly je věnována klientské aplikaci, která popisuje nejen uživatelské rozhraní, 
+ale je kladen důraz na technické řešení komunikace pomocí Server-Sent Events a zajištění transparentnosti myšlenkových pochodů agenta v reálném čase.
 
 
-\section{Struktura a organizace projektu}
+
+\section{Organizace projektu}
 
 Celý systém byl implementován jako tzv. monorepo (monolithic repository) s využitím nástroje Turborepo,
 který umožňuje spravovat více logicky oddělených aplikací, knihoven či služeb v rámci jednoho repozitáře.
@@ -1286,7 +1305,8 @@ Tato vrstva tvoří jádro celého systému a obsahuje moduly zodpovědné za in
 Zároveň tento modul přímo integruje \texttt{LlmModule}, \texttt{ToolsModule}, \texttt{ProjectsModule}, \texttt{UserStoriesModule}, \texttt{StorageModule} a \texttt{FileStorageModule},
 což z něj dělá hlavní integrační bod backendu.
 \texttt{LlmModule} poskytuje jednotné rozhraní pro volání různých poskytovatelů modelů přes AI Gateway,
-\texttt{ToolsModule} pak dále zajišťuje načtení dostupných nástrojů a jejich exekuci přes MCP vrstvu (aktuálně s podporou Playwright nástrojů).
+\texttt{ToolsModule} pak dále zajišťuje načtení dostupných nástrojů a jejich exekuci přes MCP vrstvu - aktuálně s podporou Playwright nástrojů, ale
+s možností snadného budoucího rozšíření \textbf{(NFR-05)}.
 
 \subsubsection*{Business Domain Modules}
 Tyto moduly reprezentují doménovou logiku aplikace. \texttt{ProjectsModule} zajišťuje správu projektů a jejich konfigurací,
@@ -1458,7 +1478,7 @@ Modul \texttt{LlmModule} představuje komunikační rozhraní mezi vnitřní log
 (autonomním agentem) a providery velkých jazykových modelů.
 Hlavním úkolem této vrstvy bylo zajistit takovou abstrakci, 
 která by umožnila snadnou integraci nových poskytovatelů a modelů, čímž 
-se minimalizovalo riziko závislosti na konkrétním provideru (\textit{vendor lock-in}).
+se minimalizovalo riziko závislosti na konkrétním provideru (\textit{vendor lock-in}) \textbf{(NFR-04)}.
 Díky tomu je přidání podpory pro nové modely pouze záležitostí několika
 řádků kódu (v případě nového providera vytvoření nového souboru s jeho modely).
 
@@ -1499,7 +1519,7 @@ umožňuje definovat vlastní mapování modelů a jejich identifikátorů. V pr
 že systém v rámci konfigurace využívá jeden univerzální API klíč pro podnikovou AI Gateway a 
 pomocí něj má přístup ke všem podporovaným modelům. Tím se zásadně zvyšuje bezpečnost - klíče 
 různých poskytovatelů nejsou distribuované napříč klientskými zařízeními, ale jsou bezpečně spravovány 
-na straně gateway. Koncový uživatel (nebo konkrétní instance aplikace) pak využívá pouze jeden vygenerovaný klíč, 
+na straně gateway \textbf{(NFR-03)}. Koncový uživatel (nebo konkrétní instance aplikace) pak využívá pouze jeden vygenerovaný klíč, 
 což umožňuje detailní monitoring a případné omezení využití jednotlivých modelů (rate limiting). To je naprosto klíčové 
 pro kontrolu nákladů.
 
@@ -1646,9 +1666,6 @@ private calculateCost(
 \end{lstlisting}
 
 \section{Implementace autonomního agenta}
-Sem už vlepit nějaký obrázky
-Obrázek thinkings smyčky/opravy/validace
-
 \subsection{Integrace nástrojů přes Model Context Protocol}
 
 Pro integraci nástrojů backend nevolá Playwright API přímo, ale využívá dedikovanou vrstvu \texttt{PlaywrightMCPTools},
@@ -1656,7 +1673,7 @@ jež inicializuje MCP klienta (\texttt{MCPClient}). Jak je vidět na ukázce \re
 klient je nakonfigurován pomocí příkazu \texttt{npx} a balíčku \texttt{@playwright/mcp}.
 Serverová část MCP tak běží jako samostatný proces komunikující přes I/O, což zajišťuje procesní izolaci a 
 zotavitelnost - selhání prohlížečového runtime nebo pád MCP serveru se neprojeví jako pád hlavního NestJS procesu,
-ale jako chyba volání konkrétního nástroje. 
+ale jako chyba volání konkrétního nástroje \textbf{(NFR-01)}. 
 
 
 \begin{lstlisting}[style=tscode, caption={\protect\centering Zkrácený proces inicializace MCP.}, label={lst:mcp-integration-code}]
@@ -1789,7 +1806,7 @@ aby se zabránilo nekonečnému běhu v případě halucinací, nečekaných chy
 Pro případ, že by uživatel chtěl generování kdykoliv přerušit, obsahuje smyčka i kontrolu pro zrušení pomocí \texttt{AbortSignal}.
 Další důležitou ochranou je \textbf{Circuit Breaker}, který sleduje počet po sobě jdoucích selhání nástrojů.
 Pokud tento počet překročí nastavený limit (\texttt{config.maxConsecutiveFailures}), smyčka se okamžitě přeruší a vrátí chybu, 
-aby se opět zabránilo dalšímu volání LLM a s tím i spojeným nákladům. Následně se navýší číslo iterace, připraví se požadavek 
+aby se opět zabránilo dalšímu volání LLM a s tím i spojeným nákladům \textbf{(NFR-02)}. Následně se navýší číslo iterace, připraví se požadavek 
 pro LLM a vykoná pomocí metody \texttt{llmService.generate}. 
 Po obdržení odpovědi se z ní extrahují požadavky na nástroje. 
 
@@ -1815,7 +1832,7 @@ Prompty jsou zapsány v Markdown formátu, který umožňuje lepší strukturov�
 
 
 \subsubsection*{Struktura a fáze systémového promptu}
-Systémový prompt je dynamicky sestavován pomocí funkce \texttt{getSystemPrompt}, která do
+Systémový prompt je dynamicky sestavován pomocí funkce \texttt{getSystemPrompt} \textbf{(FR-01)}, která do
 něj vkládá kontext konkrétního projektu (název, výchozí URL a popis) a uživatelského příběhu (název, popis, akceptační kritéria a případně 
 nepovinnou dodatečnou specifikaci). Model je poté instruován k dodržování přísných pravidel a postupů, 
 které jsou rozděleny do několika klíčových sekcí, jak je shrnuto v tabulce \ref{tab:prompt-structure}.
@@ -1827,7 +1844,7 @@ které jsou rozděleny do několika klíčových sekcí, jak je shrnuto v tabulc
 \hline
 \textbf{Sekce promptu} & \textbf{Účel a klíčové instrukce} \\ \hline
 \textbf{Mandatory Workflow} & Definuje jasnou sekvenci aktivit agenta, která odděluje průzkum 
-aplikace od generování kódu. Model je nucen nejprve získat reálný stav UI pomocí nástrojů a až poté na základě ověřených informací vytvářet testy. \\ \hline
+aplikace od generování kódu. Model je nucen nejprve získat reálný stav UI pomocí nástrojů \textbf{(FR-02)} a až poté na základě ověřených informací vytvářet testy \textbf{(FR-03)} . \\ \hline
 \textbf{Tool Failure Handling} & Specifikuje chování při selhání nástrojů – model 
 musí explicitně reflektovat chybu, nesmí pracovat s neověřenými daty a je nucen hledat alternativní způsob získání informací. \\ \hline
 \textbf{Selector Strategy} & Standardizuje výběr selektorů tak, aby výsledné testy byly
@@ -1847,15 +1864,15 @@ Důležité bylo zajistit, aby si agent uměl poradit nejen s ideálními scéna
 funkcionální mezery - např. když uživatelský příběh požaduje určitou funkcionalitu, která v reálné aplikaci chybí nebo je rozbitá.
 Prompt tento problém řeší zavedením konceptu \textbf{řízeného selhání} - pokud agent zjistí, že 
 požadovaná funkcionalita chybí nebo je rozbitá, je instruován tak, aby se pokusil napsat test pokrývající správné, očekávané chování.
-Tento test se ale následně musí označit pomocí speciálního příznaku \texttt{test.fail()}, 
+Tento test se ale následně musí označit pomocí speciálního příznaku \texttt{test.fail()} \textbf{(FR-04)}, 
 aby bylo jasné, že se jedná o známou chybu implementace, a navíc se na začátku souboru s vygenerovaným testem 
-vytvoří v komentáři blok \texttt{IMPLEMENTATION NOTES}, který popisuje rozdíl mezi zadáním a realitou.
+vytvoří v komentáři blok \texttt{IMPLEMENTATION NOTES}, který popisuje rozdíl mezi zadáním a realitou \textbf{(FR-06)}.
 
 
 \subsubsection*{Prompt pro regeneraci a iterativní zpětnou vazbu}
 
 Druhým klíčovým aspektem pro řízení chování agenta je schopnost regenerace testu na základě zpětné vazby od uživatele -
-a přesně to je realizováno pomocí regeneračního promptu (\texttt{getRegenerationPrompt}). Hlavní rozdíl mezi 
+a přesně to je realizováno pomocí regeneračního promptu (\texttt{getRegenerationPrompt}) \textbf{(FR-09)}. Hlavní rozdíl mezi 
 systémovým a regeneračním promptem je v tom, že regenerační prompt obsahuje navíc i 
 \textbf{předchozí vygenerovaný kód} a \textbf{textovou zpětnou vazbu od uživatele}, která popisuje, co je potřeba opravit nebo změnit.
 Prompt má poté explicitní instrukci \textit{"Keep what works; change only what is required to address the feedback"}, 
@@ -1865,13 +1882,13 @@ testy, přičemž má ale stále povinnost ověřovat všechny změny přímo na
 
 \subsection{Validační pipeline a samoopravná smyčka}
 
-Jakmile jazykový model úspěšne dokončí fázi průzkumu a vygeneruje testy, 
-je potřeba zajistit, že výstupem je opravdu spustitelný kód.
+Jakmile jazykový model úspěšně dokončí fázi průzkumu a vygeneruje testy, 
+je potřeba zajistit, že výstupem je opravdu spustitelný kód \textbf{(FR-05)}.
 LLM vrací odpovědi ve formátu Markdown, což znamená, 
 že kód je potřeba nejprve extrahovat a až poté validovat, než se vrátí uživateli.
 K tomu slouží validační pipeline představená v kapitole 3, která je implementována v rámci 
 \texttt{CodeValidatorService}. Zpracování výstupu je zobrazeno na diagramu \ref{fig:validation-pipeline} 
-a skládá se že třech hlavních fází - extrakce kódu, sémantické kontroly a in-memory TypeScript kompilace, která
+a skládá se ze tří hlavních fází - extrakce kódu, sémantické kontroly a in-memory TypeScript kompilace, která
 může být následována samoopravnou smyčkou v případě zjištění chyb (tzv. \textit{self-correction}).
 
 
@@ -1888,7 +1905,7 @@ může být následována samoopravnou smyčkou v případě zjištění chyb (t
 Prvním krokem je správné extrahování zdrojového kódu z odpovědi modelu.
 K detekci kódových bloků se využívají regulární výrazy, které hledají sekce ohraničené třemi zpětnými apostrofy (\texttt{```}) 
 s následným označením jazyka (např. \texttt{typescript} nebo \texttt{ts}).
-Pokud explicitní označení chybí, využívají se záložní metody pro nalezené generického kódového bloku (nejen s TypeScript tagem, ale i bez něj).
+Pokud explicitní označení chybí, využívají se záložní metody pro nalezení generického kódového bloku (nejen s TypeScript tagem, ale i bez něj).
 Pokud kódový blok není nalezen vůbec, pipeline se ukončí s chybou a vrátí se zpětná vazba pro LLM, aby kód správně ohraničil.
 
 \subsubsection*{Sémantická kontrola}
@@ -1905,7 +1922,7 @@ Konkrétně se jedná o:
 \subsubsection*{In-memory TypeScript kompilace}
 Následuje in-memory kompilace pomocí TypeScript Compiler API, která ověří, 
 že kód je nejen syntakticky správný, ale také že neobsahuje hlubší sémantické chyby, které nemohou být odhaleny pouhými regulárními výrazy
-(např. ne deklarované proměnné či neplatné typy).
+(např. nedeklarované proměnné či neplatné typy).
 Na rozdíl od klasické diskové kompilace tento přístup eliminuje potřebu vytváření a správu dočasných souborů,
 čímž eliminuje problémy s jejich pojmenováním, umístěním či mazáním 
 (to by mohlo být obzvláště problematické v prostředí, kde by mohlo docházet k paralelním běhům více agent instancí,
@@ -1916,15 +1933,140 @@ režie spojená s I/O operacemi, což je klíčové pro udržení plynulosti a r
 Pokud kód neprojde sémantickou kontrolou nebo in-memory kompilací, 
 systém aktivuje samoopravnou smyčku. Nejprve se zkontroluje, 
 zda nebyl překročen limit pro počet pokusů o opravu kódu (\texttt{maxRepairAttempts} s 
-výchozí hodnotou 3) a v případě, že byl, pipeline se ukončí s chybou a vrátí se zpětná vazba pro LLM.
+výchozí hodnotou 3) a v případě, že byl, pipeline se ukončí s chybou, která se vrátí až orchestrátorovi či uživateli.
 V opačném případě se zjištěné chyby (včetně detailů jako je typ chyby, chybová zpráva a číslo řádku) 
 zabalí do opravné zprávy (Repair Message), která se vrátí zpět modelu spolu s původním kódem a instrukcí k opravě. 
 
 \section{Implementace klientské části}
 
-\section{Shrnutí}
-TODO + prolinkovat funkční a nefunkční části systému s původními požadavky z kapitoly 3.
+\subsection{Architektura UI a správa stavu}
 
+Klientská část systému je koncipována jako Single Page Application (SPA) a je implementována pomocí 
+Reactu s využitím jazyka TypeScript a nástrojů Vite či Tailwind CSS. Výsledné rozložení uživatelského rozhraní 
+se drželo návrhu z kapitoly 3 a je zobrazeno na obrázku \ref{fig:app-layout}. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/app-layout-screenshot.png}
+    \caption{Náhled na uživatelské rozhraní aplikace.}
+    \label{fig:app-layout}
+\end{figure}
+
+Aby nebylo nutné vytvářet vlastní komplexní komponenty, byla využita 
+knihovna \texttt{Shadcn UI}, která poskytuje moderní, přizpůsobitelné a především dobře navržené komponenty s 
+vestavěnou podporou pro light i dark mode, což také přispívá k lepší uživatelské zkušenosti a vizuální konzistenci celé aplikace.
+Velkou výhodou této knihovny je to, že nestahuje do projektu žádné další závislosti, ale prostřednictvím CLI příkazu umožňuje
+generovat pouze ty komponenty, které jsou skutečně potřeba, což pomáhá minimalizovat velikost výsledného balíčku.
+Příkaz na ukázce \ref{lst:shadcn-cli} zobrazuje, jak se pomocí CLI nejprve nastaví projekt pro využívání Shadcn UI a poté se generují 
+pouze potřebné komponenty, které jsou následně umístěny do adresáře \texttt{src/components/ui}, odkud jsou importovány a využívány v rámci celé aplikace.
+
+
+\begin{lstlisting}[
+  style=console,
+  caption={Inicializace a generování komponent knihovny Shadcn UI.},
+  label={lst:shadcn-cli}
+]
+~/Documents/ExampleProject> npx shadcn@latest init
+~/Documents/ExampleProject> npx shadcn@latest add [component]
+\end{lstlisting}
+
+
+
+\subsubsection*{Centralizovaná orchestrace a správa stavu}
+
+Pro správu stavu a orchestraci dat byl zvolen přístup založený na kombinaci React hooků a knihovny \texttt{TanStack Query}.
+Jelikož aplikace není extrémně komplexní a nevyžaduje složitý state management, nebylo třeba 
+využívat mechanismy jako je Redux, které by mohly přinést zbytečnou režii.
+Výhodou použití \texttt{TanStack Query} narozdíl od prostých fetch volání je implementovaný systém cachování,
+automatické invalidování dat na pozadí a případná synchronizace dat mezi různými komponentami bez 
+nutnosti manuálního psaní logiky pro načítání, aktualizaci a správu stavu dat. 
+Pro uchování uživatelských nastavení (např. zvolené tooly, které agent smí používat, případně nastavení dark a light režimu) se využívá
+prohlížečové úložiště \texttt{localStorage}, 
+což umožňuje uchovávání těchto preferencí i mezi jednotlivými relacemi bez nutnosti implementace složitějšího backendového řešení \textbf{(FR-10)}.
+
+\subsection{Real-time streamování a vizualizace procesu}
+
+Při implementaci Server-Sent Events na straně klienta bylo potřeba překonat omezení 
+nativního \texttt{EvenSource} API, které podporuje pouze \texttt{GET} požadavky.
+Proces generování testů však vyžaduje odeslání objektu s kontextem, k čemuž je nezbytné 
+využití metody \texttt{POST}. Streamování je proto implementováno pomocí nízkoúrovňového
+ \texttt{fetch} API v kombinaci s \texttt{ReadableStream}.
+
+
+\subsubsection*{Zpracování streamu a mapování událostí}
+
+Pro obsluhu celého procesu zpracovávání streamu byl navržen hook \texttt{useAgentStream},
+který asynchronně čte příchozí data po blocích (chunks), pomocí \texttt{TextDecoder} je dekóduje
+a poté analyzuje text po řádcích. Podle specifikace protokolu SSE hledá dvojice klíčů \texttt{event:} a \texttt{data:} 
+a transformuje je zpět na strukturované objekty.
+
+Všechny rozpoznané události jsou zachytávány a následně mapovány na stav komponenty.
+Výběr událostí, které se promítají přímo do uživatelského rozhraní do podoby tzv. \textit{Activity Feedu}, 
+udržuje konstanta \texttt{ITERATION\_LOG\_EVENTS}, zobrazená na ukázce \ref{lst:iteration-events}.
+
+\begin{lstlisting}[
+  style=tscode,
+  caption={\protect\centering Definice událostí streamu vizualizovaných v klientském rozhraní.},
+  label={lst:iteration-events}
+]
+export const ITERATION_LOG_EVENTS: ReadonlySet<string> = new Set([
+  "agent_start",
+  "thinking",
+  "tool_call",
+  "tool_result",
+  "final_response",
+  "code_validation",
+  "code_repair",
+]);
+\end{lstlisting}
+
+Jakmile je zachycena událost, která odpovídá některé z definovaných v \texttt{ITERATION\_LOG\_EVENTS}, 
+stav aplikace se zaktualizuje a tato změna se promítne do pravého panelu v uživatelském rozhraní \textbf{(FR-07)}.
+Ukázka vizualizace takového procesu je zachycena na obrázku \ref{fig:activity-feed}, kde je možné sledovat jednotlivé kroky, které agent provádí a 
+rozklikávat k jednotlivým krokům i detailní informace - jako jsou např. konkrétní volané nástroje či návratové hodnoty těchto nástrojů.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/activity-feed-screenshot.png}
+    \caption{Vizualizace běhu agenta zobrazená komponentou Activity Feed.}
+    \label{fig:activity-feed}
+\end{figure}
+
+\subsubsection*{Řízené přerušení generování (Cancel Path)}
+
+Aby bylo možno bezpečně přerušit probíhající generování testů, je do \texttt{fetch} požadavku injektován 
+signál z instance \texttt{AbortController}. Pokud tedy při generování uživatel stiskne tlačítko \textit{Stop} nebo opustí aktuální stránku, 
+frontend zavolá metodu \texttt{abort()}, která okamžitě přeruší HTTP spojení s backendem. 
+Tento signál je pak na backendu zpracován, což vede k okamžitému zastavení jakékoliv činnosti agenta.
+
+\subsection{Prezentace vygenerovaného kódu a exekuce testů}
+Jakmile agent úspěšně dokončí iterativní proces a vygeneruje finální testy, backend odešle událost \texttt{complete}, 
+která je zachycena klientskou aplikací. Vygenerovaný kód je následně vizualizován pomocí read-only Monaco editoru, který poskytuje plnohodnotné 
+syntaktické zvýrazňování pro jazyk TypeScript, což výrazně zvyšuje jeho čitelnost.
+Uživatel má pak možnost tento kód (který se mezitím automaticky uložil i do lokálního souborového systému)
+zkopírovat do schránky nebo stáhnout jako \texttt{.spec.ts} soubor. Pokud výsledek neodpovídá představám uživatele,
+může vyvolat regeneraci, která automaticky resetuje obsah Activity Feedu a znovu začne vizualizovat nový běh agenta.
+
+Kromě toho může uživatel vygenerované testy i přímo spustit v sekci \texttt{Test Suites} \textbf{(FR-08)}, 
+kde je zobrazen přehled všech projektů a jejich asociovaných testů. Frontend v takovém případě 
+odešle požadavek pomocí hooku \texttt{useRunTest} na backend, který testy izolovaně spustí. 
+Aby bylo možné rozumně zobrazit výsledky testů, byla zvolena možnost generování interaktivního HTML reportu, který je nativně podporován nástrojem Playwright.
+Tento report poskytuje detailní informace o průchodu testem, včetně jednotlivých kroků, asercí, chybových hlášek a hlavně 
+nabízí i předpřipravený chybový záznam v Markdown formátu, který může uživatel snadno zkopírovat a 
+vložit jako feedback pro regeneraci testů. Detailní ukázky všech částí uživatelského rozhraní 
+jsou obsaženy v příloze \ref{app:screenshots}.
+
+\section{Shrnutí}
+Tato kapitola se věnovala detailnímu popisu implementace celého navrženého systému.
+Postupně bylo představeno technologické flow celého řešení - počínaje organizací monorepa a 
+modulárního backendu v NestJS, přes integraci velkých jazykových modelů až po klientskou aplikaci.
+Stěžejní částí byla implementace autonomního agenta, který díky iterativní smyčce, napojení na nástroje 
+přes MCP a vestavěné validační pipeline dokáže generovat spustitelné E2E TypeScript testy v prostředí Playwrightu.
+Ukázáno bylo i uživatelské rozhraní s využitím technologie SSE, které nabízí uživateli 
+real-time přehled o průběhu generování testů.
+
+Systém je nyní kompletně připraven k provozu a je nezbytné ověřit jeho použitelnost, spolehlivost a efektivitu v praxi.
+Na to se zaměří následující kapitola, která se bude věnovat komplexnímu testování a evaluaci vytvořeného řešení.
 
 \chapter{Závěr}
 xxxx
@@ -2160,6 +2302,8 @@ Before finalizing regenerated code, cross-reference each acceptance criterion ag
 If a tool fails, acknowledge it, try alternatives, and do not proceed with unverified assumptions.
 If navigation returns error pages (404, 500) or expected elements are missing, treat this as a potential implementation gap - use `test.fail()` with the expected correct assertions rather than asserting against the broken behavior.
 \end{lstlisting}
+
+\chapter{Ukázky klientského prostředí}\label{app:screenshots}
 \chapter{Uživatelská dokumentace}\label{app:docuDocs}
 xxx
 
