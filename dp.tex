@@ -749,7 +749,7 @@ pro externí služby typu GitHub či Slack, což radikálně zvyšuje modularitu
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{pictures/client.pdf}
-    \caption{Ukázková architektura Client-Host-Server v rámci Model Context Protocolu.}
+    \caption{\protect\centering Ukázková architektura Client-Host-Server v rámci Model Context Protocolu.}
     \label{fig:mcp}
 \end{figure}
 
@@ -2053,7 +2053,7 @@ odešle požadavek pomocí hooku \texttt{useRunTest} na backend, který testy iz
 Aby bylo možné rozumně zobrazit výsledky testů, byla zvolena možnost generování interaktivního HTML reportu, který je nativně podporován nástrojem Playwright.
 Tento report poskytuje detailní informace o průchodu testem, včetně jednotlivých kroků, asercí, chybových hlášek a hlavně 
 nabízí i předpřipravený chybový záznam v Markdown formátu, který může uživatel snadno zkopírovat a 
-vložit jako feedback pro regeneraci testů. Detailní ukázky všech částí uživatelského rozhraní 
+vložit jako feedback pro regeneraci testů. Další ukázky ostatních částí uživatelského rozhraní 
 jsou obsaženy v příloze \ref{app:screenshots}.
 
 \section{Shrnutí}
@@ -2304,6 +2304,96 @@ If navigation returns error pages (404, 500) or expected elements are missing, t
 \end{lstlisting}
 
 \chapter{Ukázky klientského prostředí}\label{app:screenshots}
+
+Tato příloha obsahuje doplňující ukázky klientské části aplikace, které zobrazují další funkcionality a možnosti konfigurace,
+které byly popsány v kapitole 5. Každá z těchto ukázek je doprovázena krátkým popisem, který vysvětluje, 
+jaká část uživatelského rozhraní je zobrazena a jaké možnosti interakce nabízí.
+
+\subsection*{Specifikace uživatelského příběhu}
+Tato část slouží jako hlavní vstupní formulář pro zadávání uživatelských příběhů, 
+které jsou následně ukládány do konfiguračního souboru a slouží jako základ pro generování testů.
+Tato sekce rovněž umožňuje rychlé nastavení povolených nástrojů a výběr modelu, který má agent při generování používat, 
+jak je vidět na obrázku \ref{fig:ui-user-story}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pictures/screen-user-story-area.png}
+    \caption{\protect\centering Detail formuláře pro specifikaci parametrů uživatelského příběhu.}
+    \label{fig:ui-user-story}
+\end{figure}
+
+\subsection*{Konfigurace parametrů generování}
+Obrázky \ref{fig:ui-tools} a \ref{fig:ui-models} zobrazuje modální okna pro konfiguraci nástrojů, které
+smí agent při generování testů používat, a dále pro výběr konkrétního LLM modelu, který bude pro generování využit.
+Pro každý model je vidět i krátký popis a jeho cena za milion vstupních a výstupních tokenů.
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{pictures/screen-modal-models.png}
+        \caption{\protect\centering Modální okno pro výběr LLM modelu.}
+        \label{fig:ui-models}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{pictures/screen-modal-tools.png}
+        \caption{\protect\centering Konfigurace povolených MCP nástrojů.}
+        \label{fig:ui-tools}
+    \end{minipage}
+\end{figure}
+
+\subsection*{Detail výsledku exekuce testu}
+Sekce na obrázku \ref{fig:ui-test-result} zobrazuje detailní přehled o výsledku spuštěného testu.
+Uživatel má možnost vidět základní metriky exekuce (čas, status) a proklik na detailní HTML report, 
+který je nativně generován nástrojem Playwright. Zároveň je zde zobrazen i samotný zdrojový kód testu, 
+aby uživatel měl okamžitý přehled o tom, jaký kód byl spuštěn a nemusel na něj nahlížet přímo v IDE.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pictures/screen-test-result.png}
+    \caption{\protect\centering Prezentace výsledku spuštěného testu včetně zdrojového kódu a metrik exekuce.}
+    \label{fig:ui-test-result}
+\end{figure}
+
+\subsection*{Správa testovacích sad}
+V sekci \texttt{Test Suites} (obrázek \ref{fig:ui-test-suites}) je zobrazen přehled všech vygenerovaných testů, 
+které jsou logicky seskupeny podle projektů. 
+Každý test lze přes GUI smazat a spustit - navíc v případě spuštění testu se automaticky zobrazí ikonka jeho 
+posledního stavu.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pictures/screen-test-suites.png}
+    \caption{\protect\centering Přehled vygenerovaných testů strukturovaný podle příslušných projektů.}
+    \label{fig:ui-test-suites}
+\end{figure}
+
+\subsection*{Nativní HTML report nástroje Playwright}
+Velmi často může chtít uživatel nahlédnout na konkrétní průběh testu, 
+zejména v případě jeho selhání, aby získal detailní informace o tom, co přesně se stalo.
+To poskytuje nativní HTML report generovaný Playwrightem, jak je vidět na obrázku \ref{fig:ui-playwright-report}.
+Obsahuje rozpad jednotlivých testovacích kroků, chybové hlášky, přesnou lokaci selhání (včetně náhledu na zdrojový kód)
+a další důležité informace, které mohou pomoci s rychlou identifikací problému a jeho následnou opravou.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\textwidth]{pictures/screen-playwright-2.png}
+    \caption{\protect\centering Automaticky generovaný HTML report nástrojem Playwright.}
+    \label{fig:ui-playwright-report}
+\end{figure}
+
+\subsection*{Tmavý motiv uživatelského rozhraní}
+Aplikace umí snadno přepínat i do tmavého motivu, což je vidět na obrázku \ref{fig:ui-dark-mode}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/screen-dark-mode.png}
+    \caption{\protect\centering Celkový pohled na klientskou aplikaci s aktivovaným tmavým motivem.}
+    \label{fig:ui-dark-mode}
+\end{figure}
+
 \chapter{Uživatelská dokumentace}\label{app:docuDocs}
 xxx
 
