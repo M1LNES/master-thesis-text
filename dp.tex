@@ -1283,7 +1283,7 @@ obrázku \ref{fig:backend_modules}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{pictures/app_architecture.png}
+    \includegraphics[width=1\textwidth]{pictures/app_architecture.pdf}
     \caption{Zjednodušený diagram vrstvených závislostí backendových modulů.}
     \label{fig:backend_modules}
 \end{figure}
@@ -1610,7 +1610,7 @@ registrovány a využívány.
 \textbf{Provider} & \textbf{Model} & \textbf{In (\$/1M)} & \textbf{Out (\$/1M)} & \textbf{Cached (\$/1M)} \\ \midrule
 Anthropic & Claude Haiku 3 & 0.25 & 1.25 & 0.03 \\
 Anthropic & Claude Haiku 3.5 & 0.80 & 4.00 & 0.08 \\
-Anthropic & Claude Sonnet 3.5 & 3.00 & 15.00 & 0.30 \\ \midrule
+Anthropic & Claude Sonnet 4.5 & 3.00 & 15.00 & 0.30 \\ \midrule
 OpenAI & GPT-4o & 2.50 & 10.00 & 1.25 \\
 OpenAI & GPT-4.1 & 2.00 & 8.00 & 0.50 \\
 OpenAI & GPT-5 Mini & 0.25 & 2.00 & 0.125 \\
@@ -1627,7 +1627,7 @@ Modely byly zvoleny tak, aby bylo v rámci testování možné porovnat různé 
 \begin{itemize}
     \item \textbf{Levnější modely} (např. Claude Haiku 3, GPT-5 Mini, Gemini 2.5 Flash) jsou vhodné pro rychlé iterace, 
     ladění promptů a objemově větší testování.
-    \item \textbf{Výkonnější modely} (např. GPT-5, GPT-4.1, Gemini 2.5 Pro, Claude Sonnet 3.5) se využívají tam, 
+    \item \textbf{Výkonnější modely} (např. GPT-5, GPT-4.1, Gemini 2.5 Pro, Claude Sonnet 4.5) se využívají tam, 
     kde je potřeba kvalitnější reasoning a přesnější výstup.
     \item \textbf{Více providerů} (OpenAI, Anthropic, Google) dává možnost průběžně porovnávat poměr cena/výkon napříč 
     různými poskytovateli.
@@ -2068,6 +2068,97 @@ real-time přehled o průběhu generování testů.
 Systém je nyní kompletně připraven k provozu a je nezbytné ověřit jeho použitelnost, spolehlivost a efektivitu v praxi.
 Na to se zaměří následující kapitola, která se bude věnovat komplexnímu testování a evaluaci vytvořeného řešení.
 
+
+\chapter{Testování a evaluace}\label{ch:testing}
+TODO
+
+\section{Metodika evaluace LLM agenta a testovací prostředí}
+V předchozích univerzitních pracích, které se zabývaly generováním testů pomocí LLM,
+se k ověření schopností modelů využíval existující univerzitní systém TBUIS (Testbed University Information System)
+\footnote{\href{https://projects.kiv.zcu.cz/tbuis/web/}{Aplikace TBUIS}}.
+Tento systém poskytuje sadu use-casů a funkcionalit (např. úmyslné zanešení defektu),
+které jsou vhodné pro testování generování testů. Jelikož se v rámci této 
+práce vychází z obecných uživatelských příběhů, bylo by potřeba je vytvořit na míru 
+pro určitou podmnožinu use-casů v TBUIS.
+
+Proto byla pro účely této práce vyvinuta dedikovaná testovací aplikace, která kopíruje některé
+z klíčových funkcionalit TBUIS, ale zároveň umožňuje vlastní rozšíření o další koncepty.
+V rámci daného repozitáře se pak rovnou nainstaluje přes NPM balíček nástroj TestPilot AI,
+což umožní agenta testovat přímo ve vývojovém prostředí reálné aplikace a zároveň využívá 
+jeho schopnost jednoduché integrace do stávajících projektů.
+
+
+
+\subsection{Architektura testované aplikace}
+Aplikace byla implementována jako monorepo, kde backend byl napsán v Node.js s využitím frameworku Express.js, 
+zatímco frontendová část byla vytvořena pomocí Reactu a knihovny komponent Shadcn UI.
+Klíčové pro testování schopností LLM agenta bylo záměrné rozhodnutí neimplementovat perzistentní databázi,
+ale uchovávat data pouze v paměti Node.js procesu. Díky tomu se při každém spuštění serveru vrací aplikace do přesně definovaného výchozího stavu, 
+což je ideální pro testování a v praxi využívané pro E2E testování (např. v rámci CICD pipeline), kde je potřeba mít vždy konzistentní výchozí podmínky.
+Aplikace obsahuje několik konceptů, které pomohou ověřit schopnosti LLM agenta detekovat a reagovat na funkční mezery v implementaci - 
+např. přístup založený na rolích (admin vs běžný uživatel), dynamické filtry dat nebo transientní UI elementy v podobě Toast notifikací.
+Aby bylo možné změřit schopnost agenta detekovat chyby v implementaci, byl do aplikace implementován mechanismus injektování chyb
+(\textit{Bug Injection}), který umožňuje úmyslně "rozbít" část funkcionality pomocí URL parametru - 
+to výrazně ulehčí nastavování testovací aplikace, jelikož není potřeba manuálně spouštět nové verze s různými chybami, 
+ale stačí pouze nastavit dedikovaný parametr do URL pro danou chybu.
+
+Během implementace tohoto mechanismu byl identifikován potenciální problém v podobě sémantického úniku (\textit{semantic leakage}). 
+Pokud by název parametru a jejich hodnoty nesly lidsky čitelné názvy (např. \texttt{?bug=login\_500}), 
+výkonnější modely by mohly chování aplikace detekovat na základě této informace z URL, nikoliv z 
+reálného průzkumu uživatelského rozhraní. Aby se tomuto předešlo, byl klíč URL parametru zkrácen na \texttt{?b=} 
+a konkrétní typy chyb jsou mapovány výhradně na náhodné alfanumerické hashe. Přehled všech 
+mapovaných chyb a jejich popis je uveden v tabulce \ref{tab:bug-injection}.
+
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|p{4.8cm}|}
+        \hline
+        \textbf{Hash parametr (\texttt{?b=})} & \textbf{Interní název chyby} & \textbf{Popis simulovaného selhání v UI} \\ \hline
+        \texttt{q7m2vn4k} & \texttt{login\_500} & Backend simuluje pád (chyba 500), UI zobrazí bílou obrazovku. \\ \hline
+        \texttt{p3x9ha1t} & \texttt{login\_no\_error} & Potlačení chybové hlášky při zadání špatných údajů. \\ \hline
+        \texttt{r8w5gb2n} & \texttt{register\_pwd\_bypass} & Deaktivace klientské validace shody hesel při registraci. \\ \hline
+        \texttt{a9u3kd1x} & \texttt{admin\_menu\_visible} & Bezpečnostní chyba: běžný uživatel vidí administrátorské menu. \\ \hline
+        \texttt{n8r4bf6q} & \texttt{task\_no\_validation} & Lze odeslat formulář nového úkolu s prázdným názvem. \\ \hline
+        \texttt{y1p6ls4v} & \texttt{toast\_missing} & Chybějící Toast notifikace po úspěšném provedení akce. \\ \hline
+        \texttt{t4h9eu5m} & \texttt{status\_toggle\_fail} & Kliknutí na checkbox stavu úkolu neaktualizuje vizuál v UI. \\ \hline
+        \texttt{f6j2qp9w} & \texttt{filter\_broken} & Tlačítka filtru jsou klikatelná, ale seznam úkolů se nemění. \\ \hline
+        \texttt{v1s8yl3c} & \texttt{modal\_wont\_close} & Modální okno se po úspěšném uložení úkolu nezavře. \\ \hline
+        \texttt{d5k7mt2z} & \texttt{delete\_btn\_missing} & Tlačítko pro smazání chybí v DOM stromu u všech úkolů. \\ \hline
+        \texttt{c2n7zr8p} & \texttt{rbac\_leak} & Běžný uživatel vidí tlačítko smazat i u úkolů administrátora. \\ \hline
+    \end{tabular}
+    \caption{Přehled injektovaných chyb a jejich mapování na hash parametry.}
+    \label{tab:bug-injection}
+\end{table}
+
+\subsection{Připravené testovací scénáře}
+Pro samotnou evaluaci bylo navrženo 8 komplexních uživatelských příběhů.
+Jejich přesné znění je k dispozici v přiloze \ref{app:user-stories}.
+
+Aby bylo možné zhodnotit nejen schopnost modelu generovat kód, ale i schopnost porozumět různě formulovaným akceptačním kritériím a přizpůsobit se jim,
+byla akceptační kritéria (AC) záměrně sepsána ve třech odlišných formátech:
+
+\begin{itemize}
+    \item \textbf{Deklarativní (Rule-based) styl (US-01 až US-03):} Scénáře popisují pouze výchozí stav a očekávaná 
+    pravidla systému. Agent si musí cestu uživatelským rozhraním odvodit zcela sám.
+    \item \textbf{Imperativní (Step-by-Step) styl (US-04 až US-06):} Detailní návod specifikující přesné kroky a interakce. 
+    Tento formát primárně testuje schopnost modelu striktně následovat instrukce.
+    \item \textbf{BDD styl (Given-When-Then) (US-07 a US-08):} Akceptační kritéria jsou zapsané v BDD formátu popsaném v jazyce Gherkin.
+\end{itemize}
+
+
+\section{Výsledky evaluace velkých jazykových modelů}
+jaké modely, happy pathy, negative pathy, pricing, grafy, tabulky...
+
+\section{Testování softwarové implementace nástroje}
+TODO: unit testy, integrační testy, frontendové testy
+
+
+\section{Uživatelské testování a zpětná vazba}
+TODO
+
+\chapter{Možná vylepšení}
+
 \chapter{Závěr}
 xxxx
 
@@ -2393,6 +2484,213 @@ Aplikace umí snadno přepínat i do tmavého motivu, což je vidět na obrázku
     \caption{\protect\centering Celkový pohled na klientskou aplikaci s aktivovaným tmavým motivem.}
     \label{fig:ui-dark-mode}
 \end{figure}
+
+\chapter{Uživatelské příběhy použité k evaluaci}\label{app:user-stories}
+
+Tato příloha obsahuje přesné znění všech uživatelských příběhů použitých při evaluaci systému 
+na ukázkové aplikací.
+U každé položky je zachována i testovací poznámka s informací o konkrétní chybě,
+která aplikaci záměrně znefunkčňuje. Tato informace je určena pouze pro interní potřebu 
+a není předávána agentovi.
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-01 -- User Registration \& Onboarding Flow}]
+\textbf{Name:} User Registration \& Onboarding Flow
+
+\textbf{Description:} As a new user, I want to securely register an account and subsequently log in with my new credentials.
+
+\textbf{Acceptance Criteria:}
+\begin{itemize}
+    \item \textbf{AC\_01 (Navigation):} The registration form must be accessible via the "Register" link on the default login view.
+    \item \textbf{AC\_02 (Validation):} The system must prevent registration if the 'Password' and 'Confirm Password' fields do not match, displaying an appropriate validation warning.
+    \item \textbf{AC\_03 (Success):} Providing valid details with matching passwords successfully creates the account and automatically redirects the user back to the login page.
+    \item \textbf{AC\_04 (Persistence):} The newly registered credentials must be immediately valid for authenticating into the dashboard.
+\end{itemize}
+
+\textbf{Specification:} Start the test at the base URL (\texttt{/}) and let the application automatically handle unauthenticated routing.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection:} \texttt{?b=r8w5gb2n}
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-02 -- Login Validation and Error Handling}]
+\textbf{Name:} Login Validation and Error Handling
+
+\textbf{Description:} As a user, I must be prevented from logging in with invalid credentials and receive appropriate feedback.
+
+\textbf{Acceptance Criteria:}
+\begin{itemize}
+    \item \textbf{AC\_01 (Initial State):} Upon accessing the application unauthenticated, the user is presented with the login interface where input fields must be empty by default.
+    \item \textbf{AC\_02 (Empty Submission):} Attempting to submit the login form without providing both an email and a password must be blocked by local validation warnings.
+    \item \textbf{AC\_03 (Invalid Credentials):} Submitting the form with an incorrect email or password must trigger a clearly visible "Invalid credentials" error message.
+\end{itemize}
+
+\textbf{Specification:} Start at the base URL (\texttt{/}). Rely on dynamic locators and automatic waiting rather than hardcoded timeouts.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection 1:} \texttt{?b=q7m2vn4k}
+    \item \textbf{Bug Injection 2:} \texttt{?b=p3x9ha1t}
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-03 -- Role-Based Navigation Visibility}]
+\textbf{Name:} Role-Based Navigation Visibility
+
+\textbf{Description:} As a system administrator, I want to access privileged settings, while as a regular user, I must be strictly prevented from seeing or accessing administrative navigation links.
+
+\textbf{Acceptance Criteria:}
+\begin{itemize}
+    \item \textbf{AC\_01 (Admin Access):} The system must render the 'System Settings' navigation tab in the header when authenticated as an administrator (\texttt{admin@test.com}).
+    \item \textbf{AC\_02 (User Restriction):} The system must strictly omit the 'System Settings' tab from the DOM when authenticated as a standard user (\texttt{user@test.com}), preventing unauthorized discovery.
+    \item \textbf{AC\_03 (Session Boundary):} The system must correctly isolate sessions; logging out and logging back in as a different role must immediately reflect that role's navigation permissions.
+\end{itemize}
+
+\textbf{Specification:} The standard password for all test accounts is \texttt{password123}. Verification of AC\_02 must ensure the element is physically absent from the DOM, not merely visually hidden.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection:} \texttt{?b=a9u3kd1x}
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-04 -- Create New Task and Verify Notification}]
+\textbf{Name:} Create New Task and Verify Notification
+
+\textbf{Description:} As a logged-in user, I want to create a new task and see a clear visual confirmation.
+
+\textbf{Acceptance Criteria:}
+\begin{enumerate}
+    \item Start at the base URL and log in using \texttt{user@test.com} and \texttt{password123}.
+    \item Click the 'New Task' button to open the creation modal.
+    \item Leave the Title field completely empty and click 'Save'.
+    \item Verify that the form submission is prevented due to a required field validation.
+    \item Fill the Title field with "Test Task" and select a Priority.
+    \item Click 'Save' and verify that the modal automatically closes.
+    \item Verify that the newly created "Test Task" is visible in the dashboard task list.
+    \item Verify that a success Toast notification appears on the screen.
+\end{enumerate}
+
+\textbf{Specification:} Use strict text selectors where possible.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection 1:} \texttt{?b=n8r4bf6q} (task\_no\_validation - allows empty title)
+    \item \textbf{Bug Injection 2:} \texttt{?b=y1p6ls4v} (toast\_missing)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-05 -- Task Status Toggle and Filtering}]
+\textbf{Name:} Task Status Toggle and Filtering
+
+\textbf{Description:} As a user, I want to mark tasks as completed and use filters to quickly find active tasks.
+
+\textbf{Acceptance Criteria:}
+\begin{enumerate}
+    \item Log in using \texttt{user@test.com} and \texttt{password123}.
+    \item Locate an active task in the list and click its status checkbox.
+    \item Verify that the checkbox reflects the checked state (marked as completed).
+    \item Click the 'Active' filter button/radio.
+    \item Verify that the task you just marked as completed is no longer visible in the task list.
+    \item Click the 'Completed' filter button/radio.
+    \item Verify that the completed task is now visible in the list again.
+\end{enumerate}
+
+\textbf{Specification:} Ensure you wait for the list to update after clicking the filters before making assertions.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection 1:} \texttt{?b=t4h9eu5m} (status\_toggle\_fail)
+    \item \textbf{Bug Injection 2:} \texttt{?b=f6j2qp9w} (filter\_broken)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-06 -- Edit Task details via Modal}]
+\textbf{Name:} Edit Task details via Modal
+
+\textbf{Description:} As a user, I want to update existing tasks without navigating away from the dashboard.
+
+\textbf{Acceptance Criteria:}
+\begin{enumerate}
+    \item Log in using \texttt{user@test.com} and \texttt{password123}.
+    \item Click the 'Edit' button on an existing task in the list.
+    \item Verify that the edit modal opens and the input fields are pre-populated with the task's current data.
+    \item Change the value in the 'Priority' field to a different option.
+    \item Click the 'Save' button.
+    \item Verify that the edit modal closes automatically.
+    \item Verify that the task in the dashboard list now displays the updated Priority.
+\end{enumerate}
+
+\textbf{Specification:} N/A
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection:} \texttt{?b=v1s8yl3c} (modal\_wont\_close)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-07 -- Role-Based Task Deletion Permissions}]
+\textbf{Name:} Role-Based Task Deletion Permissions
+
+\textbf{Description:} As a system administrator, I can manage all tasks. As a user, I must not be able to delete tasks belonging to others to ensure data integrity.
+
+\textbf{Acceptance Criteria:}
+\begin{itemize}
+    \item \textbf{AC\_01 (Admin Access):}
+    \begin{itemize}
+      \item \textbf{Given} I am successfully logged in as an administrator (\texttt{admin@test.com}),
+      \item \textbf{When} I view the dashboard task list,
+      \item \textbf{Then} I should see the 'Delete' button on all tasks regardless of their owner.
+    \end{itemize}
+    \item \textbf{AC\_02 (User Restriction):}
+    \begin{itemize}
+      \item \textbf{Given} I am successfully logged in as a standard user (\texttt{user@test.com}),
+      \item \textbf{When} I view the dashboard task list,
+      \item \textbf{Then} I should only see the 'Delete' button on tasks owned by me,
+      \item \textbf{And} I should strictly NOT see the 'Delete' button on tasks owned by the administrator.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Specification:} The standard password for all test accounts is \texttt{password123}. Ensure the absence of the delete button is verified at the DOM level.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection 1:} \texttt{?b=d5k7mt2z} (delete\_btn\_missing - missing for everyone)
+    \item \textbf{Bug Injection 2:} \texttt{?b=c2n7zr8p} (rbac\_leak - User sees Delete buttons on Admin's tasks)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[breakable, colback=gray!4, colframe=black!35, boxrule=0.4pt, arc=2pt, boxsep=1pt, left=3pt, right=3pt, top=2pt, bottom=2pt, before skip=6pt, after skip=6pt, fontupper=\small, title={US-08 -- Task Deletion Confirmation Flow}]
+\textbf{Name:} Task Deletion Confirmation Flow
+
+\textbf{Description:} As a user, I want to delete my task but be prompted for confirmation first to prevent accidental data loss.
+
+\textbf{Acceptance Criteria:}
+\begin{itemize}
+    \item \textbf{AC\_01 (Confirmation Prompt):}
+    \begin{itemize}
+      \item \textbf{Given} I am logged in as \texttt{user@test.com} and have an existing task,
+      \item \textbf{When} I click the 'Delete' button on my task,
+      \item \textbf{Then} the system must display a confirmation dialog before proceeding.
+    \end{itemize}
+    \item \textbf{AC\_02 (Successful Deletion):}
+    \begin{itemize}
+      \item \textbf{Given} the deletion confirmation dialog is visible,
+      \item \textbf{When} I accept/confirm the deletion,
+      \item \textbf{Then} the task must be permanently removed from the dashboard list,
+      \item \textbf{And} a success Toast notification must be displayed to confirm the action.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Specification:} Use standard auto-waiting to verify the Toast notification. The password is \texttt{password123}.
+
+\textbf{\textcolor{BrickRed}{Testing Notes (INTERNAL ONLY -- DO NOT PASS TO AGENT):}}
+\begin{itemize}
+    \item \textbf{Bug Injection:} \texttt{?b=y1p6ls4v} (toast\_missing)
+\end{itemize}
+\end{tcolorbox}
+
 
 \chapter{Uživatelská dokumentace}\label{app:docuDocs}
 xxx
