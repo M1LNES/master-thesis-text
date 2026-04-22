@@ -2102,7 +2102,16 @@ Na to se zaměří následující kapitola, která se bude věnovat komplexnímu
 
 
 \chapter{Testování a evaluace}\label{chapter:testing}
-TODO
+Tato kapitola se zaměřuje na evaluaci a ověření navrženého agentního systému TestPilot AI.
+Proces testování byl rozdělen do několika klíčových fází,
+aby bylo možné nástroj zhodnotit z různých úhlů pohledu.
+Nejprve je představena metodika měření a speciálně vyvinutá testovací aplikace, která slouží 
+jako plně kontrolované prostředí pro běh LLM agenta. Následně jsou analyzovány a 
+prezentovány výsledky generování testů - a to jak u pozitivních scénářů na zcela funkční aplikaci,
+tak i u scénářů se záměrně zanesenými defekty. Oba tyto scénáře jsou doplněny o ekonomické zhodnocení 
+a srovnání s manuálním přístupem k psaní testů. Závěr kapitoly je věnován 
+ověření kvality samotného softwarového řešení pomocí automatizovaných testů
+ a vyhodnocení zpětné vazby z uživatelského testování s reálnými uživateli z praxe.
 
 \section{Metodika evaluace LLM agenta a testovací prostředí}
 V předchozích univerzitních pracích, které se zabývaly generováním testů pomocí LLM,
@@ -2130,7 +2139,7 @@ což je ideální pro testování a v praxi využívané pro E2E testování (na
 Aplikace obsahuje několik konceptů, které pomohou ověřit schopnosti LLM agenta detekovat a reagovat na funkční mezery v implementaci - 
 např. přístup založený na rolích (admin vs běžný uživatel), dynamické filtry dat nebo transientní UI elementy v podobě Toast notifikací.
 Aby bylo možné změřit schopnost agenta detekovat chyby v implementaci, byl do aplikace implementován mechanismus injektování chyb
-(\textit{Bug Injection}), který umožňuje úmyslně "rozbít" část funkcionality pomocí URL parametru - 
+(\textit{Bug Injection}), který umožňuje úmyslně ``rozbít`` část funkcionality pomocí URL parametru - 
 to výrazně ulehčí nastavování testovací aplikace, jelikož není potřeba manuálně spouštět nové verze s různými chybami, 
 ale stačí pouze nastavit dedikovaný parametr do URL pro danou chybu.
 
@@ -2371,7 +2380,7 @@ kdy model nebyl schopen správně synchronizovat test s transientními elementy 
 vyhodnotil funkcionalitu jako nefunkční. V těchto speciálních případech byl
 v rámci regeneračního promptu požádán o prověření této funkcionality,
 kdy model následně vyřešil problém se synchronizací a test úspěšně opravil (zejména u \texttt{US-04}).
-\subsection{Křížová verifikace a detekce defektů}
+\subsection{Křížová verifikace a detekce defektů}\label{subsection:verification}
 
 Tabulka \ref{tab:bug-results} shrnuje výsledky schopnosti modelů detekovat 
 zanesené chyby v aplikaci, jež byly zmíněny a vysvětleny v tabulce \ref{tab:bug-injection}.
@@ -2534,20 +2543,260 @@ V rámci TestPilot AI lze ale konfigurovat, které nástroje smí agent využív
 takže je možné volání těchto nástrojů povolit pouze pro komplexnější scénáře, 
 které vyžadují hlubší porozumění UI.
 
-\subsection{Ekonomické a výkonnostní zhodnocení}
-TODO (tabulka s tokeny a cenou, rozbor Anthropic cachingu, časové srovnání agenta vs. manuálního psaní).
+\subsection{Ekonomické zhodnocení}
+Kromě spolehlivosti a výkonnosti modelů je pro praktické využití 
+klíčovým faktorem i ekonomická nákladnost. 
+V tabulce \ref{tab:economic-results} jsou shrnuté celkové náklady na 
+exekuci všech scénářů - jak 8 pozitivních s funkční aplikací, tak i 11 scénářů 
+s injektovanými chybami. Pro každý model je evidována nejen finální cena, 
+ale také počet API požadavků na LLM a celkový počet spotřebovaných tokenů (vstupních i výstupních).
 
-\subsection{Manuální implementace jako referenční metrika (Baseline)}
-TODO (popis toho, že se sepsalo 8 manuálních testů přes Playwright extension, trvalo to cca 2 hodiny. 
-Zmínit limity codegen nástrojů a nutnost manuálních zásahů programátora - ukázka kousku kódu).
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \begin{tabular}{|l|c|c|r|}
+        \hline
+        \textbf{Model} & \textbf{Počet requestů} & \textbf{Spotřebované tokeny} & \textbf{Cena (USD)} \\ \hline
+        Claude Sonnet 4.5 & 404 & 3 703 383 & \$12,25 \\ \hline
+        GPT-5 & 288 & 1 802 626 & \$2,41 \\ \hline
+        Gemini 2.5 Pro & 206 & 1 639 613 & \$2,40 \\ \hline
+        GPT-4o & 207 & 1 037 345 & \$1,91 \\ \hline
+        GPT-4.1 & 259 & 1 439 407 & \$1,52 \\ \hline
+        Claude Haiku 3.5 & 139 & 898 361 & \$0,82 \\ \hline
+        Gemini 2.5 Flash & 200 & 1 491 498 & \$0,55 \\ \hline
+        GPT-5-mini & 213 & 1 310 574 & \$0,37 \\ \hline
+        Claude Haiku 3 & 162 & 1 110 130 & \$0,34 \\ \hline
+    \end{tabular}
+    \caption{\protect\centering Celkové náklady pro generování kompletní sady testů.}
+    \label{tab:economic-results}
+\end{table}
+
+\subsubsection*{Cena vs kvalita}
+Jak vyplývá z předchozích pozorování a naměřených dat, 
+některé menší modely dokážou už dnes v řadě scénářů nabídnout výkon, který by mohl 
+být pro praktické použití dostatečný a cenově přijatelný. Jako příklad lze uvést modely 
+\textit{GPT-5-mini} a \textit{Gemini 2.5 Flash} - ty se cenově pohybovaly v řádu desítek centů dolarů 
+a přesto dokázaly generovat (byť s menšími asistencemi v podobě regenerace) funkční testy pro 
+velkou část scénářů. Modely \textit{Haiku 3} a \textit{Haiku 3.5} se cenově pohybovaly na podobné úrovni 
+(a po případné implementaci cachingu by se pohybovaly ještě níže - viz dále), ale jejich absence reasoningu 
+a s ním spojené halucinace by vedly k nepřijatelně nízké úspěšnosti generování testů.
+
+Modely jako \textit{Claude Sonnet 4.5} a \textit{GPT-5} jsou sice cenově nákladnější, 
+ale jejich schopnost generovat testy, ošetřovat edge-cases a detekovat chyby bez jakékoliv asistence z nich dělá 
+velmi atraktivní kandidáty pro nasazení v produkčním prostředí, 
+kde by se náklady mohly vyvážit úsporou času QA inženýrů a rychlejší detekcí defektů.
+
+\subsubsection*{Vliv architektury na spotřebu tokenů}
+Z tabulky \ref{tab:economic-results} je i patrný rozdíl v počtu spotřebovaných tokenů mezi jednotlivými modely.
+Pokročilé modely (zejména \textit{Claude Sonnet 4.5}) vykazují větší spotřebu tokenů, 
+což je důsledkem jejich pokročilého reasoning procesu - to potvrzuje chování zmíněné v 
+\ref{subsection:verification}, kde právě tento model verifikoval nejen akceptační kritéria, 
+ale i další aspekty funkcionality, které vůbec nebyly explicitně zmíněny či požadovány.
+To se projevilo i v rámci detekce defektů, kde modely s největší spotřebou tokenů
+(\textit{GPT-5}, \textit{Claude Sonnet 4.5} a \textit{Gemini 2.5 Pro}) dokázaly detekovat všechny injektované chyby.
+
+
+\subsubsection*{Absence Prompt Cachingu u Anthropic modelů}
+Výraznou anomálií v naměřených datech je vysoká nákladnost modelů od Anthropic, zejména \textit{Claude Sonnet 4.5}.
+Tento rozdíl je způsoben architekturou použité AI Gateway, skrze kterou byly modely volány.
+Modely rodiny GPT a Gemini využívají automatické cachování opakujícího se kontextu,
+kde se na straně providera LLM pomocí speciálních prefixů hlaviček identifikují části promptu, 
+které se nemění mezi jednotlivými requesty (v rámci TestPilot AI se jedná o historii zpráv a definic nástrojů)
+a tyto části se pak cachují, díky čemuž se opakující se kontext nemusí znovu načítat a tokenizovat,
+ale pouze se tokenizuje nový obsah (např. příkaz k volání nástrojů). To vede k výraznému 
+snížení nákladů na generování testů.
+
+U Anthropic modelů však tento mechanismus neprobíhá automaticky. 
+Cachování je nutné implementovat manuálně buď na úrovni AI Gateway, 
+nebo přímo v aplikaci pomocí definice tzv. breakpointů.
+Jak popisuje oficiální dokumentace platformy Claude\footnote{\href{https://platform.claude.com/docs/en/build-with-claude/prompt-caching\#understanding-cache-breakpoint-costs}
+{Dokumentace Claude Prompt Caching}}, využití takto cachovaného tokenu stojí 
+pouze 10 \% ceny běžného vstupního tokenu.
+
+Při případné plné implementaci této funkce 
+by mohly reálné náklady na model \textit{Sonnet 4.5} klesnout o desítky procent a 
+dostat se na úroveň konkurenceschopnou s modelem \textit{GPT-5}, čímž by se tento model stal ještě atraktivnějším 
+kandidátem pro nasazení v produkčním prostředí.
+
+\subsection{Porovnání s ručně psanými testy}
+Aby bylo možné posoudit skutečný přínos autonomního agenta pro generování testů,
+byla pro srovnání vytvořena sada manuálně psaných testů.
+Jedná se o 8 pozitivních scénářů (pro každý uživatelský příběh jeden), 
+které byly implementovány ručně pomocí oficiálního nahrávacího nástroje Playwright (\textit{Codegen}).
+Ten je integrován jako rozšíření (\textit{Extension}) ve vývojovém prostředí Visual Studio Code 
+a umožňuje generování kódu na základě interakcí uživatele s aplikací bez hlubší znalosti programování, což
+dokonale odpovídá cílové skupině uživatelů, kteří by mohli využívat autonomního agenta pro generování testů.
+Vytvoření těchto testů zabralo přibližně 2 hodiny včetně manuálního doplňování asercí.
+
+\subsubsection*{Limity nahrávacích nástrojů}
+Přestože nástroj \textit{Codegen} výrazně urychluje prvotní psaní kostry testů tím, 
+že překládá akce uživatele (kliknutí, vyplňování textu, navigace) do kódu,
+ukázalo se, že tento přístup má několik zásadních omezení.
+Poskytuje pouze základní záznam interakcí, ale nedokáže popsat a zachytit komplexnější logiku 
+- tu je poté třeba nutné doplňovat ručně, což vyžaduje už alespoň základní znalost programování.
+
+Ukázkovým příkladem je ověření klientské validace formuláře u scénáře \texttt{US-02}.
+Záznamový nástroj nedokáže zachytit nativní varovnou bublinu prohlížeče (``Vyplňte toto pole``), 
+protože se nejedná o standardní DOM element. Jak je vidět na ukázce \ref{testing:manual-vs-ai}, 
+při ručně nahraném testu bylo nutné manuálně doplnit dodatečnou aserci.
+Naopak modely jako \textit{GPT-5} či \textit{Claude Sonnet 4.5} 
+volí sofistikovanější přístup - nemusí nic nahrávat a doplňovat. Místo toho rovnou 
+syntetizují kód, a pracují na úrovni vnitřního stavu HTML elementu, nikoliv na úrovni vizuálního zobrazení.
+
+\begin{lstlisting}[style=tscode,
+    caption={\protect\centering Porovnání manuálního řešení a přístupu modelu GPT-5 při ověřování nativní validace formuláře.},
+    label={testing:manual-vs-ai},
+    basicstyle=\ttfamily\scriptsize,
+    float=false]
+// 1. Implementation with Playwright Codegen
+await page.getByRole('button', { name: 'Login' }).click();
+// Manual workaround - this is a limitation of the recording tool, 
+// which cannot capture native browser validation bubbles.
+await expect(page.locator("input:invalid")).toHaveCount(1);
+
+// 2. TestPilot AI implementation (model GPT-5)
+await loginButton.click();
+const titleValidity = await titleInput.evaluate((el: HTMLInputElement) => ({
+    valid: el.checkValidity(),
+    valueMissing: el.validity.valueMissing,
+    required: el.required === true || el.getAttribute("required") !== null
+}));
+expect(titleValidity.required).toBe(true);
+expect(titleValidity.valid).toBe(false);
+expect(titleValidity.valueMissing).toBe(true);
+\end{lstlisting}
+
+
+Dalším omezením manuálního nahrávání byla logická neschopnost ověřit neexistenci
+elementu. Například ve scénáři \texttt{US-03} běžný uživatel nesmí vidět 
+administrátorské menu. Codegen nemůže zaznamenat kliknutí na něco, co na obrazovce fyzicky není.
+Bylo proto nutné dopsat ručně manuální aserci (\texttt{not.toBeVisible()}) pro ověření, že tento prvek není přítomný.
+Naopak modely rovnou pochopily požadavek a automaticky generovaly 
+aserce na absenci daného prvku v DOM stromu (např. pomocí \texttt{toHaveCount(0)}).
+
+\subsubsection*{Časová efektivita}
+
+Zatímco manuální vytváření testů pomocí Codegenu a následného ručního doplňování asercí zabralo 
+přibližně 15 minut pro každý scénář, agent dokázal vygenerovat robustnější test v řádu 
+nižších jednotek minut (zpravidla 2-5 minut v závislosti na komplexitě scénáře, modelu a případné regeneraci).
+To nastiňuje, že případná integrace autonomního agenta do QA by 
+mohla přinést nejen značnou časovou úsporu, ale mohla by i zlepšit kvalitu 
+testů právě díky eliminaci problémů spojených s manuálním nahráváním.
+
 
 
 \section{Testování softwarové implementace nástroje}
-TODO: unit testy, integrační testy, frontendové testy
 
+Před uživatelskými testy bylo potřeba zajistit stabilitu a spolehlivost systému TestPilot AI.
+Vzhledem k tomu, že obsahuje jak frontendovou část pro interakci s uživatelem, tak i backendovou část pro orchestraci 
+a komunikaci s LLM, bylo nezbytné pokrýt testy obě tyto části.
+
+\subsection*{Testování backendové části}
+Pro testování backendové části byl využit framework Jest v kombinaci s knihovnou Supertest 
+pro end-to-end testování API endpointů.
+Důraz byl kladen na otestování klíčové business logiky, která zajišťuje orchestraci mezi jednotlivými komponentami systému,
+jakož i na správné fungování API endpointů, které jsou kritické pro komunikaci mezi frontendem a backendem.
+Hlavní oblasti, které byly testovány, zahrnovaly:
+
+\begin{itemize}
+    \item \textbf{Services:} Nejvyšší pokrytí pro klíčové služby 
+    zajišťující orchestraci (např. \texttt{LlmService}, \texttt{AgentService}, \texttt{TestRunnerService}).
+    \item \textbf{Controllers:} Ověřování zpracování HTTP požadavků a správné volání služeb.
+    \item \textbf{Konfigurace a validace:} Testování parserů a validačních Zod schémat pro nástroje agenta.
+\end{itemize}
+
+Testovací sada obsahuje celkem 320 jednotkových a integračních testů rozdělených do 
+31 testovacích sad. Line coverage dosahuje přibližně 82~\% a function coverage téměř 90~\%.
+
+\subsection*{Testování frontendové části}
+V rámci klientského testování je použit framework Vitest, který 
+je optimalizován pro rychlé testování v prostředí Vite.
+Simulace uživatelských interakcí a testování komponent probíhá prostřednictvím React Testing Library
+za pomoci JSDOM.
+Testy se zaměřují především na ověření správného renderování a reprezentace stavu u klíčových komponent, 
+a dále také na funkčnost hooků, které obsahují oddělenou logiku pro správu stavů a interakcí.
+Celkem klientská část čítá 159 testů a 
+pokrytí se pohybuje okolo 60~\%. 
 
 \section{Uživatelské testování a zpětná vazba}
-TODO
+Pro ověření praktické použitelnosti nástroje TestPilot AI bylo 
+provedeno uživatelské testování prostřednictvím dotazníku 
+v Google Forms, který obsahoval otázky zaměřené na různé aspekty nástroje 
+a otevřenou sekci pro volné komentáře a návrhy na zlepšení.
+Dotazník byl vyplněn 4 respondenty z firmy Emplifi (dvěma architekty, jedním SW inženýrem a jedním QA inženýrem), 
+jejichž kompletní odpovědi jsou uvedené v příloze \ref{app:userTesting}.
+
+\subsection*{Hodnocení klíčových aspektů a celkový dojem}
+Odpovědi respondentů indikují spokojenost s nástrojem a jeho přínosem pro vývojový proces:
+
+\begin{itemize}
+    \item \textbf{Inicializace a integrace:} Každý respondent ohodnotil proces 
+    počátečního nastavení pomocí příkazu \texttt{npx testpilot init/run} nejvyšší možnou známkou 
+    (5/5 - Velmi snadné). Pozitivně (5/5) bylo hodnoceno i lokální ukládání testů přímo do 
+    repozitáře namísto využití interní databáze.
+    \item \textbf{Kvalita kódu a asistentce:} Shoda vygenerovaného kódu s akceptačními kritérii i 
+    dodržování Playwright best-practices byly hodnoceny poměrně kladně (převážně 4/5). 
+    \item \textbf{Časová úspora a celkový dojem:} Všichni 4 respondenti se shodli (možnost ``Určitě ano``), 
+    že nástroj má potenciál šetřit čas při psaní boilerplate kódu pro E2E testy. Celková známka nástroje dosáhla 
+    průměrné hodnoty 1,25 (na škále 1 = Vynikající, 5 = Nepoužitelný) a 100 \% testujících vidí v 
+    tomto prototypu potenciál, který by po dalším vývoji mohl být plnhodnotně využitelný ve vývojovém procesu.
+\end{itemize}
+
+\subsection*{Silné stránky a přínosy}
+V otevřených odpovědích respondenti vyzdvihovali 
+transparentnost celého procesu. Zobrazování myšlenkových pochodů agenta a volání konkrétních
+nástrojů bylo hodnoceno jako přínosné a užitečné pro pochopení toho, jak model dospěl k danému kódu.
+Silnou stránkou, kterou zmiňovali zejména architekti, byla snadná integrace do existujících projektů.
+Jeden z respondentů dokonce uvedl, že tato jednoduchost otevírá cestu k tvorbě automatizovaných testů 
+i pro méně technické role ve firmě, což by plně odpovídalo původnímu záměru nástroje - 
+umožnit psaní testů i uživatelům bez hlubších technických znalostí.
+Kladně byla hodnocena i schopnost modelů regenerovat testy - 
+jeden z respondentů explicitně uvedl, že pokud zadání obsahovalo nejednoznačnosti, 
+oprava na základě chybového reportu byla zpravidla úspěšná již na první pokus.
+
+\subsection*{Identifikované limity a návrhy na zlepšení}
+Zpětná vazba od uživatelů byla i cenná pro identifikaci oblastí, které by bylo možné v budoucnu vylepšit.
+Zmiňováno bylo:
+
+\begin{itemize}
+    \item \textbf{Izolace testovacího prostředí:} QA inženýr narazil na problém se 
+    sdíleným stavem prohlížeče (pokud byl uživatel již přihlášen z předchozí interakce, agent selhal, protože nenašel 
+    přihlašovací formulář). Tento poznatek se plně shoduje se zjištěními z této kapitoly, 
+    kde byla nutnost manuálního čištění session definována jako jeden z limitů.
+    \item \textbf{Úprava existujících testů:} Dva respondenti uvedli, že pro 
+    plné nahrazení současných nástrojů jim chybí možnost nechat agenta upravovat již existující
+     testy, nikoliv pouze generovat testy nové nebo regenerovat ty čerstvě vytvořené.
+    \item \textbf{Uživatelské rozhraní:} Byla identifikována drobná UX nedokonalost u tlačítka pro
+     regeneraci, které vizuálně neindikuje, že otevře modální okno pro dodatečný kontext, a působí spíše 
+     jako tlačítko pro okamžitou exekuci. Dále byla zmíněna absence persistence stavu při přepínání mezi 
+     záložkami jednotlivých uživatelských příběhů.
+    \item \textbf{Paralelní generování testů:} Jeden z respondentů navrhl možnost spouštět generování testů 
+    pro více uživatelských příběhů paralelně, což by mohlo výrazně zrychlit celý proces, zejména v případech, 
+    kdy je potřeba vytvořit testy pro větší množství scénářů.
+\end{itemize}
+
+Lze konstatovat, že uživatelské testování potvrdilo nejen praktickou použitelnost nástroje, 
+ale i jeho potenciál pro zrychlení vývojového cyklu a umožnění psaní testů i pro méně technické role.
+Zároveň poskytlo cenné poznatky pro další vývoj a vylepšení, které by mohly tento nástroj 
+učinit ještě efektivnějším a uživatelsky přívětivějším.
+
+\section{Shrnutí}
+V rámci této kapitoly byla provedena důkladná evaluace agentního systému, 
+která potvrdila vysoký potenciál využití autonomních LLM agentů v oblasti 
+automatizovaného E2E testování. Analýza výsledků ukázala, 
+že pokročilé reasoning modely dokáží nejen generovat funkční testy, 
+ale především i detekovat chyby v implementaci, což je klíčová schopnost pro praktické využití v QA procesech.
+Navíc srovnání s manuálně psanými testy ukázalo, 
+že agentní systém eliminuje limity běžně využívaných nahrávacích nástrojů a zkracuje 
+dobu potřebnou pro vytvoření testu. Ekonomické zhodnocení pak poukázalo na existenci 
+cenově efektivních modelů pro běžné nasazení i na důležitost architektonických optimalizací 
+(jako je využití prompt cachingu) pro snížení nákladů u pokročilejších modelů.
+
+Pro ověření stability nástroje byly napsány i automatizované testy pro backend i frontend, 
+které pokrývají klíčové části systému a zajišťují jeho spolehlivost. Kapitola byla zakončena uživatelským testováním, 
+které potvrdilo nejen spokojenost s nástrojem, ale zároveň nastínilo i konkrétní oblasti na 
+zlepšení. Tím se bude zabývat následující kapitola, která se zaměří na možná vylepšení a 
+další směřování vývoje nástroje TestPilot AI.
 
 \chapter{Možná vylepšení}\label{chapter:improvements}
 
