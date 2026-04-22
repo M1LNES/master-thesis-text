@@ -194,6 +194,38 @@
   captionpos=b 
 }
 
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{220,220,220}
+\definecolor{codetext}{RGB}{30,30,30}
+\definecolor{codekeyword}{RGB}{0,0,120}
+\definecolor{codestring}{RGB}{0,110,0}
+\definecolor{codenumber}{RGB}{120,120,120}
+
+\lstdefinestyle{snapshot}{
+    basicstyle=\ttfamily\scriptsize\color{codetext},
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    numbers=left,
+    numberstyle=\tiny\color{codenumber},
+    stepnumber=1,
+    numbersep=6pt,    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    xleftmargin=10pt,
+    xrightmargin=5pt,
+    aboveskip=6pt,
+    belowskip=6pt,
+    keywordstyle=\color{codekeyword}\bfseries,
+    stringstyle=\color{codestring},
+    morekeywords={generic,main,heading,paragraph,textbox,button,link,region,list},
+    morestring=[b]",
+    literate=
+        {[}{{\color{gray}[}}1
+        {]}{{\color{gray}]}}1
+        {=}{{\color{black}=}}1
+}
+
 % _____________________________________________________________________________
 %
 %
@@ -2201,7 +2233,7 @@ Výsledný kód byl hodnocen dle následující čtyřbodové škály:
 \end{itemize}
 
 \subsubsection*{Verifikace defektů}
-Druhá fáze evaluace se zaměřila na schopnost modelů detekovat zanešené chyby.
+Druhá fáze evaluace se zaměřila na schopnost modelů detekovat zanesené chyby.
 Na rozdíl od první fáze zde byla vynechána jakákoliv dodatečná regenerace,
 aby bylo možné zachytit prvotní dedukci modelu při kontaktu s rozbitou aplikací.
 Výsledky těchto experimentů byly kategorizovány do tří skupin: 
@@ -2341,14 +2373,32 @@ v rámci regeneračního promptu požádán o prověření této funkcionality,
 kdy model následně vyřešil problém se synchronizací a test úspěšně opravil (zejména u \texttt{US-04}).
 \subsection{Křížová verifikace a detekce defektů}
 
-V této fázi byla testována schopnost agenta detekovat odchylky od zadání v reálném čase. Výsledky detekce 11 injektovaných chyb jsou shrnuty v tabulce \ref{tab:bug-results}.
+Tabulka \ref{tab:bug-results} shrnuje výsledky schopnosti modelů detekovat 
+zanesené chyby v aplikaci, jež byly zmíněny a vysvětleny v tabulce \ref{tab:bug-injection}.
+Opět se objevují markantní rozdíly mezi non-reasoning (\textit{Haiku 3} a \textit{Haiku 3.5}) 
+a reasoning modely, což znovu potvrzuje nutnost použití těchto pokročilejších modelů 
+pro úlohy, které vyžadují hlubší porozumění.
+
+
 
 \begin{table}[H]
     \centering
     \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \resizebox{\textwidth}{!}{
     \begin{tabular}{|l|c|c|c|c|c|c|c|c|c|}
         \hline
-        \textbf{Chyba (Hash)} & \textbf{GPT-4o} & \textbf{GPT-4.1} & \textbf{GPT-5-m} & \textbf{GPT-5} & \textbf{H-3} & \textbf{H-3.5} & \textbf{S-4.5} & \textbf{F-2.5} & \textbf{G-2.5P} \\ \hline
+        \textbf{Chyba} & 
+        \textbf{GPT-4o} & 
+        \textbf{GPT-4.1} & 
+        \shortstack{\rule{0pt}{2.6ex}\textbf{GPT-5}\\\textbf{mini}} &
+        \textbf{GPT-5}  
+        & \shortstack{\rule{0pt}{2.6ex}\textbf{Claude}\\\textbf{Haiku 3}} 
+        & \shortstack{\rule{0pt}{2.6ex}\textbf{Claude}\\\textbf{Haiku 3.5}} 
+        & \shortstack{\rule{0pt}{2.6ex}\textbf{Claude}\\\textbf{Sonnet 4.5}} 
+        & \shortstack{\rule{0pt}{2.6ex}\textbf{Gemini 2.5}\\\textbf{Flash}} 
+        & \shortstack{\rule{0pt}{2.6ex}\textbf{Gemini 2.5}\\\textbf{Pro}} \\ \hline
+
         login\_500 & D & D & D & D & E & E & D & D & D \\ \hline
         login\_no\_error & D & D & D & D & E & FN & D & D & D \\ \hline
         reg\_pwd\_bypass & FN & D & D & D & E & E & D & E & D \\ \hline
@@ -2361,18 +2411,128 @@ V této fázi byla testována schopnost agenta detekovat odchylky od zadání v 
         delete\_missing & D & D & D & D & E & D & D & D & D \\ \hline
         rbac\_leak & FN & D & E & D & E & FN & D & D & D \\ \hline
     \end{tabular}
-    \caption{Úspěšnost detekce zanesených chyb (D=Detected, FN=False Negative, E=Error).}
+    }
+    \caption{\protect\centering Úspěšnost detekce zanesených chyb (D=Detected, FN=False Negative, E=Error).}
     \label{tab:bug-results}
 \end{table}
 
-\textbf{Strategie detekce u pokročilých modelů:}
-Modely jako \textit{GPT-5}, \textit{Sonnet 4.5} a \textit{Gemini Pro} prokázaly vynikající schopnost křížové verifikace. Při zjištění chyby (např. chybějící potvrzení o smazání úkolu) model \textit{GPT-5} nejenže ukončil test s chybou, ale v sekci \texttt{IMPLEMENTATION NOTES} explicitně uvedl, že ``v UI nebyla nalezena očekávaná notifikační oblast``. Tento proces ``uvažování`` (\textit{reasoning}) je klíčovým prvkem, který odlišuje autonomního agenta od statického generátoru kódu.
+\subsubsection*{Strategie detekce u pokročilejších modelů}
+Modely jako \textit{GPT-5}, \textit{Sonnet 4.5} a \textit{Gemini 2.5 Pro} dokázaly detekovat všechny zmiňované
+chyby a prokázaly vynikající schopnost křížové verifikace s akceptačními kritérii.
+Na ukázce \ref{testing:detected-bug} je vidět, jak model \textit{Gemini 2.5 Pro} postupoval 
+při detekci chyby \texttt{register\_pwd\_bypass}. Na začátku souboru vytvořil 
+sekci \texttt{IMPLEMENTATION\_NOTES}, kde podrobně popsal každé akceptační kritérium a označil,
+které z nich bylo splněné a které ne. Nefunkční validaci hesel (AC\_02) 
+nejen správně označil v rámci této sekce, ale i v samotném testu využil \texttt{test.fail()} 
+s jasným popisem očekávaného chování, které však v aplikaci chybí. 
+Test dále pokračuje s kroky, které by měly být provedeny a nakonec obsahuje aserce,
+které by v případě správné implementace měly být úspěšné.
 
-\textbf{Anatomie falešné pozitivity (False Negatives):}
-Kritickým zjištěním bylo chování modelu \textit{GPT-4o}, který v několika případech (např. \texttt{filter\_broken}) nahlásil úspěšné splnění testu, přestože byla aplikace nefunkční. Analýza kódu ukázala, že model použil příliš obecné aserce (např. kontrolu přítomnosti textu kdekoli na stránce místo v konkrétním seznamu), což vedlo k falešnému potvrzení správnosti stavu.
+\begin{lstlisting}[style=tscode, 
+    caption={\protect\centering Ukázka detekce chyby modelem Gemini 2.5 Pro.}, 
+    label={testing:detected-bug},
+    basicstyle=\ttfamily\scriptsize,
+    float=false]
+/**
+ * IMPLEMENTATION NOTES:
+ * - [PASS] AC_01 (Navigation): The "Register" link correctly navigates from the login view to the registration form.
+ * - [FAIL] AC_02 (Validation): The system does not display a validation warning when 'Password' and 'Confirm Password' fields do not match. Instead, it redirects to the login page without any feedback. The test for this is marked with test.fail() as it asserts the expected (but currently missing) behavior.
+ * - [PASS] AC_03 (Success): Successful registration with valid details correctly redirects the user to the login page.
+ * - [PASS] AC_04 (Persistence): A newly registered user can immediately log in and access the dashboard.
+ */
+test('should show a validation warning if passwords do not match', async ({ page }) => {
+    // AC_02 (Validation)
+    test.fail(true, 'Expected validation message for mismatched passwords is not implemented.');
+    
+    await page.goto(baseUrl + '/register');
+    await page.getByLabel('Full Name').fill('Test User');
+    ...
+    // The application should display an error message, but it currently redirects.
+    // The following assertion is what we expect to see.
+    await expect(page.getByText('Passwords do not match')).toBeVisible();
+    await expect(page).toHaveURL(/.*\/register/);
+});
+\end{lstlisting}
 
-\textbf{Robustnost modelu Sonnet 4.5:}
-Model \textit{Sonnet 4.5} vykazoval nejvyšší míru defenzivního testování. Při ověřování validací formulářů nekontroloval pouze chybové hlášky, ale přímo se dotazoval na HTML atribut \texttt{required} a stav validace elementu v DOM stromu, čímž eliminoval riziko přehlédnutí chyby způsobené pouze chybějícím textem v UI.
+\subsubsection*{Falešně negativní výsledky}
+V rámci detekce defektů se objevily i případy falešně negativních výsledků, zejména u 
+modelu \textit{GPT-4o}. Například u chyby \texttt{filter\_broken} model nahlásil úspěšné splnění testu,
+přestože byl filtr nefunkční. Po analýze vygenerovaného kódu bylo možné
+identifikovat několik příčin, které k tomuto selhání vedly:
+
+\begin{itemize}
+    \item Použití příliš obecných asercí (např. \texttt{getByText}),
+    které nejsou vázány na konkrétní kontext nebo stav UI.
+    
+    \item Použití selektorů, které neodpovídají žádnému prvku v DOM stromu.
+    V takovém případě test sice formálně proběhne, ale neprovede žádné ověření,
+    protože všechny operace probíhají nad prázdným výsledkem.
+
+    \item Absence explicitních negativních kontrol, zejména v případech,
+    kdy bylo potřeba ověřit neexistenci prvku nebo chybové hlášky.
+\end{itemize}
+
+\subsection*{Transparentnost modelu Sonnet 4.5}
+Jak již bylo zmíněno, model \textit{Claude Sonnet 4.5} vynikal nejen v kvalitě generovaných testů, 
+ale i v robustnosti a schopnosti detekovat chyby. Zároveň při psaní testů dával uživatelům 
+mnohem konkrétnější zpětnou vazbu v Activity logu, kdy svůj thinking proces doprovázel i konkrétními poznámkami o tom,
+k čemu dospěl a co bude další krok. 
+
+To se projevilo i v rámci detekce defektů, jak je vidět na obrázku \ref{fig:sonnet-bug-detection}, kdy 
+se provádělo generování testu se zanešenou chybou \texttt{task\_no\_validation}. Model správně identifikoval,
+že se mu podařilo vytvořit záznam s prázdným nadpisem a že toto chování rozporuje akceptačnímu kritériu 4.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{pictures/sonnet-cooking.png}
+    \caption{\protect\centering Detekce chyby modelem Claude Sonnet 4.5 s konkrétními poznámkami v Activity logu.}
+    \label{fig:sonnet-bug-detection}
+\end{figure}
+
+\subsubsection*{Využití strukturálních informací a kontextu prostředí}
+Během odhalování defektů se ukázalo, že pokročilejší modely (\textit{GPT-5}, \textit{GPT-4.1},
+\textit{Claude Sonnet 4.5} a \textit{Gemini 2.5 Pro}) nepoužívaly k detekci pouze textové informace z DOM stromu, 
+ale dokázaly využít i pokročilejší nástroje pro inspekci stránky. 
+Významným prvkem bylo využití nástrojů poskytující snapshoty a screenshoty uživatelského rozhraní - 
+konkrétně Playwright nástroje \texttt{browse\_take\_screenshot} a \texttt{browse\_snapshot}.
+Tyto výstupy modelům poskytovaly explicitní reprezentaci DOM struktury i vizuálního stavu aplikace,
+což umožnilo kombinovat strukturální a vizuální validaci při generování testů.
+
+Ukázka \ref{testing:snapshot} zobrazuje část výstupu z nástroje \texttt{browse\_snapshot}, 
+který byl vygenerován při ověřování přihlašování s chybou \texttt{login\_500}.
+
+\begin{lstlisting}[style=snapshot,
+    caption={\protect\centering Ukázka výstupu nástroje \texttt{browse\_snapshot}.},
+    label={testing:snapshot},
+    float,
+    floatplacement=H]
+- generic [ref=e2]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Welcome Back" [level=3] [ref=e6]
+        - paragraph [ref=e7]: Sign in to access TaskMaster Pro.
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - text: Email
+          - textbox "Email" [active] [ref=e11]
+        - generic [ref=e12]:
+          - text: Password
+          - textbox "Password" [ref=e13]
+        - button "Login" [ref=e14] [cursor=pointer]
+        - paragraph [ref=e15]:
+          - text: Need an account?
+          - link "Register" [ref=e16] [cursor=pointer]:
+            - /url: /register
+  - region "Notifications (F8)":
+    - list
+\end{lstlisting}
+
+Je nutné poznamenat, že využití těchto nástrojů je zpravidla dražší než běžné textové dotazy,
+takže by se nevhodné a nadměrné používání těchto nástrojů mohlo velmi prodražit.
+V rámci TestPilot AI lze ale konfigurovat, které nástroje smí agent využívat, 
+takže je možné volání těchto nástrojů povolit pouze pro komplexnější scénáře, 
+které vyžadují hlubší porozumění UI.
 
 \subsection{Ekonomické a výkonnostní zhodnocení}
 TODO (tabulka s tokeny a cenou, rozbor Anthropic cachingu, časové srovnání agenta vs. manuálního psaní).
@@ -2924,53 +3084,71 @@ a není předávána agentovi.
 \end{tcolorbox}
 
 \chapter{Uživatelské testování}\label{app:userTesting}
+Tato příloha obsahuje obdržené odpovědi z Google Forms dotazníku,
+který byl použit pro sběr zpětné vazby od uživatelů, kteří nástroj TestPilot AI vyzkoušeli 
+na vlastních aplikacích. Odpovědi na jednotlivé otázky jsou nepovinné, 
+aby uživatelé mohli poskytnout zpětnou vazbu pouze k relevantním aspektům,
+které pro ně byly důležité či které využili.
+
 \newcommand{\gfsel}{\textcolor{green!50!black}{\faDotCircle}}
 \newcommand{\gfnosel}{\textcolor{gray!70}{\faCircle}}
-\newcommand{\gfchoice}[2]{\mbox{\ifnum#1=1 \gfsel\else \gfnosel\fi\ \ifnum#1=1\textbf{#2}\else#2\fi}}
+\newcommand{\gfchoice}[2]{\noindent\hfill\mbox{\ifnum#1=1 \gfsel\else \gfnosel\fi\ \ifnum#1=1\textbf{#2}\else#2\fi}\hfill\null}
 
 \subsection*{Respondent 1}
 \begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
-\gfchoice{1}{Softwarový inženýr} \quad \gfchoice{0}{QA inženýr} \quad \gfchoice{0}{Manažer} \quad \gfchoice{0}{Softwarový architekt} \quad \gfchoice{0}{Other}
+
+\gfchoice{1}{Softwarový inženýr} \quad \gfchoice{0}{QA inženýr} \quad \gfchoice{0}{Manažer} 
+
+\quad \gfchoice{0}{Softwarový architekt} \quad \gfchoice{0}{Other}
 
 \textbf{2) Jak hodnotíte proces počátečního nastavení a spuštění nástroje pomocí příkazů \texttt{npx testpilot init/run}?}
 \textit{1 = Velmi náročné, 5 = Velmi snadné}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{3) Jak přehledný a intuitivní je pro Vás dashboard aplikace?}
 \textit{1 = Velmi nepřehledný a obtížně použitelný, 5 = Velmi přehledný a intuitivní}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{4) Do jaké míry odpovídal vygenerovaný kód Vašim definovaným akceptačním kritériím?}
 \textit{1 = Vygenerovaný kód akceptačním kritériím neodpovídal, 5 = Plně odpovídal definovaným kritériím}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{5) Jak hodnotíte kvalitu vybraných selektorů a celkovou strukturu testu z pohledu osvědčených postupů (Playwright best practices)?}
 \textit{1 = Velmi nízká kvalita implementace, 5 = Vynikající kvalita odpovídající osvědčeným postupům}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{0}{5}
-\textit{Nevyplněno}
 
 \textbf{6) Pomohlo Vám sledování myšlenkových pochodů agenta (Thinking process) a volání nástrojů (Tool calls) pochopit jeho postup, nebo jste tyto informace vnímal/a jako nadbytečné?}
 \textit{1 = Zcela nadbytečné informace, 5 = Velmi užitečné pro pochopení procesu rozhodování}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{7) Pokud agent narazil na chybu a následně ji sám opravil, jak hodnotíte úspěšnost a relevanci této opravy?}
 \textit{1 = Oprava nebyla úspěšná nebo nebyla relevantní, 5 = Oprava byla plně úspěšná a relevantní}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{8) Jak Vám vyhovuje, že nástroj ukládá testy přímo do Vašeho projektu (do specifikovaných složek) namísto ukládání do interní databáze?}
 \textit{1 = Zcela nevyhovuje, 5 = Zcela vyhovuje}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{9) Domníváte se, že by Vám tento nástroj reálně ušetřil čas při psaní základní kostry (boilerplate kódu) pro E2E testy?}
+
 \gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec}
 
 \textbf{10) Jak byste celkově ohodnotil/a nástroj TestPilot AI?}
 \textit{1 = Vynikající nástroj, 5 = Prakticky nepoužitelný nástroj}
-\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
+
+\gfchoice{0}{1} \quad \gfchoice{1}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{0}{5}
 
 \textbf{11) Považujete tento Proof of Concept za směr, který by po dalším vývoji mohl sloužit jako plnohodnotný asistent pro vývojáře a QA?}
+
 \gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec ne}
 
 \textbf{12) Na jaké chyby jste při testování narazil/a? Co Vás nejvíce limitovalo a co byste naopak označil/a za nejsilnější stránku programu?}
@@ -2983,50 +3161,81 @@ a není předávána agentovi.
 \begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
-\gfchoice{0}{Softwarový inženýr} \quad \gfchoice{0}{QA inženýr} \quad \gfchoice{0}{Manažer} \quad \gfchoice{1}{Softwarový architekt} \quad \gfchoice{0}{Other}
+
+\gfchoice{0}{Softwarový inženýr} \quad \gfchoice{0}{QA inženýr} \quad \gfchoice{0}{Manažer} 
+
+\quad \gfchoice{1}{Softwarový architekt} \quad \gfchoice{0}{Other}
 
 \textbf{2) Jak hodnotíte proces počátečního nastavení a spuštění nástroje pomocí příkazů \texttt{npx testpilot init/run}?}
 \textit{1 = Velmi náročné, 5 = Velmi snadné}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{3) Jak přehledný a intuitivní je pro Vás dashboard aplikace?}
 \textit{1 = Velmi nepřehledný a obtížně použitelný, 5 = Velmi přehledný a intuitivní}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{4) Do jaké míry odpovídal vygenerovaný kód Vašim definovaným akceptačním kritériím?}
 \textit{1 = Vygenerovaný kód akceptačním kritériím neodpovídal, 5 = Plně odpovídal definovaným kritériím}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{5) Jak hodnotíte kvalitu vybraných selektorů a celkovou strukturu testu z pohledu osvědčených postupů (Playwright best practices)?}
 \textit{1 = Velmi nízká kvalita implementace, 5 = Vynikající kvalita odpovídající osvědčeným postupům}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{6) Pomohlo Vám sledování myšlenkových pochodů agenta (Thinking process) a volání nástrojů (Tool calls) pochopit jeho postup, nebo jste tyto informace vnímal/a jako nadbytečné?}
 \textit{1 = Zcela nadbytečné informace, 5 = Velmi užitečné pro pochopení procesu rozhodování}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{7) Pokud agent narazil na chybu a následně ji sám opravil, jak hodnotíte úspěšnost a relevanci této opravy?}
 \textit{1 = Oprava nebyla úspěšná nebo nebyla relevantní, 5 = Oprava byla plně úspěšná a relevantní}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{0}{5}
-\textit{Nevyplněno}
 
 \textbf{8) Jak Vám vyhovuje, že nástroj ukládá testy přímo do Vašeho projektu (do specifikovaných složek) namísto ukládání do interní databáze?}
 \textit{1 = Zcela nevyhovuje, 5 = Zcela vyhovuje}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{9) Domníváte se, že by Vám tento nástroj reálně ušetřil čas při psaní základní kostry (boilerplate kódu) pro E2E testy?}
+
 \gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec}
 
 \textbf{10) Jak byste celkově ohodnotil/a nástroj TestPilot AI?}
 \textit{1 = Vynikající nástroj, 5 = Prakticky nepoužitelný nástroj}
+
 \gfchoice{1}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{0}{5}
 
 \textbf{11) Považujete tento Proof of Concept za směr, který by po dalším vývoji mohl sloužit jako plnohodnotný asistent pro vývojáře a QA?}
+
 \gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec ne}
 
 \textbf{12) Na jaké chyby jste při testování narazil/a? Co Vás nejvíce limitovalo a co byste naopak označil/a za nejsilnější stránku programu?}
 
-\textit{Připomínky: 1) Po úvodní inicializaci se zobrazila chyba informující o tom, že adresář tests/generated neexistuje. V dokumentaci však nebylo uvedeno, že je nutné tento adresář vytvořit ručně. 2) U funkce Regenerate není na první pohled zřejmé, že tlačítko otevírá modální okno, do kterého lze zadat požadavek na regeneraci. Uživatelsky to spíše působí dojmem, že po kliknutí dojde k okamžitému spuštění regenerace. 3) Při regeneraci bych očekával spíše úpravu již existujícího uloženého testu, nikoli vytvoření nového. Silné stránky: 1) Možnost regenerace testů považuji za silnou stránku aplikace. Ve většině případů si aplikace dokázala dobře poradit se zadanými požadavky a test byl upraven podle očekávání již na první pokus. 2) Další silnou stránkou je sledování myšlenkového procesu agenta a volání nástrojů. Možnosti budoucího vylepšení: 1) Přímá regenerace již existujících testů. 2) Možnost vložení kontextu aplikace přímo do konfigurace projektu.}
+\textit{Připomínky:}
+
+\textit{1) Po úvodní inicializaci se zobrazila chyba informující o tom, že adresář tests/generated neexistuje. V dokumentaci však nebylo uvedeno, že je nutné tento adresář vytvořit ručně.}
+
+\textit{2) U funkce Regenerate není na první pohled zřejmé, že tlačítko otevírá modální okno, do kterého lze zadat požadavek na regeneraci. Uživatelsky to spíše působí dojmem, že po kliknutí dojde k okamžitému spuštění regenerace.}
+
+\textit{3) Při regeneraci bych očekával spíše úpravu již existujícího uloženého testu, nikoli vytvoření nového.}
+\\\\
+\textit{Silné stránky:}
+
+\textit{1) Možnost regenerace testů považuji za silnou stránku aplikace. Ve většině případů si aplikace dokázala dobře poradit se zadanými požadavky a test byl upraven podle očekávání již na první pokus.}
+
+\textit{2) Další silnou stránkou je sledování myšlenkového procesu agenta a volání nástrojů.}
+\\\\
+\textit{Možnosti budoucího vylepšení:}
+
+\textit{1) Přímá regenerace již existujících testů.}
+
+\textit{2) Možnost vložení kontextu aplikace přímo do konfigurace projektu.}
+
 
 \end{tcolorbox}
 
@@ -3034,49 +3243,127 @@ a není předávána agentovi.
 \begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
-\gfchoice{0}{Softwarový inženýr} \quad \gfchoice{1}{QA inženýr} \quad \gfchoice{0}{Manažer} \quad \gfchoice{0}{Softwarový architekt} \quad \gfchoice{0}{Other}
+
+\gfchoice{0}{Softwarový inženýr} \quad \gfchoice{1}{QA inženýr} \quad \gfchoice{0}{Manažer} 
+
+\quad \gfchoice{0}{Softwarový architekt} \quad \gfchoice{0}{Other}
 
 \textbf{2) Jak hodnotíte proces počátečního nastavení a spuštění nástroje pomocí příkazů \texttt{npx testpilot init/run}?}
 \textit{1 = Velmi náročné, 5 = Velmi snadné}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{3) Jak přehledný a intuitivní je pro Vás dashboard aplikace?}
 \textit{1 = Velmi nepřehledný a obtížně použitelný, 5 = Velmi přehledný a intuitivní}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{4) Do jaké míry odpovídal vygenerovaný kód Vašim definovaným akceptačním kritériím?}
 \textit{1 = Vygenerovaný kód akceptačním kritériím neodpovídal, 5 = Plně odpovídal definovaným kritériím}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{5) Jak hodnotíte kvalitu vybraných selektorů a celkovou strukturu testu z pohledu osvědčených postupů (Playwright best practices)?}
 \textit{1 = Velmi nízká kvalita implementace, 5 = Vynikající kvalita odpovídající osvědčeným postupům}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{6) Pomohlo Vám sledování myšlenkových pochodů agenta (Thinking process) a volání nástrojů (Tool calls) pochopit jeho postup, nebo jste tyto informace vnímal/a jako nadbytečné?}
 \textit{1 = Zcela nadbytečné informace, 5 = Velmi užitečné pro pochopení procesu rozhodování}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{7) Pokud agent narazil na chybu a následně ji sám opravil, jak hodnotíte úspěšnost a relevanci této opravy?}
 \textit{1 = Oprava nebyla úspěšná nebo nebyla relevantní, 5 = Oprava byla plně úspěšná a relevantní}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
 
 \textbf{8) Jak Vám vyhovuje, že nástroj ukládá testy přímo do Vašeho projektu (do specifikovaných složek) namísto ukládání do interní databáze?}
 \textit{1 = Zcela nevyhovuje, 5 = Zcela vyhovuje}
+
 \gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
 
 \textbf{9) Domníváte se, že by Vám tento nástroj reálně ušetřil čas při psaní základní kostry (boilerplate kódu) pro E2E testy?}
+
 \gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec}
 
 \textbf{10) Jak byste celkově ohodnotil/a nástroj TestPilot AI?}
 \textit{1 = Vynikající nástroj, 5 = Prakticky nepoužitelný nástroj}
+
 \gfchoice{1}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{0}{5}
 
 \textbf{11) Považujete tento Proof of Concept za směr, který by po dalším vývoji mohl sloužit jako plnohodnotný asistent pro vývojáře a QA?}
+
 \gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec ne}
 
 \textbf{12) Na jaké chyby jste při testování narazil/a? Co Vás nejvíce limitovalo a co byste naopak označil/a za nejsilnější stránku programu?}
 
-\textit{Trochu mi chybělo, že nemohu pracovat na generování více testů najednou, když se mezi testy (user stories) přepnu, tak už v záložce Generated test není ten test a nejde tak již udělat třeba Regenerate. Problém s již přihlášeným uživatelem v testované aplikaci při startu generování testu vedl k tomu, že v testu chyběl login a tak pak běh testu vždy selhal, protože neměl tento krok. Věřím, že půjde vyřešit možná nastavení přímo v Playwright. Ale celkově nástroj je výborným pomocníkem, který šetří spoustu času a usnadňuje velmi rychle implementovat základní test cases pro testování nových features.}
+\textit{Trochu mi chybělo, že nemohu pracovat na generování více testů najednou, když se mezi testy (user stories) přepnu, tak už v záložce Generated test není ten test a nejde tak již udělat třeba Regenerate. Problém s již přihlášeným uživatelem v testované aplikaci při startu generování testu vedl k tomu, že v testu chyběl login a tak pak běh testu vždy selhal, protože neměl tento krok. Věřím, že půjde vyřešit možná nastavení přímo v Playwright.}
+
+\textit{Ale celkově nástroj je výborným pomocníkem, který šetří spoustu času a usnadňuje velmi rychle implementovat základní test cases pro testování nových features.}
+
+\end{tcolorbox}
+
+\subsection*{Respondent 4}
+\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
+
+\textbf{1) Jaká je Vaše primární role v týmu?}
+
+\gfchoice{0}{Softwarový inženýr} \quad \gfchoice{0}{QA inženýr} \quad \gfchoice{0}{Manažer} 
+
+\quad \gfchoice{1}{Softwarový architekt} \quad \gfchoice{0}{Other}
+
+\textbf{2) Jak hodnotíte proces počátečního nastavení a spuštění nástroje pomocí příkazů \texttt{npx testpilot init/run}?}
+\textit{1 = Velmi náročné, 5 = Velmi snadné}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
+
+\textbf{3) Jak přehledný a intuitivní je pro Vás dashboard aplikace?}
+\textit{1 = Velmi nepřehledný a obtížně použitelný, 5 = Velmi přehledný a intuitivní}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
+
+\textbf{4) Do jaké míry odpovídal vygenerovaný kód Vašim definovaným akceptačním kritériím?}
+\textit{1 = Vygenerovaný kód akceptačním kritériím neodpovídal, 5 = Plně odpovídal definovaným kritériím}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
+
+\textbf{5) Jak hodnotíte kvalitu vybraných selektorů a celkovou strukturu testu z pohledu osvědčených postupů (Playwright best practices)?}
+\textit{1 = Velmi nízká kvalita implementace, 5 = Vynikající kvalita odpovídající osvědčeným postupům}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
+
+\textbf{6) Pomohlo Vám sledování myšlenkových pochodů agenta (Thinking process) a volání nástrojů (Tool calls) pochopit jeho postup, nebo jste tyto informace vnímal/a jako nadbytečné?}
+\textit{1 = Zcela nadbytečné informace, 5 = Velmi užitečné pro pochopení procesu rozhodování}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{1}{4} \quad \gfchoice{0}{5}
+
+\textbf{7) Pokud agent narazil na chybu a následně ji sám opravil, jak hodnotíte úspěšnost a relevanci této opravy?}
+\textit{1 = Oprava nebyla úspěšná nebo nebyla relevantní, 5 = Oprava byla plně úspěšná a relevantní}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
+
+\textbf{8) Jak Vám vyhovuje, že nástroj ukládá testy přímo do Vašeho projektu (do specifikovaných složek) namísto ukládání do interní databáze?}
+\textit{1 = Zcela nevyhovuje, 5 = Zcela vyhovuje}
+
+\gfchoice{0}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{1}{5}
+
+\textbf{9) Domníváte se, že by Vám tento nástroj reálně ušetřil čas při psaní základní kostry (boilerplate kódu) pro E2E testy?}
+
+\gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec}
+
+\textbf{10) Jak byste celkově ohodnotil/a nástroj TestPilot AI?}
+\textit{1 = Vynikající nástroj, 5 = Prakticky nepoužitelný nástroj}
+
+\gfchoice{1}{1} \quad \gfchoice{0}{2} \quad \gfchoice{0}{3} \quad \gfchoice{0}{4} \quad \gfchoice{0}{5}
+
+\textbf{11) Považujete tento Proof of Concept za směr, který by po dalším vývoji mohl sloužit jako plnohodnotný asistent pro vývojáře a QA?}
+
+\gfchoice{1}{Určitě ano} \quad \gfchoice{0}{Spíše ano} \quad \gfchoice{0}{Spíše ne} \quad \gfchoice{0}{Vůbec ne}
+
+\textbf{12) Na jaké chyby jste při testování narazil/a? Co Vás nejvíce limitovalo a co byste naopak označil/a za nejsilnější stránku programu?}
+
+\textit{Jako velmi silnou stránku nástroje vnímám snadnou integraci do existujících projektů, vytváření testů přímo do repozitáře a možnosti konfigurace. Jednoduchost rozhraní dává možnost pro široké uplatnění pro vytváření testů i pro méně technické role ve firmě. Pro plné nahrazení současných nástrojů v některých týmech chybí pouze drobná rozšíření správy testovací sady - úprava existujících testů.}
 
 \end{tcolorbox}
 
