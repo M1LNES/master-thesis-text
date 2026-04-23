@@ -42,8 +42,8 @@
 \title{Automatické generování end-to-end testů pomocí velkých jazykových modelů (LLM)}
 \author{Bc. Milan}{Janoch}{}{}
 \supervisor{Ing. Martin Dostal, Ph.D.}
-\assignment{zadani.pdf}
-\signdate{01}{03}{2026}{V Plzni}% << the longest local name in the Czech Rep.
+\assignment{zadani-final.pdf}
+\signdate{24}{04}{2026}{V Plzni}% << the longest local name in the Czech Rep.
 
 \addbibresource{dp.bib}% << the file with the bibliographical database to be used throughout the text
 
@@ -1197,7 +1197,7 @@ což umožňuje bezproblémově napojit frontend na sdílené DTO modely a zacho
 Pro vývoj backendové části aplikace byl zvolen framework NestJS založený na platformě Node.js.
 Tento framework byl vybrán především pro svou modulární architekturu a integrovanou podporu pro \textit{Dependency Injection} -
 klíčový návrhový vzor pro udržitelnost a testovatelnost kódu \cite{munirov2025nestjs}. Vzhledem k tomu, že agent bude obsahovat komplexní logiku,
-která zahrnuje komunikaci s LLM modely, správu lokálního souborového systému, správu uživatelských příběhů a projektů, 
+která zahrnuje komunikaci s LLM, správu lokálního souborového systému, správu uživatelských příběhů a projektů, 
 je důležité, aby tyto domény byly striktně logicky oddělené do samostatných modulů, což povede k lepší čitelnosti, testovatelnosti 
 a dlouhodobé udržitelnosti celého backendu. NestJS navíc nabízí nástroj \texttt{Nest CLI}, který umožňuje 
 rychlé generování boilerplate kódu pro nové moduly, služby a kontrolery, což výrazně usnadňuje a zrychluje vývoj.
@@ -1250,7 +1250,7 @@ který běží jako samostatný proces a komunikuje s backendem přímo přes pr
 \section{Shrnutí}
 V této kapitole byl představen a zdůvodněn výběr technologií, které budou použity pro implementaci navrženého systému.
 Zvolený technologický stack sahá od striktní typové kontroly (TypeScript), přes reaktivní uživatelské rozhraní (React) a modulární backend (NestJS), 
-až po specializované nástroje pro komunikaci s LLM modely (Vercel AI SDK) a testování webových aplikací (Playwright s podporou MCP protokolu). 
+až po specializované nástroje pro komunikaci s LLM (Vercel AI SDK) a testování webových aplikací (Playwright s podporou MCP protokolu). 
 Konkrétní použití těchto technologií bude detailně představeno v další kapitole, jež se bude věnovat samotné implementaci.
 
 \chapter{Implementace}\label{chapter:implementation}
@@ -2893,11 +2893,53 @@ Identifikované oblasti zahrnují zejména podporu dlouhodobé správy a údržb
 zajištění izolace agentského testovacího prostředí, 
 optimalizaci uživatelské přívětivosti a výkonu, integraci existujících ekosystémů a posílení
 bezpečnostních mechanismů. Implementace těchto rozšíření by vedla k dalšímu zvýšení 
-praktické využitelnosti nástroje v reálném vývojovém prostředí,
+praktické využitelnosti nástroje v reálném vývojovém prostředí.
 
 
 \chapter{Závěr}\label{chapter:end}
-xxxx
+Cílem této práce bylo prozkoumat možnosti využití generování kódu prostřednictvím velkých jazykových modelů 
+pro automatizované testování. Dalším cílem byl návrh architektury systému pro automatické 
+generování end-to-end testů na základě uživatelských příběhů a implementace funkčního prototypu tohoto systému
+využívající vybrané LLM a testovací framework. Tyto cíle byly úspěšně splněny, 
+což bylo potvrzeno evaluací vygenerovaných testů.
+\newline
+
+První část práce se zaměřila na testování v agilním vývoji a na možnosti využití umělé inteligence pro automatizaci tohoto procesu.
+Byl představen koncept autonomních agentů a porovnány populární frameworky pro vytváření end-to-end testů. 
+Klíčovým zjištěním bylo, že integrace iterativního uvažování a standardizovaného protokolu MCP umožňuje agentům překonat limity běžného
+statického generování kódu a adaptovat se na dynamické prostředí webových aplikací.
+Dále byl kladen důraz na analýzu běžně využívaných struktur a specifikací, jenž jsou 
+běžně používané v nástrojích pro řízení vývoje softwaru, a identifikaci klíčových prvků,
+které by bylo možné využít pro generování testů.
+Z této analýzy pak vzešel návrh architektury výsledného systému. 
+\newline
+
+Výsledkem práce je funkční prototyp na generování E2E testů, který využívá velké jazykové modely pro autonomní průzkum aplikace,
+generování testů a jejich křížovou verifikaci s akceptačními kritérii uživatelských příběhů.
+Díky agentské architektuře a využití pokročilejších modelů s podporou reasoningu dokáže 
+tento systém generovat robustní testy, které odpovídají zadání a zároveň jsou schopné detekovat 
+defekty v implementaci, což je klíčová schopnost pro praktické využití v QA procesech.
+\newline
+
+V rámci testování a evaluace byly systémem generovány testy 9 různými modely
+pro 8 uživatelských příběhů na ukázkové aplikaci. Tato aplikace zároveň
+umožňovala injektovat 11 různých chyb do implementace, 
+což umožnilo otestovat schopnost modelů detekovat defekty.
+Následně byly vygenerované testy porovnány s manuálně vytvořenými testy pomocí nahrávacího nástroje Codegen,
+aby se porovnala časová efektivita a kvalita testů. 
+Porovnáno bylo i ekonomické hledisko, které ukázalo existenci
+cenově efektivních modelů pro běžné nasazení a důležitost architektonických optimalizací 
+pro snížení nákladů u pokročilejších modelů.
+Systém byl ověřen i pomocí automatizovaných testů pro frontend (60~\% coverage) i backend (82~\% line coverage).
+Nakonec bylo provedeno uživatelské testování, které potvrdilo použitelnost nástroje v reálném vývojovém prostředí 
+a poskytlo cennou zpětnou vazbu pro další vylepšení.
+\newline
+
+V závěru práce jsou navržena vylepšení, která by mohla posunout tento nástroj na úroveň plnohodnotného produkčního nástroje pro generování E2E testů
+a umožnit tak širší využití i mezi uživateli bez hlubších technických znalostí.
+
+
+
 
 \chapter*{Přehled zkratek}
 \addcontentsline{toc}{chapter}{Přehled zkratek}

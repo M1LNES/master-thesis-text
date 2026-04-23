@@ -376,6 +376,9 @@
 		\FASThesis@wrotethis{} samostatně a výhradně s~použitím citovaných pramenů, literatury a dalších
 		odborných zdrojů. Tato práce nebyla využita k~získání jiného nebo stejného akademického
 		titulu.\newline\par\noindent%
+		Dále prohlašuji, že během této práce jsem použil Gemini 3.1 Pro ke kontrole gramatiky a ke stylistické úpravě textu
+		z důvodu zlepšení čitelnosti a srozumitelnosti textu.
+		Po použití tohoto nástroje jsem pečlivě zkontroloval a~upravil obsah podle potřeby a přebírám plnou odpovědnost za výsledný obsah práce.\newline\par\noindent%
 		Beru na vědomí, že se na moji práci vztahují práva a povinnosti vyplývající ze zákona
 		č.~121/2000 Sb., autorského zákona v platném znění, zejména skutečnost, že Západočeská
 		univerzita v~Plzni má právo na uzavření licenční smlouvy o užití této práce jako školního
@@ -1084,7 +1087,7 @@
 	\def\temptm{tm}%
 	\def\tempnotm{notm}%
 	%
-	\vspace*{100mm}\par\noindent%	
+	\vspace*{70mm}\par\noindent%	
 	\ifx\temparg\temptm%
 		\FASThesis@trademark@statement%
 	\else%
