@@ -58,7 +58,7 @@
 }
 % *** English abstract ***
 {xxx}
-\keywords{xxx, xxxx, xxx}
+\keywords{E2E testování, LLM, AI agent, user stories, automatizace testů}
 % _____________________________________________________________________________
 %
 %        ACKNOWLEDGEMENT
@@ -2108,7 +2108,7 @@ aby bylo možné nástroj zhodnotit z různých úhlů pohledu.
 Nejprve je představena metodika měření a speciálně vyvinutá testovací aplikace, která slouží 
 jako plně kontrolované prostředí pro běh LLM agenta. Následně jsou analyzovány a 
 prezentovány výsledky generování testů - a to jak u pozitivních scénářů na zcela funkční aplikaci,
-tak i u scénářů se záměrně zanesenými defekty. Oba tyto scénáře jsou doplněny o ekonomické zhodnocení 
+tak i u scénářů se záměrně zanesenými defekty. Oba tyto scénáře jsou doplněny o celkové ekonomické zhodnocení 
 a srovnání s manuálním přístupem k psaní testů. Závěr kapitoly je věnován 
 ověření kvality samotného softwarového řešení pomocí automatizovaných testů
  a vyhodnocení zpětné vazby z uživatelského testování s reálnými uživateli z praxe.
@@ -2800,6 +2800,102 @@ další směřování vývoje nástroje TestPilot AI.
 
 \chapter{Možná vylepšení}\label{chapter:improvements}
 
+Přestože evaluace výsledných vygenerovaných testů a uživatelské testování 
+prokázaly potenciál a přínos nástroje TestPilot AI, 
+současná Proof of Concept implementace obsahuje prostor pro další rozvoj a zlepšení.
+Na základě zjištěných technických limitů a cenné zpětné vazby od respondentů bylo 
+identifikováno několik klíčových oblastí, které by mohly být vylepšeny, 
+aby tím nástroj mohl být posunut na úroveň plnohodnotného produkčního použití.
+
+
+\section{Správa testů a jejich úpravy}
+Jak vyplynulo z uživatelského testování, pro reálné nasazení v agilním vývoji nestačí testy pouze jednorázově generovat.
+Systémy, pro něž jsou testy generovány, se neustále vyvíjejí a s tím přichází i potřeba průběžné údržby testů, aby zůstaly relevantní a funkční.
+Významným vylepšením by proto byla podpora pro autonomní údržbu již existujících testů. Agent by dokázal načíst již existující kód testu,
+správně ho propojit a porovnat s novými verzemi akceptačních kritérií nebo aktuálním stavem DOM stromu 
+a následně navrhnout nezbytné úpravy. To by pomohlo QA inženýrům udržovat 
+aktuální testovací sady bez nutnosti manuálního zásahu do kódu, 
+čímž by se i snížila celková časová náročnost na údržbu testů a 
+umožnilo by to rychlejší adaptaci na změny v aplikaci.
+Tento proces by pouze daný test přepsal v rámci daného repozitáře, 
+takže by se zachovala historie změn a bylo by možné kdykoliv revertovat zpět k předchozí verzi testu.
+
+
+\section{Automatizovaná izolace prostředí}
+Jedním z hlavních omezení identifikovaných během testování 
+byl problém se sdíleným stavem prohlížeče mezi jednotlivými iteracemi generování testů. 
+Tento problém se projevoval zejména tím, že agent pracoval s perzistentní instancí prohlížeče, ve které 
+zůstával zachován stav z předchozích kroků (např. zmiňované aktivní přihlášení).
+V důsledku toho byly následně generované nebo upravované testy ovlivněny již modifikovaným stavem aplikace, což 
+bylo potřeba vyřešit manuálním resetováním stavu prohlížeče před každou iterací generování testu.
+To je ale zdlouhavé a neefektivní.
+
+Dalším rozšířením nástroje by mohlo být zavedení mechanismů pro automatickou izolaci testovacího prostředí
+mezi jednotlivými generacemi testů. 
+Toho by mohlo být implementováno několika způsoby, například:
+
+\begin{itemize}
+    \item \textbf{Obnova kontextu prohlížeče:} Vytvoření nového browser 
+    contextu před každou iterací generování testu, čímž je zajištěno čisté a nezávislé prostředí bez sdíleného stavu.
+    \item \textbf{Automatizovaný setup a teardown:} Agent by automaticky prováděl setup a teardown pro každý test, 
+    což by zahrnovalo například odhlášení uživatele, vymazání cookies či celého místního úložiště (\texttt{localStorage}).
+\end{itemize}
+
+\section{Optimalizace uživatelské přívětivosti a výkonu}
+S rostoucím počtem testovaných aplikací (a k ním příslušných uživatelských příběhů) 
+se zvyšuje i počet generovaných testů, což může vést k výraznému prodloužení 
+doby potřebné pro vygenerování kompletní testovací sady.
+Architektura systémy by mohla být rozšířena o následující optimalizace:
+\begin{itemize}
+    \item \textbf{Paralelní generování testů:} Umožnění běhu více instancí agenta současně nad různými 
+    scénáři, díky čemuž by se zkrátil čas pro vygenerovaní kompletní sady testů pro velké množství scénářů. 
+    \item \textbf{Streamování odpovědí z LLM:} Současní řešení využívá tzv. \textit{Chat Completion API} přístup - 
+    model zpracuje celý požadavek a až poté vrátí kompletní odpověď, která se následně zpracuje na backendu a vrátí uživateli do UI.
+    Přechod na stremování odpovědí (\textit{Responses API}) by umožnil sledovat generovaný kód a průběh myšlenkových pochodů v
+    reálném čase, což by působilo uživatelsky přívětivějším dojmem a umožnilo i potenciální dřívější detekci případných problémů. 
+\end{itemize}
+
+\section{Integrace do firemních ekosystémů}
+Pro automizované testování je klíčové i snadné napojení do stávajících 
+firemních procesů a nástrojů. Místo ručního vkládání projektů a uživatelských příběhů 
+by agent mohl být agent rozšířen o přímou integraci s ALM nástroji - 
+konkrétně třeba o Jiru (uživatelské příběhy) a populární plugin Zephyr (správa testovacích případů).
+To by umožnilo:
+
+\begin{itemize}
+    \item Automaticky stahovat a aktualizovat uživatelské příběhy prostřednictvím Jira API.
+    \item Párovat vygenerované testy s testovacími případy v Zephyru, což by vedlo k lepší organizaci a sledovatelnosti testů.
+    \item Při opakovaných selháních testů (např. v rámci spouštění Release Candidate buildů) 
+    umožnit založení bugu s přiloženým logem - případně i důvodem a návrhem na opravu kódu.
+\end{itemize}
+
+
+\section{Bezpečnostní mechanismy a rozšiřitelnost nástrojů}
+Posledním navrhovaným potenciálním vylepšením je zavedení 
+bezpečnostních machanismů a rozšíření možností nástrojů, které má agent k dispozici.
+Při exekuci E2E testů nad reálnou aplikací může agent teoreticky provést nenávratné operace 
+(např. smazání produkčních dat), což by mohlo mít závažné důsledky.
+Toto potenciální riziko by mohlo být minimalizováno zavedením konceptu Human-in-the-Loop 
+- ten by definoval citlivé akce, které by před svým vykonáním vyžadovaly uživatelův 
+explicitní souhlas (např. prostřednictvím modálního okna s možnostmi ``Approve/Reject``).
+
+Zároveň by agent mohl být obohacen i o dodatečné vlastní nástroje. Vývojáři by mohli 
+agentovi poskytnout specifické nástroje - např. přímé dotazy do testovacích databází 
+či generování testovacích dat, což by umožnilo psát komplexnější scénáře bez nutnosti 
+manuálního zásahu do kódu. Díky podpoře Playwrightu (viz kapitola \ref{chapter:therotical_part})
+by mohly i výstupní testy být generovány v růných programovacích jazycích (Java, Python), což by 
+rozšířilo možnost využití nástroje i mimo TypeScriptové projekty.
+
+\section{Shrnutí}
+Tato kapitola se zaměřila na rozbor možných vylepšení nástroje TestPilot AI, 
+které by mohly posunout tento Proof of Concept na úroveň plnohodnotného produkčního nástroje pro generování E2E testů.
+Identifikované oblasti zahrnují zejména podporu dlouhodobé správy a údržby testů, 
+zajištění izolace agentského testovacího prostředí, 
+optimalizaci uživatelské přívětivosti a výkonu, integraci existujících ekosystémů a posílení
+bezpečnostních mechanismů. Implementace těchto rozšíření by vedla k dalšímu zvýšení 
+praktické využitelnosti nástroje v reálném vývojovém prostředí,
+
+
 \chapter{Závěr}\label{chapter:end}
 xxxx
 
@@ -3344,7 +3440,7 @@ které pro ně byly důležité či které využili.
 \newcommand{\gfchoice}[2]{\noindent\hfill\mbox{\ifnum#1=1 \gfsel\else \gfnosel\fi\ \ifnum#1=1\textbf{#2}\else#2\fi}\hfill\null}
 
 \subsection*{Respondent 1}
-\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
+\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms - export odpovědi}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
 
@@ -3407,7 +3503,7 @@ které pro ně byly důležité či které využili.
 \end{tcolorbox}
 
 \subsection*{Respondent 2}
-\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
+\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms - export odpovědi}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
 
@@ -3489,7 +3585,7 @@ které pro ně byly důležité či které využili.
 \end{tcolorbox}
 
 \subsection*{Respondent 3}
-\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
+\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms - export odpovědi}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
 
@@ -3554,7 +3650,7 @@ které pro ně byly důležité či které využili.
 \end{tcolorbox}
 
 \subsection*{Respondent 4}
-\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms -- export odpovědí}]
+\begin{tcolorbox}[breakable, colback=gray!3, colframe=black!35, boxrule=0.4pt, arc=2pt, title={Google Forms - export odpovědi}]
 
 \textbf{1) Jaká je Vaše primární role v týmu?}
 
