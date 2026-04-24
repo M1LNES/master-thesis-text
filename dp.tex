@@ -1316,8 +1316,9 @@ což výrazně zrychluje vývoj a testování.
 
 Základní struktura projektu je rozdělena do dvou hlavních adresářů - složka \texttt{apps} pro spustitelné aplikace (backend a frontend) a 
 složka \texttt{packages} pro sdílené knihovny (např. pro DTO modely, CLI nástroje).
-Zjednodušené zobrazení této struktury je znázorněno níže:
+Zjednodušené zobrazení této struktury je znázorněno na další straně.
 
+\newpage
 \vspace{1em}
 \dirtree{%
 .0 {}.
@@ -1370,6 +1371,12 @@ který provádí počáteční validaci vstupních parametrů pomocí DTO a Zod 
 službami z jiných modulů - od toho je tu dedikovaná servisní vrstva (např. \texttt{AgentOrchestrationService}), 
 která zapouzdřuje veškerou business logiku.
 Až tato vrstva deleguje dílčí úkoly dál a bezpečně komunikuje se specializovanými službami (Services) z jiných modulů. 
+Tato architektura je logicky rozdělena do tří hlavních vrstev, které budou detailně popsány v následujících částech:
+\begin{itemize}
+    \item \textbf{Core AI Orchestration:} Jádro systému spravující komunikaci s jazykovými modely, externími nástroji a celkový běh agenta.
+    \item \textbf{Business Domain Modules:} Moduly zapouzdřující aplikační logiku, správu projektů, uživatelských příběhů a samotných testů.
+    \item \textbf{Infrastructure \& Persistence:} Vrstva zajišťující konfiguraci prostředí, logování a bezpečnou práci se souborovým systémem.
+\end{itemize}
 
 \subsubsection*{Core AI Orchestration}
 Tato vrstva tvoří jádro celého systému a obsahuje moduly zodpovědné za interakci s velkými jazykovými modely a jejich orchestraci.
@@ -1409,7 +1416,7 @@ rozšířeny o metainformace jako \texttt{createdAt} a \texttt{updatedAt},
 které umožňují sledovat historii změn a případně implementovat funkce pro 
 auditování nebo zobrazení časové osy projektu.
 
-\begin{lstlisting}[style=tscode, caption={\protect\centering Ukázka sdílených doménových entit v balíčku \texttt{@testpilotai/shared}.}, label={lst:shared-entities}]
+\begin{lstlisting}[style=tscode, caption={\protect\centering Ukázka sdílených doménových entit v balíčku \texttt{@testpilotai/shared}.}, label={lst:shared-entities}, float=false]
 export interface Project {
     id: string;
     name: string;
@@ -1462,69 +1469,6 @@ relační databáze. Systém využívá dva hlavní soubory pro perzistenci -
 a dále \texttt{.testpilot-cache.json}, 
 který slouží pro ukládání metadat z jednotlivých běhů generování testů.
 
-\begin{lstlisting}[style=jsoncode, float, floatplacement=H, caption={\protect\centering Zkrácená ukázka struktury souboru \texttt{test-pilot.json}.}, label={lst:test-pilot-structure}]
-{
-    "config": {
-        "output": {
-            "directory": "./tests/generated"
-        }
-    },
-    "projects": [
-        {
-            "id": "project-1770809040081",
-            "name": "Example project",
-            "description": "Short desc",
-            "baseUrl": "https://app.test.com",
-            "createdAt": "2026-01-01T00:00:00Z",
-            "updatedAt": "2026-01-01T01:22:33Z"
-        },
-        ...
-    ],
-    "userStories": [
-        {
-            "id": "1772119522231-grcz5m2",
-            "projectId": "project-1770809040081",
-            "title": "Login",
-            "description": "As a user, I want...",
-            "acceptanceCriteria": "AC1; AC2",
-            "extraInfo": "Use stable selector",
-            "createdAt": "2026-01-02T00:00:00Z",
-            "updatedAt": "2026-01-03T12:34:56Z"
-        },
-        ...
-    ]
-}
-\end{lstlisting}
-
-\begin{lstlisting}[style=jsoncode, float, floatplacement=H, caption={\protect\centering Zkrácená ukázka struktury souboru \texttt{.testpilot-cache.json}.}, label={lst:cache-structure}]
-{
-    "version": "1.0.0",
-    "generationRecords": [
-        {
-            "userStoryId": "1772119522231-grcz5m2",
-            "model": "gpt-5",
-            "generatedCode": "test(...)",
-            "status": "success",
-            "tokenUsage": {
-                "input": 112964,
-                "output": 7192,
-                "cached": 88448
-            },
-            "cost": {
-                "input": 0.030645,
-                "output": 0.07192,
-                "cached": 0.05527
-            },
-            "id": "gen-1772634117252-66tj9guye",
-            "timestamp": "2026-03-04T14:21:57.252Z"
-        },
-        ...
-    ],
-    "lastUpdated": "2026-03-27T13:09:06.289Z"
-}
-\end{lstlisting}
-
-
 Na ukázkách \ref{lst:test-pilot-structure} a \ref{lst:cache-structure} je zobrazen obsah těchto souborů. Jak je vidět, soubor \texttt{test-pilot.json} obsahuje klíč \texttt{config}, který 
 umožňuje specifikovat globální nastavení aplikace (momentálně pouze cílový adresář pro ukládání vygenerovaných testů).
 Dále obsahuje pole objektů \texttt{projects} a \texttt{userStories}, 
@@ -1538,6 +1482,63 @@ kolik tokenů bylo zkonzumováno, jaká byla celková cena a (v případě úsp�
 Tyto informace jsou klíčové pro zpětnou vazbu uživatelům a budou dále zmíněny a využity v další kapitole,
 která se zaměří na testování funkčnosti systému a celkové náklady generování testů.
 
+\begin{figure}[H]
+    \centering
+    \begin{minipage}[t]{0.47\textwidth}
+\begin{lstlisting}[style=jsoncode, basicstyle=\ttfamily\tiny, breaklines=true, breakatwhitespace=true, xleftmargin=1.5em, caption={\protect\centering Struktura \texttt{test-pilot.json}.}, label={lst:test-pilot-structure}]
+{
+ "config": {
+  "output": { "directory": "./tests" }
+ },
+ "projects": [
+  {
+   "id": "project-1770809040081",
+   "name": "Example project",
+   "baseUrl": "https://app.test.com",
+   "createdAt": "2026-01-01T00:00:00Z",
+   "updatedAt": "2026-01-01T01:22:33Z"
+  }
+ ],
+ "userStories": [
+  {
+   "id": "1772119522231-grcz5m2",
+   "projectId": "project-1770809",
+   "title": "Login",
+   "acceptanceCriteria": "AC1; AC2",
+   "createdAt": "2026-01-02T00:00:00Z"
+  }
+ ]
+}
+\end{lstlisting}
+    \end{minipage}\hfill
+    \begin{minipage}[t]{0.47\textwidth}
+\begin{lstlisting}[style=jsoncode, basicstyle=\ttfamily\tiny, breaklines=true, breakatwhitespace=true, xleftmargin=1.5em, caption={\protect\centering Struktura \texttt{.testpilot-cache.json}.}, label={lst:cache-structure}]
+{
+ "version": "1.0.0",
+ "generationRecords": [
+  {
+   "userStoryId": "1772119522231-g",
+   "model": "gpt-5",
+   "status": "success",
+   "tokenUsage": {
+    "input": 112964,
+    "output": 7192,
+    "cached": 88448
+   },
+   "cost": {
+    "input": 0.030645,
+    "output": 0.07192,
+    "cached": 0.05527
+   },
+   "id": "gen-1772634117252-6",
+   "timestamp": "2026-03-04T14:21:57Z"
+  }
+ ],
+ "lastUpdated": "2026-03-27T13:09:06Z"
+}
+\end{lstlisting}
+    \end{minipage}
+\end{figure}
 
 Klíčovým problémem při práci s těmito soubory je synchronizace kritických sekcí typu \textit{read-modify-write}.
 Při paralelních požadavcích by mohlo dojít k nechtěnému přepsání, ztrátě či poškození dat (např. v případě kolizí při souběžném zápisu do souborů).
@@ -1789,9 +1790,13 @@ který zajistí, že pokud se spojení nepovede navázat do určitého časovéh
 
 \subsection{Řídící smyčka agenta a ochranné mechanismy}
 
-Veškerá agentova logika je implementována v rámci \texttt{AgentService}, 
-která je zodpovědná za řízení hlavní smyčky exekuce, správu vnitřního stavu a implementaci ochranných mechanismů.
-Tyto funkce jsou detailně popsány níže.
+Veškerá agentova logika je implementována v rámci služby \texttt{AgentService}, 
+která je zodpovědná za řízení hlavní smyčky exekuce. Následující sekce se detailně 
+zaměřuje na dva klíčové aspekty tohoto procesu:
+\begin{itemize}
+    \item \textbf{Správa vnitřního stavu exekuce (State Management):} Způsob, jakým systém udržuje kontext, historii konverzace a statistiky napříč jednotlivými iteracemi agenta.
+    \item \textbf{Ochranné mechanismy a řízení běhu:} Sada pravidel a pojistek (např. \textit{Circuit Breaker}), která chrání smyčku před zacyklením, halucinacemi a neočekávanými selháními.
+\end{itemize}
 
 
 \subsubsection*{Správa vnitřního stavu exekuce (State Management)}
@@ -1802,7 +1807,6 @@ Pro tento účel byl navržen \texttt{AgentExecutionState}, který je zobrazen n
 \begin{lstlisting}[
   style=tscode,
   basicstyle=\ttfamily\scriptsize,
-  float=false,
   caption={\protect\centering Struktura vnitřního stavu exekuce agenta.},
   label={lst:agent-state},
   morekeywords={ToolCallResult,Message,TokenUsage,Cost,AgentIterationLog}
@@ -1973,7 +1977,7 @@ může být následována samoopravnou smyčkou v případě zjištění chyb (t
 
 
 
-\subsubsection*{Extrakce kódu a sémantické kontroly}
+\subsubsection*{Extrakce kódu}
 Prvním krokem je správné extrahování zdrojového kódu z odpovědi modelu.
 K detekci kódových bloků se využívají regulární výrazy, které hledají sekce ohraničené třemi zpětnými apostrofy (\texttt{```}) 
 s následným označením jazyka (např. \texttt{typescript} nebo \texttt{ts}).
@@ -2093,12 +2097,12 @@ rozklikávat k jednotlivým krokům i detailní informace - jako jsou např. kon
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{pictures/activity-feed-screenshot.png}
+    \includegraphics[width=0.9\textwidth]{pictures/activity-feed-screenshot.png}
     \caption{Vizualizace běhu agenta zobrazená komponentou Activity Feed.}
     \label{fig:activity-feed}
 \end{figure}
 
-\subsubsection*{Řízené přerušení generování (Cancel Path)}
+\subsubsection*{Řízené přerušení generování}
 
 Aby bylo možno bezpečně přerušit probíhající generování testů, je do \texttt{fetch} požadavku injektován 
 signál z instance \texttt{AbortController}. Pokud tedy při generování uživatel stiskne tlačítko \textit{Stop} nebo opustí aktuální stránku, 
@@ -2515,7 +2519,7 @@ identifikovat několik příčin, které k tomuto selhání vedly:
     kdy bylo potřeba ověřit neexistenci prvku nebo chybové hlášky.
 \end{itemize}
 
-\subsection*{Transparentnost modelu Sonnet 4.5}
+\subsubsection*{Transparentnost modelu Sonnet 4.5}
 Jak již bylo zmíněno, model \textit{Claude Sonnet 4.5} vynikal nejen v kvalitě generovaných testů, 
 ale i v robustnosti a schopnosti detekovat chyby. Zároveň při psaní testů dával uživatelům 
 mnohem konkrétnější zpětnou vazbu v Activity logu, kdy svůj thinking proces doprovázel i konkrétními poznámkami o tom,
