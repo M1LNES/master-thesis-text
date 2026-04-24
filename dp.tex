@@ -54,17 +54,39 @@
 %
 % _____________________________________________________________________________
 %
-\abstract{xxx
+\abstract{
+Tato diplomová práce se zabývá využitím velkých jazykových modelů (LLM) pro automatizované end-to-end testování softwaru. 
+Cílem práce je návrh a implementace systému, který na základě uživatelských příběhů generuje 
+robustní automatizované testovací scénáře.
+Navržené řešení využívá architekturu založenou na autonomním AI agentovi s přístupem k nástrojům pro inspekci prohlížeče v reálném čase.
+Funkčnost systému byla evaluována pomocí devíti jazykových modelů (z rodin GPT, Claude a Gemini). 
+Samotná evaluace zahrnovala jak generování testů pro plně funkční aplikaci, tak křížovou verifikaci a detekci záměrně zanesených chyb.
+Výsledky ukazují, že pokročilé modely s podporou reasoningu dokáží efektivně identifikovat
+defekty a generovat kód s vyšší sémantickou hloubkou než běžné nahrávací nástroje využívané v 
+testování, přičemž dosahují časové úspory ve srovnání s manuálním psaním testů.
 }
 % *** English abstract ***
-{xxx}
+{
+This thesis explores the use of large language models (LLMs) for automated end-to-end software testing. 
+The goal of this thesis is to design and implement a system that generates 
+robust automated test scenarios based on user stories.
+The proposed solution utilizes an architecture based on an autonomous AI agent with access to real-time browser inspection tools.
+The system’s functionality was evaluated using nine language models (from the GPT, Claude, and Gemini families). 
+The evaluation itself included both test generation for a fully functional application and cross-verification and detection of intentionally introduced errors.
+The results show that advanced models with reasoning capabilities can effectively identify
+defects and generate code with greater semantic depth than conventional recording tools used in 
+testing, while achieving time savings compared to manual test writing.
+}
 \keywords{E2E testování, LLM, AI agent, user stories, automatizace testů}
 % _____________________________________________________________________________
 %
 %        ACKNOWLEDGEMENT
 % _____________________________________________________________________________
 %
-\acknowledgement{xxx
+\acknowledgement{Rád bych poděkoval Ing. Martinu Dostalovi, Ph.D. 
+za jeho neustálou podporu, věcné připomínky a cenné rady při tvorbě této diplomové práce.
+Děkuji také Ing. Tomášovi Rojíkovi za jeho pravidelné odborné konzultace, praktické rady, postřehy a 
+poskytnutí přístupu k LLM modelům.
 }
 % _____________________________________________________________________________
 %
@@ -800,7 +822,7 @@ a zajistit interaktivní a stabilní testování v dynamickém prostředí webu.
 konkrétní požadavky a architektura řešení, čemuž se podrobně věnuje následující kapitola.
 
 
-\chapter{Návrh systému}\label{chapter:system_design}
+\chapter{Analýza a návrh systému}\label{chapter:system_design}
 Tato kapitola využívá teoretické poznatky z předchozí kapitoly a přechází k praktickému návrhu systému pro automatizované generování E2E testů s využitím velkých jazykových modelů.
 Text se v úvodu zaměřuje na analýzu struktury vstupních dat z běžně využívaných ALM nástrojů, z čehož jsou následně odvozeny konkrétní funkční a nefunkční požadavky.
 Hlavní část kapitoly je poté zaměřena na návrh koncepční architektury - od doménového modelu a distribučního modelu, přes představení a vysvětlení 
@@ -2908,7 +2930,7 @@ První část práce se zaměřila na testování v agilním vývoji a na možno
 Byl představen koncept autonomních agentů a porovnány populární frameworky pro vytváření end-to-end testů. 
 Klíčovým zjištěním bylo, že integrace iterativního uvažování a standardizovaného protokolu MCP umožňuje agentům překonat limity běžného
 statického generování kódu a adaptovat se na dynamické prostředí webových aplikací.
-Dále byl kladen důraz na analýzu běžně využívaných struktur a specifikací, jenž jsou 
+Dále byl kladen důraz na analýzu běžně využívaných struktur a specifikací, jež jsou 
 běžně používané v nástrojích pro řízení vývoje softwaru, a identifikaci klíčových prvků,
 které by bylo možné využít pro generování testů.
 Z této analýzy pak vzešel návrh architektury výsledného systému. 
@@ -3109,8 +3131,6 @@ test.describe('Login Feature', () => {
 
 For criteria flagged as FAIL, write the test with the EXPECTED correct assertions and add `test.fail()` at the start of the test body. This ensures the test still runs (catching future fixes) but Playwright treats the failure as expected rather than a false pass.
 \end{lstlisting}
-
-\newpage
 
 \section{Prompt pro regeneraci testů}
 
@@ -3754,9 +3774,140 @@ které pro ně byly důležité či které využili.
 
 \end{tcolorbox}
 
+
 \chapter{Uživatelská dokumentace}\label{app:userDocs}
-\chapter{Programátorská dokumentace}\label{app:programDocs}
-xxx
+\subsection*{Prerekvizity}
+Před samotnou instalací nástroje TestPilot AI je nutné ověřit a zajistit,
+že prostředí splňuje následující požadavky:
+\begin{itemize}
+    \item \textbf{Node.js:} Verze 22 a vyšší (je kompatibilní i s 18+, ale pro optimální výkon je vhodné volit LTS verzi). 
+    \item \textbf{npm:} Verze 9 a vyšší 
+    \item \textbf{Playwrigh:} Nainstalovaný Playwright (\texttt{@playwright/test}) včetně jeho inicializace (\texttt{npm init playwright@latest}).
+    Důležité je zvolit \textbf{TypeScript} jako preferovaný jazyk pro testy. Více viz 
+    \href{https://playwright.dev/docs/intro#installing-playwright}{oficiální dokumentace Playwright}.
+    \item \textbf{Playwright prohlížeče:} Nainstalované binární soubory prohlížečů (příkaz \texttt{npx playwright install}).
+    \item \textbf{API klíče:} Zajištěný přístup k AI Gateway prostřednictvím platného API klíče a URL.  
+\end{itemize}
+
+\subsection*{Instalace a inicializace}
+Nástroj je distribuován jako NPM balíček (dostupný na \url{https://www.npmjs.com/package/testpilotai}) a lze jej nainstalovat pomocí příkazu:
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\small]
+npm install testpilotai
+\end{lstlisting}
+
+Pro integraci nástroje do existujícího projektu je potřeba přejít do kořenového 
+adresáře repozitáře a spustit inicializační příkaz. 
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\small]
+npx testpilotai init
+\end{lstlisting}
+Tento příkaz detekuje 
+konfiguraci Playwrightu, nabídne volbu výstupní složky pro generované testy 
+a vytvoří konfigurační soubor \texttt{test-pilot.json}.
+Výstupní složka pro testy lze kdykoliv dodatečně změnit upravením tohoto konfiguračního souboru
+prostřednictvím klíče \texttt{config.output.directory}.
+
+V kořenovém adresáři je následně nutné vytvořit soubor \texttt{.env} s přístupovými údaji k LLM:
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\small]
+AI_GATEWAY_KEY=<YOUR_API_KEY>
+AI_GATEWAY_BASE_URL=<YOUR_API_URL/v1> 
+PORT=3002
+\end{lstlisting}
+Zatímco \texttt{AI\_GATEWAY\_KEY} a \texttt{AI\_GATEWAY\_BASE\_URL} jsou povinnými proměnnými pro správnou komunikaci s LLM, 
+proměnná \texttt{PORT} je volitelná a slouží k nastavení portu, na kterém TestPilot AI server poběží (výchozí je 3000).
+
+\subsection*{Spuštění a pracovní postup (Workflow)}
+Uživatelské rozhraní a lokální server se spustí pomocí příkazu:
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\small]
+npx testpilotai run
+\end{lstlisting}
+
+Otevře se prohlížečové okno s běžící aplikací TestPilot AI.
+Samotný proces generování zahrnuje následující kroky:
+
+\begin{enumerate}
+    \item \textbf{Vytvoření projektu:} V bočním panelu najet na sekci ``Projects`` (výběrový seznam v levém horním rohu), kliknout 
+    na ``New Project`` a zadat URL aplikace (např. \texttt{http://localhost:5173} nebo \texttt{https://example.com}), 
+    pro něž se mají generovat testy.
+    \item \textbf{Definice User Story:} Přidat nový uživatelský příběh, vyplnit název, popisek
+    a specifikovat detailní akceptační kritéria. Jako nepovinný krok lze přidat i dodatečnou specifikaci pro LLM.
+    \item \textbf{Generování:} Z nabídky vybrat LLM model (např. GPT-5 nebo Claude 4.5 Sonnet) 
+    a kliknout na ``Generate Test``.
+    \item \textbf{Průběžná kontrola:} V záložce \textit{Activity} v reálném čase 
+    sledovat myšlenkové pochody agenta a nástroje, které aktuálně volá nad aplikací.
+\end{enumerate}
+Obrázky uživatelského rozhraní a jejich další popis je k dispozici v příloze \ref{app:screenshots}.
+\newline
+
+Vygenerovaný test se uloží do specifikované složky v projektu. 
+Pokud test neodpovídá plně představám, lze využít tlačítko \textit{Regenerate}, kam 
+stačí vložit chybový log nebo přirozeným jazykem popsat požadovanou úpravu.
+Testy lze pouštět z aplikace v sekci ``Test Suites``, kde každý běh vygeneruje HTML report s detailním logem,
+který může sloužit pro další iterace regenerace testu.
+
+\chapter{Programátorská dokumentace}\label{app:progDocs}
+
+\subsection*{Vývojové prostředí a instalace}
+Pro lokální vývoj je nutné mít nainstalované Node.js (v22+) a 
+npm (9+). Zdrojové kódy se nachází ve složce \texttt{testpilotai/}.
+Postup pro lokální spuštění zahrnuje kroky:
+\begin{enumerate}
+    \item Přechod do složky \texttt{testpilotai/}
+    \item Instalace závislostí pro celé monorepo: \texttt{npm install}
+    \item Instalace prohlížečů pro Playwright: \texttt{npx playwright install}
+    \item Pro spuštění v režimu vývoje (backend i frontend paralelně) využít příkaz: \texttt{npm run dev}
+\end{enumerate}
+
+\subsection*{Důležité NPM příkazy}
+V kořenovém adresáři monorepa jsou k dispozici následující skripty pro správu a sestavení:
+\begin{itemize}
+    \item \texttt{npm run build}: Sestavení celého projektu (sdílené typy, backend, frontend).
+    \item \texttt{npm run build:cli}: Sestavení finálního CLI balíčku do složky \texttt{packages/cli/dist}.
+    \item \texttt{npm run test:api}: Spuštění unit a integračních testů backendové části v \texttt{apps/api}.
+    \item \texttt{npm run test:client}: Spuštění testů frontendové části ve \texttt{apps/client} pomocí Vitest.
+\end{itemize}
+
+\newpage    
+\section*{Konfigurace přímých LLM poskytovatelů}
+Výchozí nastavení využívá OpenAI-compatible rozhraní skrze AI Gateway,
+kde je v rámci \texttt{.env} proměnných zadán klíč a URL pro tuto gateway
+(viz příloha \ref{app:userDocs}).
+Pro přechod na přímé napojení na nativní SDK poskytovatelů (OpenAI, Anthropic, Google) 
+je potřeba upravit implementaci v \texttt{apps/api/src/llm/llm.service.ts}.
+
+\begin{enumerate}
+    \item Instalace příslušných balíčků v \texttt{apps/api}: \texttt{npm install @ai-sdk/openai @ai-sdk/anthropic @ai-sdk/google}.
+    \item Upravení metody \texttt{generate()} tak, aby využívala nativní providery na základě prefixu modelu:
+\end{enumerate}
+
+
+\begin{lstlisting}[style=tscode, basicstyle=\ttfamily\scriptsize, float=false]
+import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { google } from '@ai-sdk/google';
+
+// Logic inside LLM service
+// Determine provider based on model prefix 
+// and initialize corresponding SDK client
+let aiModel;
+if (model.providerPrefix === 'openai') {
+  aiModel = openai(model.shortId);
+} else if (model.providerPrefix === 'anthropic') {
+  aiModel = anthropic(model.shortId);
+} else if (model.providerPrefix === 'google') {
+  aiModel = google(model.shortId);
+}
+\end{lstlisting}
+
+Následně je potřeba do \texttt{.env} souboru přidat klíče pro jednotlivé poskytovatele, například:
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\small]
+ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> 
+GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
+\end{lstlisting}
+
+
+
+
 
 
 \backmatter
