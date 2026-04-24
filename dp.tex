@@ -2019,7 +2019,7 @@ zabalí do opravné zprávy (Repair Message), která se vrátí zpět modelu spo
 
 Klientská část systému je koncipována jako Single Page Application (SPA) a je implementována pomocí 
 Reactu s využitím jazyka TypeScript a nástrojů Vite či Tailwind CSS. Výsledné rozložení uživatelského rozhraní 
-se drželo návrhu z kapitoly 3 a jeho finální podobu lze vidět v příloze \ref{app:ui-screenshots}
+se drželo návrhu z kapitoly 3 a jeho finální podobu lze vidět v příloze \ref{app:screenshots}
 na obrázku \ref{fig:app-layout}.
 
 Aby nebylo nutné vytvářet vlastní komplexní komponenty, byla využita 
@@ -2063,21 +2063,12 @@ využití metody \texttt{POST}. Streamování je proto implementováno pomocí n
  \texttt{fetch} API v kombinaci s \texttt{ReadableStream}.
 
 
-\subsubsection*{Zpracování streamu a mapování událostí}
 
-Pro obsluhu celého procesu zpracovávání streamu byl navržen hook \texttt{useAgentStream},
-který asynchronně čte příchozí data po blocích (chunks), pomocí \texttt{TextDecoder} je dekóduje
-a poté analyzuje text po řádcích. Podle specifikace protokolu SSE hledá dvojice klíčů \texttt{event:} a \texttt{data:} 
-a transformuje je zpět na strukturované objekty.
-
-Všechny rozpoznané události jsou zachytávány a následně mapovány na stav komponenty.
-Výběr událostí, které se promítají přímo do uživatelského rozhraní do podoby tzv. \textit{Activity Feedu}, 
-udržuje konstanta \texttt{ITERATION\_LOG\_EVENTS}, zobrazená na ukázce \ref{lst:iteration-events}.
-
-\begin{lstlisting}[
+ \begin{lstlisting}[
   style=tscode,
   caption={\protect\centering Definice událostí streamu vizualizovaných v klientském rozhraní.},
-  label={lst:iteration-events}
+  label={lst:iteration-events},
+  float=false
 ]
 export const ITERATION_LOG_EVENTS: ReadonlySet<string> = new Set([
   "agent_start",
@@ -2089,6 +2080,17 @@ export const ITERATION_LOG_EVENTS: ReadonlySet<string> = new Set([
   "code_repair",
 ]);
 \end{lstlisting}
+
+\subsubsection*{Zpracování streamu a mapování událostí}
+
+Pro obsluhu celého procesu zpracovávání streamu byl navržen hook \texttt{useAgentStream},
+který asynchronně čte příchozí data po blocích (chunks), pomocí \texttt{TextDecoder} je dekóduje
+a poté analyzuje text po řádcích. Podle specifikace protokolu SSE hledá dvojice klíčů \texttt{event:} a \texttt{data:} 
+a transformuje je zpět na strukturované objekty.
+
+Všechny rozpoznané události jsou zachytávány a následně mapovány na stav komponenty.
+Výběr událostí, které se promítají přímo do uživatelského rozhraní do podoby tzv. \textit{Activity Feedu}, 
+udržuje konstanta \texttt{ITERATION\_LOG\_EVENTS}, zobrazená na ukázce \ref{lst:iteration-events}.
 
 Jakmile je zachycena událost, která odpovídá některé z definovaných v \texttt{ITERATION\_LOG\_EVENTS}, 
 stav aplikace se zaktualizuje a tato změna se promítne do pravého panelu v uživatelském rozhraní \textbf{(FR-07)}.
@@ -3219,7 +3221,7 @@ Na obrázku \ref{fig:app-layout} je zobrazen kompletní layout aplikace.
 \begin{figure}[p] 
     \centering
     \includegraphics[width=0.95\textheight, angle=90, keepaspectratio]{pictures/app-layout-screenshot.png}
-    \caption{Náhled na uživatelské rozhraní aplikace (otočeno).}
+    \caption{Náhled na uživatelské rozhraní aplikace.}
     \label{fig:app-layout}
 \end{figure}
 
