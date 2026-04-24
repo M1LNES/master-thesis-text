@@ -545,6 +545,13 @@ Nevýhodou je omezená podpora napříč jazyky, prohlížeči a testování ví
 
 Studie \textit{A conceptual model supporting decision-making for test automation in Agile-based Software Development} \cite{butt2023conceptual} identifikovala několik klíčových výzev, které
 se vyskytují při implementaci automatizace testů v agilním prostředí. 
+Mezi tyto kritické oblasti patří zejména:
+
+\begin{itemize}
+    \item Údržba a narůstající technický dluh
+    \item Potřeba efektivního regresního testování
+    \item Rozdíl mezi specifikací požadavků a výsledným kódem
+\end{itemize}
 
 \subsubsection*{Údržba a technický dluh}
 Jak vyplývá ze zmíněné studie, tento proces je časově náročný a náchylný k chybám. S rostoucím počtem uživatelských příběhů se manuální tvorba 
@@ -602,6 +609,17 @@ Je nutné podotknout, že i přes své schopnosti a potenciál jsou LLM stále j
 a proto může docházet k jevu zvanému \texttt{halucinace} - okamžik, kdy model generuje věcně nesprávný či nesmyslný text, který ale může působit věrohodně.
 
 \subsection{Parametry a technické aspekty LLM}
+Před rozborem principů fungování velkých jazykových modelů je 
+nezbytné definovat klíčové parametry a mechanismy, které zásadně ovlivňují 
+jejich chování, výkon a možnosti integrace. V následující části budou rozebrány tyto koncepty:
+
+\begin{itemize}
+    \item \textbf{Tokenizace a zpracování dat:} Rozdělení textu na menší jednotky - základní metrika pro zpracování dat a účtování nákladů.
+    \item \textbf{Context window:} Kapacita určující maximální množství vstupních a výstupních dat (tokenů) v rámci výpočetního cyklu.
+    \item \textbf{Temperature:} Parametr řídící míru nedeterminismu a kreativity generovaného výstupu.
+    \item \textbf{Tool Calling:} Mechanismus umožňující modelům autonomní interakci s externími systémy.
+    \item \textbf{Prompt Caching:} Technika pro optimalizaci výkonu a snížení výpočetních nákladů.
+\end{itemize}
 \subsubsection*{Tokenizace a zpracování dat}
 Tokenizace je proces převedení vstupního textu na menší jednotky (tzv. tokeny), které mohou reprezentovat celá slova, 
 části slov či jednotlivé znaky. To umožňuje modelům zpracovávat i neznámé výrazy pomocí algoritmů jako je Byte Pair Encoding (BPE) nebo SentencePiece \cite{galle-2019-investigating}.
@@ -1997,14 +2015,8 @@ zabalí do opravné zprávy (Repair Message), která se vrátí zpět modelu spo
 
 Klientská část systému je koncipována jako Single Page Application (SPA) a je implementována pomocí 
 Reactu s využitím jazyka TypeScript a nástrojů Vite či Tailwind CSS. Výsledné rozložení uživatelského rozhraní 
-se drželo návrhu z kapitoly 3 a je zobrazeno na obrázku \ref{fig:app-layout}. 
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=1\textwidth]{pictures/app-layout-screenshot.png}
-    \caption{Náhled na uživatelské rozhraní aplikace.}
-    \label{fig:app-layout}
-\end{figure}
+se drželo návrhu z kapitoly 3 a jeho finální podobu lze vidět v příloze \ref{app:ui-screenshots}
+na obrázku \ref{fig:app-layout}.
 
 Aby nebylo nutné vytvářet vlastní komplexní komponenty, byla využita 
 knihovna \texttt{Shadcn UI}, která poskytuje moderní, přizpůsobitelné a především dobře navržené komponenty s 
@@ -3198,6 +3210,14 @@ If navigation returns error pages (404, 500) or expected elements are missing, t
 Tato příloha obsahuje doplňující ukázky klientské části aplikace, které zobrazují další funkcionality a možnosti konfigurace,
 které byly popsány v kapitole \ref{chapter:implementation}. Každá z těchto ukázek je doprovázena krátkým popisem, který vysvětluje, 
 jaká část uživatelského rozhraní je zobrazena a jaké možnosti interakce nabízí.
+Na obrázku \ref{fig:app-layout} je zobrazen kompletní layout aplikace.
+
+\begin{figure}[p] 
+    \centering
+    \includegraphics[width=0.95\textheight, angle=90, keepaspectratio]{pictures/app-layout-screenshot.png}
+    \caption{Náhled na uživatelské rozhraní aplikace (otočeno).}
+    \label{fig:app-layout}
+\end{figure}
 
 \subsection*{Specifikace uživatelského příběhu}
 Tato část slouží jako hlavní vstupní formulář pro zadávání uživatelských příběhů, 
@@ -3272,16 +3292,6 @@ a další důležité informace, které mohou pomoci s rychlou identifikací pro
     \includegraphics[width=0.95\textwidth]{pictures/screen-playwright-2.png}
     \caption{\protect\centering Automaticky generovaný HTML report nástrojem Playwright.}
     \label{fig:ui-playwright-report}
-\end{figure}
-
-\subsection*{Tmavý motiv uživatelského rozhraní}
-Aplikace umí snadno přepínat i do tmavého motivu, což je vidět na obrázku \ref{fig:ui-dark-mode}.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=1\textwidth]{pictures/screen-dark-mode.png}
-    \caption{\protect\centering Celkový pohled na klientskou aplikaci s aktivovaným tmavým motivem.}
-    \label{fig:ui-dark-mode}
 \end{figure}
 
 \chapter{Uživatelské příběhy použité k evaluaci}\label{app:user-stories}
@@ -3904,6 +3914,39 @@ ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
 OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> 
 GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
 \end{lstlisting}
+
+\chapter{Obsah přílohy}\label{app:structure}
+
+Níže je zobrazen obsah přiloženého zip souboru,
+který obsahuje všechny relevantní materiály a zdrojové kódy 
+spojené s touto diplomovou prací.
+\vspace{1em}
+\dirtree{%
+.0 {}.
+.1 \faFolder{} A24N0104P\_prilohy.zip. 
+.2 \faFolder{} Aplikace\_a\_knihovny.
+.3 \faFolder{} testpilotai.
+.3 \faFolder{} testing\_app.
+.2 \faFolder{} Poster.
+.3 \faFile[regular]{} poster.pdf.
+.3 \faFile[regular]{} poster.pub.
+.2 \faFolder{} Text\_prace.
+.3 \faFile[regular]{} dp.pdf.
+.2 \faFile[regular]{} Readme.txt.
+}
+\vspace{1em}
+\noindent Složka \texttt{Aplikace\_a\_knihovny} obsahuje zdrojové kódy systému TestPilot AI 
+(složka \texttt{testpilotai}) a testovací aplikace (složka \texttt{testing\_app}), 
+která byla použita pro účely testování a demonstrace funkcionalit nástroje.
+\newline
+
+\noindent Složka \texttt{Poster} obsahuje digitální verzi posteru.
+\newline
+
+\noindent Složka \texttt{Text\_prace} obsahuje tento text diplomové práce ve formátu PDF.
+\newline
+
+\noindent Soubor \texttt{Readme.txt} poskytuje stručný popis o obsahu a struktuře přiložených materiálů.
 
 
 
