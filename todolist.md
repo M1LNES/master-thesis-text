@@ -1,0 +1,6 @@
+- Projet AI gramatiku
+- Poster udělat
+- Udělat skript na ty tildy
+- Doplnit dokumentační komentáře
+- Zjistit a vytisknout ty papíry pro Dostala
+- Sjednotit styly, když se mi s tím bude chtít srát (texttt vs textit)
