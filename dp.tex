@@ -308,7 +308,7 @@ Nejznámějším a~současně nejrozšířenějším přístupem k~agilnímu vý
 a~za zajištění toho, aby vývoj směřoval k~naplnění potřeb zákazníka.
 \end{itemize}
 
-Hlavní náplní práce Product Ownera je správa backlogu a~příprava uživatelských příběhů (často známý pod rozšířenějším anglickým pojmem \textit{user stories}), 
+Hlavní náplní práce Product Ownera je správa backlogu a~příprava uživatelských příběhů (často známých pod rozšířenějším anglickým pojmem \textit{user stories}), 
 které specifikují požadované funkcionality z~pohledu uživatele \cite{sachdeva2016scrum}.
 
 \begin{figure}[H]
@@ -373,7 +373,7 @@ V~tabulce~\ref{tab:invest_principy} jsou uvedeny jednotlivé principy \texttt{IN
 \subsection{Akceptační kritéria}
 Zatímco user story charakterizují potřeby zákazníka, akceptační kritéria (často označována zkratkou \texttt{ACC} z~anglického \texttt{Acceptance Criteria}) 
 jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkrétní user story \cite{li2024simac}, co je nutno dodržet a~udělat, aby byla user
- story považována za splněnou. Týkají se zejména funkcionality (tlačítko dělá to co má), kvalitativních charakteristik 
+ story považována za splněnou. Týkají se zejména funkcionality (tlačítko dělá to, co má), kvalitativních charakteristik 
  (systém reaguje do X milisekund) a~obchodní logiky \cite{ferreira2022towards}. 
 
  Akceptační kritéria mohou být zapsána různou formou - ať už prostý seznam, kde každý bod představuje právě jedno kritérium, 
@@ -511,7 +511,7 @@ vedla ke~zrodu mnoha testovacích frameworků pro webovou automatizaci, které s
 
 \subsection{Přehled frameworků pro webovou automatizaci}
 V~oblasti webové automatizace existuje velké množství frameworků, které se navzájem liší svými vlastnostmi, podporovanými jazyky a~přístupy k~testování.
-Zde je uveden přehled těch nejpopulárnějších a~nejčastěji používaných,
+Zde je uveden přehled těch nejpopulárnějších a~nejčastěji používaných:
 
 \subsubsection*{Selenium (WebDriver)}
 Jeden z~nejrozšířenějších a~nejstarších nástrojů. Podporuje širokou škálu jazyků (Java, Python, C\#, JavaScript) a~prohlížečů prostřednictvím WebDriveru \cite{selenium_docs}. Díky rozšířené 
@@ -573,7 +573,7 @@ Velké jazykové modely jsou rozsáhlé, předtrénované, statistické modely z
 Jedná se zejména o~modely založené na architektuře Transformer, které obsahují miliardy parametrů a~jsou trénovány na masivním množství 
 textových dat. Díky tomuto objemu parametrů jsou schopny zachytit komplexní vzory a~vztahy v~jazyce (na základě statistické analýzy) a~generovat 
 text  \cite{minaee2024large}. Navíc vykazují i~tzv.~\texttt{emergent abilities} - schopnosti jako je učení se v~kontextu, plnění komplexních 
-instrukce či řešit vícekrokové úlohy.
+instrukcí či řešení vícekrokových úloh.
 
 Evoluce jazykových modelů prošla 4~hlavními generacemi \cite{wang2025history}:
 
@@ -597,7 +597,7 @@ nahlíží tak, jakou část této architektury využívají:
 \item \textbf{Encoder-Decoder} - Modely kombinující obě části architektury. Využívají se zejména pro úlohy transformace textu, jako je strojový překlad, sumarizace nebo otázky a~odpovědi. Příkladem je model T5.
 \end{itemize}
 
-Je nutné podotknout, že i~přes své schopnosti a~potenciál jsou LLM stále jen nástrojem založeným na predikci - nejsou schopné skutečného porozumění, 
+Je nutné podotknout, že i~přes své schopnosti a~potenciál jsou LLM stále jen nástroji založenými na predikci - nejsou schopné skutečného porozumění, 
 a~proto může docházet k~jevu zvanému \texttt{halucinace} - okamžik, kdy model generuje věcně nesprávný či nesmyslný text, který ale může působit věrohodně.
 
 \subsection{Parametry a~technické aspekty LLM}
@@ -797,7 +797,7 @@ jenž si vysloužil přezdívku ``USB-C for AI applications``, poskytuje jednotn
 robustním modelu komunikace Client-Host-Server s~využitím formátu JSON-RPC 2.0 \cite{sarkar2025survey}:
 
 \begin{itemize}
-    \item \textbf{Client} - Protokolová komponenta zabudována do hostitelské aplikace, která udržuje spojení s~jedním konkrétním MCP serverem.
+    \item \textbf{Client} - Protokolová komponenta zabudovaná do hostitelské aplikace, která udržuje spojení s~jedním konkrétním MCP serverem.
     \item \textbf{Host} - Aplikace, která navazuje komunikaci a~interaguje s~uživateli.
     \item \textbf{Server} - Samostatný nezávislý proces (běžící lokálně nebo vzdáleně), který zpřístupňuje konkrétní funkce (tooly) - slouží jako obálky kolem externích systémů (API, databáze, CLI nástroje...).
 \end{itemize}
@@ -839,8 +839,8 @@ který zobrazuje navržené řešení a~demonstruje jeho klíčové funkce.
 Důležitým faktorem pro úspěšnou automatizaci testů je správné pochopení a~zpracování vstupních artefaktů, které jsou základem pro generování testů.
 Jak bylo zmíněno v~kapitole~\ref{chapter:therotical_part}, tyto artefakty mohou mít různou formu - od textových dokumentů (např. uživatelské příběhy, akceptační kritéria) až po strukturované formáty (např. Gherkin).
 V~ALM nástrojích uživatelské příběhy často nemají jednotnou strukturu, což výrazně ztěžuje jejich zpracování. Zejména nástroje jako \texttt{Jira} nabízejí 
-uživatelům velkou flexibilitu (nejen) při správě uživatelských příběhů. K~prozkoumání této problematiky lze využít a~nahlédnout na 
-již existující Jira instance, které jsou přístupné veřejnosti. Zde je několik existujících instancí, ze kterých lze získat 
+uživatelům velkou flexibilitu (nejen) při správě uživatelských příběhů. K~prozkoumání této problematiky lze nahlédnout do 
+již existujících Jira instancí, které jsou přístupné veřejnosti. Zde je několik existujících instancí, ze kterých lze získat 
 cenné informace o~struktuře a~sémantice uživatelských příběhů:
 
 \begin{itemize}
@@ -1005,7 +1005,7 @@ ale každý vygenerovaný test patří pouze jednomu jedinému uživatelskému p
 \end{figure}
 
 Ostatní prvky identifikované v~analýze (např. metadata ticketů) jsou záměrně vynechány, protože pro generování testů nepřináší žádnou přidanou hodnotu a~navíc jejich 
-zahrnování v~agentově kontextu by mohlo vést k~zvětšení množství tokenů a~tím i~nákladů na generování testů. 
+zahrnování v~agentově kontextu by mohlo vést ke~zvětšení množství tokenů a~tím i~nákladů na generování testů. 
 
 \subsection{Distribuce a~perzistence dat}
 Před samotnou definicí architektury agenta je nejprve nutné rozhodnout, jaký způsob distribuce systému zvolit a~jakým způsobem ukládat data.
@@ -1291,7 +1291,7 @@ ale je kladen důraz na technické řešení komunikace pomocí Server-Sent Even
 
 Celý systém byl implementován jako tzv.~monorepo (monolithic repository) s~využitím nástroje Turborepo,
 který umožňuje spravovat více logicky oddělených aplikací, knihoven či služeb v~rámci jednoho repozitáře.
-Díky tomu je možné sdílet kód, typy a~rozhraní napříč různými častmi systému bez nutnosti publikovat a~spravovat
+Díky tomu je možné sdílet kód, typy a~rozhraní napříč různými částmi systému bez nutnosti publikovat a~spravovat
 samostatné balíčky pro každou z~těchto částí. Nástroj Turborepo navíc optimalizuje proces sestavování (build process)
 díky inteligentnímu cachování, které zajišťuje, že se znovu sestaví pouze ty části systému, které byly skutečně změněny, 
 což výrazně zrychluje vývoj a~testování.
@@ -1577,7 +1577,7 @@ což umožňuje detailní monitoring a~případné omezení využití jednotliv�
 pro kontrolu nákladů.
 
 V~rámci této práce byl proto využit právě tento přístup, kdy uživatel dostane jeden univerzální API klíč pro AI Gateway firmy 
-Emplifi, přes níž se následně volají všechny podporované modely. To výrazně zjednodušuje použití tohoto systému 
+Emplifi, přes niž se následně volají všechny podporované modely. To výrazně zjednodušuje použití tohoto systému 
 zaměstnanci a~zároveň umožní na konci vývoje a~testování určit, kolik nákladů bylo na tento systém vynaloženo, což
 bude důležitá metrika pro zhodnocení efektivity navrženého řešení.
 
@@ -2223,7 +2223,7 @@ daných akceptačních kritérií a~zároveň se předešlo nechtěným zacyklen
 Pro konzistenci a~stabilitu výsledků bylo nutné před každým spuštěním generování nového testu
 (případně i~při regeneraci) manuálně promazat session Playwright prohlížeče a~restartovat 
 testovací aplikaci. Bez toho kroku docházelo k~prolínání stavů (zejména u~přihlášení, 
-kdy mohla být ještě aktivní sesion z~předchozího testu, případně u~jiných operací, které vyžadovaly 
+kdy mohla být ještě aktivní session z~předchozího testu, případně u~jiných operací, které vyžadovaly 
 operace mazání či editace), což rozporuje 
 princip izolace testů a~vede k~nespolehlivým výsledkům. 
 
@@ -2734,7 +2734,7 @@ Odpovědi respondentů indikují spokojenost s~nástrojem a~jeho přínosem pro 
     počátečního nastavení pomocí příkazu \texttt{npx testpilot init/run} nejvyšší možnou známkou 
     (5/5 - Velmi snadné). Pozitivně (5/5) bylo hodnoceno i~lokální ukládání testů přímo do 
     repozitáře namísto využití interní databáze.
-    \item \textbf{Kvalita kódu a~asistentce:} Shoda vygenerovaného kódu s~akceptačními kritérii i~dodržování Playwright best-practices byly hodnoceny poměrně kladně (převážně 4/5). 
+    \item \textbf{Kvalita kódu a~asistence:} Shoda vygenerovaného kódu s~akceptačními kritérii i~dodržování Playwright best-practices byly hodnoceny poměrně kladně (převážně 4/5). 
     \item \textbf{Časová úspora a~celkový dojem:} Všichni 4~respondenti se shodli (možnost ``Určitě ano``), 
     že nástroj má potenciál šetřit čas při psaní boilerplate kódu pro E2E testy. Celková známka nástroje dosáhla 
     průměrné hodnoty 1,25 (na škále 1 = Vynikající, 5 = Nepoužitelný) a~100 \% testujících vidí v~tomto prototypu potenciál, který by po dalším vývoji mohl být plnohodnotně využitelný ve vývojovém procesu.
@@ -2828,7 +2828,7 @@ To je ale zdlouhavé a~neefektivní.
 
 Dalším rozšířením nástroje by mohlo být zavedení mechanismů pro automatickou izolaci testovacího prostředí
 mezi jednotlivými generacemi testů. 
-Toho by mohlo být implementováno několika způsoby, například:
+Toto rozšíření by mohlo být implementováno několika způsoby, například:
 
 \begin{itemize}
     \item \textbf{Obnova kontextu prohlížeče:} Vytvoření nového browser 
@@ -2841,19 +2841,19 @@ Toho by mohlo být implementováno několika způsoby, například:
 S~rostoucím počtem testovaných aplikací (a~k~ním příslušných uživatelských příběhů) 
 se zvyšuje i~počet generovaných testů, což může vést k~výraznému prodloužení 
 doby potřebné pro vygenerování kompletní testovací sady.
-Architektura systémy by mohla být rozšířena o~následující optimalizace:
+Architektura systému by mohla být rozšířena o~následující optimalizace:
 \begin{itemize}
     \item \textbf{Paralelní generování testů:} Umožnění běhu více instancí agenta současně nad různými 
     scénáři, díky čemuž by se zkrátil čas pro vygenerovaní kompletní sady testů pro velké množství scénářů. 
     \item \textbf{Streamování odpovědí z~LLM:} Současní řešení využívá tzv.~\textit{Chat Completion API} přístup - 
     model zpracuje celý požadavek a~až poté vrátí kompletní odpověď, která se následně zpracuje na backendu a~vrátí uživateli do UI.
-    Přechod na stremování odpovědí (\textit{Responses API}) by umožnil sledovat generovaný kód a~průběh myšlenkových pochodů v~reálném čase, což by působilo uživatelsky přívětivějším dojmem a~umožnilo i~potenciální dřívější detekci případných problémů. 
+    Přechod na streamování odpovědí (\textit{Responses API}) by umožnil sledovat generovaný kód a~průběh myšlenkových pochodů v~reálném čase, což by působilo uživatelsky přívětivějším dojmem a~umožnilo i~potenciální dřívější detekci případných problémů. 
 \end{itemize}
 
 \section{Integrace do firemních ekosystémů}
 Pro automatizované testování je klíčové i~snadné napojení do stávajících 
 firemních procesů a~nástrojů. Místo ručního vkládání projektů a~uživatelských příběhů 
-by agent mohl být agent rozšířen o~přímou integraci s~ALM nástroji - 
+by mohl být agent rozšířen o~přímou integraci s~ALM nástroji - 
 konkrétně třeba o~Jiru (uživatelské příběhy) a~populární plugin Zephyr (správa testovacích případů).
 To by umožnilo:
 
@@ -2878,7 +2878,7 @@ Zároveň by agent mohl být obohacen i~o~dodatečné vlastní nástroje. Vývoj
 agentovi poskytnout specifické nástroje - např. přímé dotazy do testovacích databází 
 či generování testovacích dat, což by umožnilo psát komplexnější scénáře bez nutnosti 
 manuálního zásahu do kódu. Díky podpoře Playwrightu (viz kapitola~\ref{chapter:therotical_part})
-by mohly i~výstupní testy být generovány v~růných programovacích jazycích (Java, Python), což by 
+by mohly i~výstupní testy být generovány v~různých programovacích jazycích (Java, Python), což by 
 rozšířilo možnost využití nástroje i~mimo TypeScriptové projekty.
 
 \section{Shrnutí}
