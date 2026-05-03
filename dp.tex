@@ -308,7 +308,7 @@ Nejznámějším a~současně nejrozšířenějším přístupem k~agilnímu vý
 a~za zajištění toho, aby vývoj směřoval k~naplnění potřeb zákazníka.
 \end{itemize}
 
-Hlavní náplní práce Product Ownera je správa backlogu a~příprava uživatelských příběhů (často známý pod rozšířejnějším anglickým pojmem \textit{user stories}), 
+Hlavní náplní práce Product Ownera je správa backlogu a~příprava uživatelských příběhů (často známý pod rozšířenějším anglickým pojmem \textit{user stories}), 
 které specifikují požadované funkcionality z~pohledu uživatele \cite{sachdeva2016scrum}.
 
 \begin{figure}[H]
@@ -330,7 +330,7 @@ A~právě uživatelské příběhy tvoří základní pilíř pro specifikován�
 
 \subsection{Uživatelské příběhy}
 User story je nejpoužívanějším artefaktem v~agilním vývoji \cite{9393933userstories} - jedná se o~krátký, semi-strukturovaný 
-popis požadavků napsán v~přirozeném jazyce. Na ukázce \ref{lst:user-story-template} je uvedena standardní šablona, 
+popis požadavků napsaný v~přirozeném jazyce. Na ukázce \ref{lst:user-story-template} je uvedena standardní šablona, 
 podle níž se uživatelské příběhy píší \cite{9393933userstories,9771182userStories, 9325670userStories}.
 \begin{center}
 \begin{minipage}{0.8\textwidth}
@@ -372,7 +372,7 @@ V~tabulce~\ref{tab:invest_principy} jsou uvedeny jednotlivé principy \texttt{IN
 
 \subsection{Akceptační kritéria}
 Zatímco user story charakterizují potřeby zákazníka, akceptační kritéria (často označována zkratkou \texttt{ACC} z~anglického \texttt{Acceptance Criteria}) 
-jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkrétní user story \cite{li2024simac} co je nutno dodržet a~udělat, aby byla user
+jasně popisují \texttt{Definition of Done} (zkráceně \texttt{DoD}) pro konkrétní user story \cite{li2024simac}, co je nutno dodržet a~udělat, aby byla user
  story považována za splněnou. Týkají se zejména funkcionality (tlačítko dělá to co má), kvalitativních charakteristik 
  (systém reaguje do X milisekund) a~obchodní logiky \cite{ferreira2022towards}. 
 
@@ -425,7 +425,7 @@ textových popisů, z~něhož následně generovala Gherkin scénáře, z~nichž
 
 \section{Automatizované testování softwaru}
 Softwarové testování lze definovat jako hledání chyb či chybějících požadavků v~softwaru \cite{7814898swtesting}. Dá se na něj 
-nahlížet i~z~pohledu snižování rizika, což vede v~posílení důvěry uživatelů a~zlepšení kvality softwaru. Jak také \textit{Software Testing Techniques: A~Literature Review} \cite{7814898swtesting} uvádí,
+nahlížet i~z~pohledu snižování rizika, což vede k~posílení důvěry uživatelů a~zlepšení kvality softwaru. Jak také \textit{Software Testing Techniques: A~Literature Review} \cite{7814898swtesting} uvádí,
 testování je důležitou součástí \texttt{QA} - čím dříve jsou chyby odhaleny, tím levnější je jejich oprava. Testování lze rozdělit 
 do několika tříd, jež jsou znázorněny v~tabulce~\ref{tab:druhy_testu}, která vychází z~knihy \cite{herout_testovani_programatory}.
 
@@ -506,7 +506,7 @@ Obě tyto perspektivy potřebují lokalizovat a~interagovat s~HTML elementy. Int
 Zatímco první kategorie je označována jako zastaralá \cite{leotta2016approaches}, DOM-based přístup je náchylný na drobné změny v~HTML struktuře, 
 které mohou způsobit selhání testů a~vyžadují častou údržbu. Vizuální přístup sice dokáže testovat to, co uživatel skutečně vidí, 
 ale je náchylný na změny v~rozložení stránky a~režie spojená s~rozpoznáváním obrazu může být vysoká. Právě snaha o~řešení těchto problémů 
-vedla k~zrodu mnoha testovacích frameworků pro webovou automatizaci, které se snaží zjednodušit a~zefektivnit tvorbu end-to-end testů.
+vedla ke~zrodu mnoha testovacích frameworků pro webovou automatizaci, které se snaží zjednodušit a~zefektivnit tvorbu end-to-end testů.
 
 
 \subsection{Přehled frameworků pro webovou automatizaci}
@@ -571,9 +571,9 @@ které mohou vést k~nesprávné implementaci či chybám. To má poté za násl
 \section{Velké jazykové modely ve vývoji softwaru}
 Velké jazykové modely jsou rozsáhlé, předtrénované, statistické modely založené na neuronových sítí. 
 Jedná se zejména o~modely založené na architektuře Transformer, které obsahují miliardy parametrů a~jsou trénovány na masivním množství 
-textových dat. Díky tomuto objemu parametrů jsou schopni zachytit komplexní vzory a~vztahy v~jazyce (na základě statistické analýzy) a~generovat 
+textových dat. Díky tomuto objemu parametrů jsou schopny zachytit komplexní vzory a~vztahy v~jazyce (na základě statistické analýzy) a~generovat 
 text  \cite{minaee2024large}. Navíc vykazují i~tzv.~\texttt{emergent abilities} - schopnosti jako je schopnost učit se v~kontextu, plnit komplexní 
-instrukce či řešit více krokové úlohy.
+instrukce či řešit vícekrokové úlohy.
 
 Evoluce jazykových modelů prošla 4~hlavními generacemi \cite{wang2025history}:
 
@@ -597,7 +597,7 @@ nahlíží tak, jakou část této architektury využívají:
 \item \textbf{Encoder-Decoder} - Modely kombinující obě části architektury. Využívají se zejména pro úlohy transformace textu, jako je strojový překlad, sumarizace nebo otázky a~odpovědi. Příkladem je model T5.
 \end{itemize}
 
-Je nutné podotknout, že i~přes své schopnosti a~potenciál jsou LLM stále jen nástrojem založené na predikci - nejsou schopné skutečnému porozumění, 
+Je nutné podotknout, že i~přes své schopnosti a~potenciál jsou LLM stále jen nástrojem založeným na predikci - nejsou schopné skutečného porozumění, 
 a~proto může docházet k~jevu zvanému \texttt{halucinace} - okamžik, kdy model generuje věcně nesprávný či nesmyslný text, který ale může působit věrohodně.
 
 \subsection{Parametry a~technické aspekty LLM}
@@ -749,12 +749,12 @@ Ve své základní podobě se skládá ze tří klíčových komponent \cite{ope
 
 \begin{itemize}
     \item \textbf{Model} - Konkrétní velký jazykový model, který řídí uvažování, rozhodování a~celkovou exekuci workflow agenta.
-    \item \textbf{Nástroje (Tools)} - Externí funkce nebo API, jenž agent využívá k~interakci s~vnějším prostředím.
-    \item \textbf{Instrukce (Instructions)} - Explicitní pravidla definující agentovo chování - zmenšují prostor pro nejednoznačnosti což vede k~efektivnějšímu chování a~minimalizaci halucinací.
+    \item \textbf{Nástroje (Tools)} - Externí funkce nebo API, jež agent využívá k~interakci s~vnějším prostředím.
+    \item \textbf{Instrukce (Instructions)} - Explicitní pravidla definující agentovo chování - zmenšují prostor pro nejednoznačnosti, což vede k~efektivnějšímu chování a~minimalizaci halucinací.
 \end{itemize}
 
 
-Pro plné fungování v~rámci komplexnějších architektur je často zmiňují i~další klíčové aspekty, které pomáhají agentům řešit náročnější úlohy. Mezi ně patří 
+Pro plné fungování v~rámci komplexnějších architektur se často zmiňují i~další klíčové aspekty, které pomáhají agentům řešit náročnější úlohy. Mezi ně patří 
 paměť (\texttt{Memory}), která umožňuje agentovi uchovávat a~využívat informace z~předchozích interakcí, a~dále plánování (\texttt{Planning}), jež umožňuje 
 agentovi dekomponovat složitý problém na sadu menších proveditelných kroků \cite{sarkar2025survey}.
 
@@ -1108,7 +1108,7 @@ které jsou zobrazeny na obrázku~\ref{fig:agent_architecture}.
 
 Single-agent architektura se zaměřuje na jednoho centrálního agenta, který má přístup ke všem nástrojům a~informacím potřebným k~vykonání úkolu.
 Tento agent je zodpovědný za celý proces - od plánování, přes exekuci, až po generování výstupu. Tento přístup je jednodušší na implementaci,
-snadněji se ladí a~chová se determiničtěji, protože veškeré rozhodování je centralizované v~jednom agentovi.
+snadněji se ladí a~chová se determinističtěji, protože veškeré rozhodování je centralizované v~jednom agentovi.
 
 Oproti tomu multi-agentní architektura rozděluje úkol mezi více specializovaných agentů, kde každý z~nich má svou specifickou roli - 
 jeden může být zodpovědný za plánování, druhý za generování kódu a~třetí za revizi kódu. Tento přístup může být efektivní pro řešení komplexnějších úloh,
@@ -2127,7 +2127,7 @@ ověření kvality samotného softwarového řešení pomocí automatizovaných 
 V~předchozích univerzitních pracích, které se zabývaly generováním testů pomocí LLM,
 se k~ověření schopností modelů využíval existující univerzitní systém TBUIS (Testbed University Information System)
 \footnote{\href{https://projects.kiv.zcu.cz/tbuis/web/}{Aplikace TBUIS}}.
-Tento systém poskytuje sadu use-casů a~funkcionalit (např. úmyslné zanešení defektu),
+Tento systém poskytuje sadu use-casů a~funkcionalit (např. úmyslné zanesení defektu),
 které jsou vhodné pro testování generování testů. Jelikož se v~rámci této 
 práce vychází z~obecných uživatelských příběhů, bylo by potřeba je vytvořit na míru 
 pro určitou podmnožinu use-casů v~TBUIS.
@@ -2256,7 +2256,7 @@ Výsledky těchto experimentů byly kategorizovány do tří skupin:
 
 \begin{itemize}
     \item \textbf{D (Detected):} Model správně detekoval rozdíl mezi zadáním a~akceptačními kritérii a~defekt identifikoval (např. pomocí \texttt{test.fail()} či záznamu v~\texttt{IMPLEMENTATION NOTES}).
-    \item \textbf{FN (False Negative):} Kritické selhání - model ignoroval zanešenou chybu 
+    \item \textbf{FN (False Negative):} Kritické selhání - model ignoroval zanesenou chybu 
     a~test vyhodnotil jako úspěšný (v~\texttt{IMPLEMENTATION NOTES} potvrzuje splnění kritérií, 
     i~když ve skutečnosti je funkcionalita rozbitá).
     \item \textbf{E (Error):} Agent napsal test, který nedoběhl (např. volba špatného selektoru) a~nebo
@@ -2491,7 +2491,7 @@ mnohem konkrétnější zpětnou vazbu v~Activity logu, kdy svůj thinking proce
 k~čemu dospěl a~co bude další krok. 
 
 To se projevilo i~v~rámci detekce defektů, jak je vidět na obrázku~\ref{fig:sonnet-bug-detection}, kdy 
-se provádělo generování testu se zanešenou chybou \texttt{task\_no\_validation}. Model správně identifikoval,
+se provádělo generování testu se zanesenou chybou \texttt{task\_no\_validation}. Model správně identifikoval,
 že se mu podařilo vytvořit záznam s~prázdným nadpisem a~že toto chování rozporuje akceptačnímu kritériu 4.
 
 \begin{figure}[h]
@@ -2737,7 +2737,7 @@ Odpovědi respondentů indikují spokojenost s~nástrojem a~jeho přínosem pro 
     \item \textbf{Kvalita kódu a~asistentce:} Shoda vygenerovaného kódu s~akceptačními kritérii i~dodržování Playwright best-practices byly hodnoceny poměrně kladně (převážně 4/5). 
     \item \textbf{Časová úspora a~celkový dojem:} Všichni 4~respondenti se shodli (možnost ``Určitě ano``), 
     že nástroj má potenciál šetřit čas při psaní boilerplate kódu pro E2E testy. Celková známka nástroje dosáhla 
-    průměrné hodnoty 1,25 (na škále 1 = Vynikající, 5 = Nepoužitelný) a~100 \% testujících vidí v~tomto prototypu potenciál, který by po dalším vývoji mohl být plnhodnotně využitelný ve vývojovém procesu.
+    průměrné hodnoty 1,25 (na škále 1 = Vynikající, 5 = Nepoužitelný) a~100 \% testujících vidí v~tomto prototypu potenciál, který by po dalším vývoji mohl být plnohodnotně využitelný ve vývojovém procesu.
 \end{itemize}
 
 \subsection*{Silné stránky a~přínosy}
@@ -2851,7 +2851,7 @@ Architektura systémy by mohla být rozšířena o~následující optimalizace:
 \end{itemize}
 
 \section{Integrace do firemních ekosystémů}
-Pro automizované testování je klíčové i~snadné napojení do stávajících 
+Pro automatizované testování je klíčové i~snadné napojení do stávajících 
 firemních procesů a~nástrojů. Místo ručního vkládání projektů a~uživatelských příběhů 
 by agent mohl být agent rozšířen o~přímou integraci s~ALM nástroji - 
 konkrétně třeba o~Jiru (uživatelské příběhy) a~populární plugin Zephyr (správa testovacích případů).
@@ -2867,7 +2867,7 @@ To by umožnilo:
 
 \section{Bezpečnostní mechanismy a~rozšiřitelnost nástrojů}
 Posledním navrhovaným potenciálním vylepšením je zavedení 
-bezpečnostních machanismů a~rozšíření možností nástrojů, které má agent k~dispozici.
+bezpečnostních mechanismů a~rozšíření možností nástrojů, které má agent k~dispozici.
 Při exekuci E2E testů nad reálnou aplikací může agent teoreticky provést nenávratné operace 
 (např. smazání produkčních dat), což by mohlo mít závažné důsledky.
 Toto potenciální riziko by mohlo být minimalizováno zavedením konceptu Human-in-the-Loop 
@@ -3751,7 +3751,7 @@ Před samotnou instalací nástroje TestPilot AI je nutné ověřit a~zajistit,
 \begin{itemize}
     \item \textbf{Node.js:} Verze 22~a~vyšší (je kompatibilní i~s~18+, ale pro optimální výkon je vhodné volit LTS verzi). 
     \item \textbf{npm:} Verze 9~a~vyšší 
-    \item \textbf{Playwrigh:} Nainstalovaný Playwright (\texttt{@playwright/test}) včetně jeho inicializace (\texttt{npm init playwright@latest}).
+    \item \textbf{Playwright:} Nainstalovaný Playwright (\texttt{@playwright/test}) včetně jeho inicializace (\texttt{npm init playwright@latest}).
     Důležité je zvolit \textbf{TypeScript} jako preferovaný jazyk pro testy. Více viz 
     \href{https://playwright.dev/docs/intro#installing-playwright}{oficiální dokumentace Playwright}.
     \item \textbf{Playwright prohlížeče:} Nainstalované binární soubory prohlížečů (příkaz \texttt{npx playwright install}).
